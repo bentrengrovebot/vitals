@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import { PrismaClient } from '@prisma/client';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 
 import authRoutes from './routes/auth.js';
 import profileRoutes from './routes/profile.js';
@@ -17,6 +18,16 @@ import aiRoutes from './routes/ai.js';
 import dataRoutes from './routes/data.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Run database migrations on startup
+try {
+  console.log('Running prisma db push...');
+  execSync('npx prisma db push --skip-generate', { stdio: 'inherit' });
+  console.log('Database schema synced.');
+} catch (err) {
+  console.error('Failed to push database schema:', err.message);
+}
+
 const prisma = new PrismaClient();
 const app = express();
 const PORT = process.env.PORT || 3000;
