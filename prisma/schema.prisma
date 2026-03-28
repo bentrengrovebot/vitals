@@ -1,0 +1,161 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  profile      Profile?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Profile {
+  id           String    @id @default(cuid())
+  userId       String    @unique
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String    @default("")
+  dob          DateTime?
+  sex          String    @default("Male")
+  heightCm     Float?
+  weightKg     Float?
+  weightGoalKg Float?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Goals {
+  id            String   @id @default(cuid())
+  userId        String
+  calories      Int      @default(2300)
+  proteinG      Int      @default(150)
+  fatG          Int      @default(80)
+  carbsG        Int      @default(250)
+  waterMl       Int      @default(2500)
+  effectiveFrom DateTime @default(now())
+  createdAt     DateTime @default(now())
+}
+
+model Recipe {
+  id          String             @id @default(cuid())
+  userId      String
+  name        String
+  servings    Int                @default(1)
+  ingredients RecipeIngredient[]
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+}
+
+model RecipeIngredient {
+  id       String @id @default(cuid())
+  recipeId String
+  recipe   Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  name     String
+  grams    Float
+  calories Float
+  proteinG Float
+  fatG     Float
+  carbsG   Float
+  source   String @default("ai_estimated")
+}
+
+model DiaryEntry {
+  id       String   @id @default(cuid())
+  userId   String
+  date     DateTime @db.Date
+  slot     String
+  name     String
+  portion  String?
+  calories Float
+  proteinG Float
+  fatG     Float
+  carbsG   Float
+  recipeId String?
+  mealTime DateTime?
+  createdAt DateTime @default(now())
+}
+
+model WeighIn {
+  id       String   @id @default(cuid())
+  userId   String
+  date     DateTime @db.Date
+  weightKg Float
+  trendKg  Float?
+  createdAt DateTime @default(now())
+}
+
+model SymptomLog {
+  id        String   @id @default(cuid())
+  userId    String
+  timestamp DateTime @default(now())
+  type      String
+  severity  Int
+  notes     String?
+}
+
+model CustomFood {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  servingSize Float
+  unit        String   @default("g")
+  calories    Float
+  proteinG    Float
+  fatG        Float
+  carbsG      Float
+  createdAt   DateTime @default(now())
+}
+
+model WaterLog {
+  id        String   @id @default(cuid())
+  userId    String
+  timestamp DateTime @default(now())
+  amountMl  Int
+}
+
+model Supplement {
+  id               String   @id @default(cuid())
+  userId           String
+  name             String
+  activeIngredient String?
+  activeDose       String
+  otherIngredients Json?
+  servingSize      String?
+  brand            String?
+  source           String   @default("manual")
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+}
+
+model SupplementLog {
+  id           String   @id @default(cuid())
+  userId       String
+  supplementId String
+  date         DateTime @db.Date
+  takenAt      DateTime
+}
+
+model AiInsight {
+  id           String   @id @default(cuid())
+  userId       String
+  timestamp    DateTime @default(now())
+  type         String   @default("on_demand")
+  daysAnalysed Int
+  response     String   @db.Text
+  dataSources  Json?
+}

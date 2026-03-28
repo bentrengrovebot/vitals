@@ -1,0 +1,76 @@
+import { Router } from 'express';
+import { authMiddleware } from '../middleware/auth.js';
+
+const router = Router();
+router.use(authMiddleware);
+
+// GET /api/diary/:date
+router.get('/:date', async (req, res) => {
+  try {
+    const entries = await req.prisma.diaryEntry.findMany({
+      where: { userId: req.userId, date: new Date(req.params.date) },
+      orderBy: { createdAt: 'asc' },
+    });
+    // Group by slot
+    const grouped = { Breakfast: [], Lunch: [], Dinner: [], Snacks: [] };
+    entries.forEach(e => {
+      if (grouped[e.slot]) grouped[e.slot].push(e);
+    });
+    res.json(grouped);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET /api/diary/range?start=&end=
+router.get('/range/query', async (req, res) => {
+  try {
+    const { start, end } = req.query;
+    const entries = await req.prisma.diaryEntry.findMany({
+      where: {
+        userId: req.userId,
+        date: { gte: new Date(start), lte: new Date(end) },
+      },
+      orderBy: { date: 'asc' },
+    });
+    res.json(entries);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST /api/diary
+router.post('/', async (req, res) => {
+  try {
+    const { date, slot, name, portion, calories, proteinG, fatG, carbsG, recipeId } = req.body;
+    const entry = await req.prisma.diaryEntry.create({
+      data: {
+        userId: req.userId,
+        date: new Date(date),
+        slot,
+        name,
+        portion,
+        calories,
+        proteinG,
+        fatG,
+        carbsG,
+        recipeId,
+      },
+    });
+    res.json(entry);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// DELETE /api/diary/:id
+router.delete('/:id', async (req, res) => {
+  try {
+    await req.prisma.diaryEntry.delete({ where: { id: req.params.id } });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+export default router;
