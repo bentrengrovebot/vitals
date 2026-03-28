@@ -23,4 +23,4 @@ RUN npx prisma generate && npm run build
 EXPOSE 3000
 
 # Start
-CMD ["node", "server/index.js"]
+CMD ["sh", "-c", "npx prisma db push --skip-generate && node server/index.js"]
