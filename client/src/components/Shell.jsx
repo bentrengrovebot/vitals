@@ -1,25 +1,16 @@
 import { useState } from 'react';
-import Diary from '../pages/Diary';
-import Recipes from '../pages/Recipes';
+import Home from '../pages/Home';
+import Health from '../pages/Health';
+import More from '../pages/More';
 import RecipeEdit from '../pages/RecipeEdit';
 import FoodPicker from '../pages/FoodPicker';
 import VitalsChat from '../pages/VitalsChat';
-import Insights from '../pages/Insights';
-import Settings from '../pages/Settings';
-
-const NAV_ICONS = {
-  diary: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>,
-  recipes: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 11h.01"/><path d="M11 15h.01"/><path d="M16 16h.01"/><path d="m2 16 20 6-6-20A20 20 0 0 0 2 16"/></svg>,
-  vitals: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>,
-  insights: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>,
-  settings: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>,
-};
 
 export default function Shell() {
-  const [screen, setScreen] = useState('diary');
+  const [screen, setScreen] = useState('home');
   const [pickerSlot, setPickerSlot] = useState(null);
-  const [editRecipe, setEditRecipe] = useState(null);
   const [pickerDate, setPickerDate] = useState(null);
+  const [editRecipe, setEditRecipe] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const refresh = () => setRefreshKey(k => k + 1);
@@ -35,41 +26,58 @@ export default function Shell() {
     setScreen('recipe_edit');
   };
 
-  const showNav = screen !== 'vitals' && screen !== 'picker' && screen !== 'recipe_edit';
+  const isOverlay = screen === 'vitals' || screen === 'picker' || screen === 'recipe_edit';
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0d1117', maxWidth: 480, margin: '0 auto', position: 'relative' }}>
-      {screen === 'diary' && <Diary key={refreshKey} openPicker={openPicker} goTo={setScreen} />}
-      {screen === 'recipes' && <Recipes onEdit={openRecipeEdit} goTo={setScreen} />}
-      {screen === 'recipe_edit' && <RecipeEdit recipe={editRecipe} onBack={() => { setScreen('recipes'); refresh(); }} />}
-      {screen === 'picker' && <FoodPicker slot={pickerSlot} date={pickerDate} onBack={() => { setScreen('diary'); refresh(); }} />}
-      {screen === 'vitals' && <VitalsChat onBack={() => setScreen('diary')} />}
-      {screen === 'insights' && <Insights goTo={setScreen} />}
-      {screen === 'settings' && <Settings goTo={setScreen} onRefresh={refresh} />}
+    <div style={{ minHeight: '100vh', maxWidth: 430, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+      {screen === 'home' && <Home key={refreshKey} openPicker={openPicker} goTo={setScreen} />}
+      {screen === 'health' && <Health goTo={setScreen} />}
+      {screen === 'more' && <More goTo={setScreen} onRefresh={refresh} openRecipeEdit={openRecipeEdit} />}
+      {screen === 'recipe_edit' && <RecipeEdit recipe={editRecipe} onBack={() => { setScreen('more'); refresh(); }} />}
+      {screen === 'picker' && <FoodPicker slot={pickerSlot} date={pickerDate} onBack={() => { setScreen('home'); refresh(); }} />}
+      {screen === 'vitals' && <VitalsChat onBack={() => setScreen('home')} />}
 
-      {showNav && (
+      {!isOverlay && (
         <div style={{
           position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)',
-          width: '100%', maxWidth: 480, background: '#0d1117', borderTop: '1px solid rgba(255,255,255,0.08)',
-          display: 'flex', zIndex: 50, padding: '6px 8px 28px',
+          width: '100%', maxWidth: 430,
+          display: 'flex', alignItems: 'center',
+          padding: '6px 10px 30px',
+          background: 'linear-gradient(180deg, rgba(27,33,41,0.8), rgba(27,33,41,0.98))',
+          backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+          borderTop: '1px solid rgba(255,255,255,0.06)',
+          zIndex: 100,
         }}>
-          {[
-            { id: 'diary', label: 'Diary' },
-            { id: 'recipes', label: 'Recipes' },
-            { id: 'vitals', label: 'Vitals' },
-            { id: 'insights', label: 'Insights' },
-            { id: 'settings', label: 'Settings' },
-          ].map(tab => (
-            <button key={tab.id} onClick={() => setScreen(tab.id)}
-              style={{
-                flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                background: 'none', border: 'none', padding: '8px 0',
-                color: screen === tab.id ? '#2dba8e' : '#484f58', fontSize: 10, fontWeight: 600,
-              }}>
-              {NAV_ICONS[tab.id]}
-              {tab.label}
-            </button>
-          ))}
+          <div style={{ display: 'flex', flex: 1 }}>
+            {[
+              { id: 'home', label: 'Home', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> },
+              { id: 'health', label: 'Health', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> },
+              { id: 'more', label: 'More', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg> },
+            ].map(tab => (
+              <button key={tab.id} onClick={() => setScreen(tab.id)}
+                style={{
+                  flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+                  background: 'none', border: 'none', padding: '8px 0',
+                  color: screen === tab.id ? '#e8ecf1' : 'rgba(255,255,255,0.25)',
+                  fontSize: 9, fontWeight: 600, letterSpacing: '0.5px',
+                }}>
+                {tab.icon}
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          {/* FAB - Vitals AI */}
+          <button onClick={() => setScreen('vitals')}
+            style={{
+              width: 54, height: 54, borderRadius: '50%',
+              background: 'radial-gradient(circle at 50% 50%, rgba(30,50,60,0.9), rgba(20,30,40,0.95))',
+              border: '1.5px solid rgba(45,186,142,0.25)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              marginLeft: 6, flexShrink: 0,
+              boxShadow: '0 0 25px rgba(45,186,142,0.12), inset 0 0 15px rgba(45,186,142,0.05)',
+            }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2dba8e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </button>
         </div>
       )}
     </div>

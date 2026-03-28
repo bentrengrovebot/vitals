@@ -45,7 +45,7 @@ export default function VitalsChat({ onBack }) {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#0d1117' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#1b2129' }}>
       <div style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', gap: 12, borderBottom: `1px solid ${brd}` }}>
         <button onClick={onBack} style={{ background: 'none', border: 'none', color: t2, fontSize: 22 }}>←</button>
         <div style={{ width: 36, height: 36, borderRadius: 12, background: 'linear-gradient(135deg,#2dba8e,#1a8a6a)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -92,7 +92,7 @@ export default function VitalsChat({ onBack }) {
 
       <div style={{ padding: '12px 20px 28px', display: 'flex', gap: 8, borderTop: `1px solid ${brd}` }}>
         <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') sendMessage(); }}
-          placeholder="Ask about your health..." style={{ flex: 1, padding: '14px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: '#161b22', fontSize: 15, color: t1 }} />
+          placeholder="Ask about your health..." style={{ flex: 1, padding: '14px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: '#232a33', fontSize: 15, color: t1 }} />
         <button onClick={() => sendMessage()} disabled={loading || !input.trim()}
           style={{ width: 48, height: 48, borderRadius: 14, border: 'none', background: input.trim() ? ac : t3, color: input.trim() ? '#fff' : '#8b949e', fontSize: 18, fontWeight: 700, flexShrink: 0 }}>↑</button>
       </div>

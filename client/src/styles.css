@@ -6,12 +6,25 @@
 }
 
 html, body {
-  font-family: -apple-system, system-ui, 'Segoe UI', sans-serif;
-  background: #0d1117;
-  color: #e6edf3;
+  font-family: -apple-system, system-ui, 'Helvetica Neue', sans-serif;
+  background: #1b2129;
+  color: #e8ecf1;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overscroll-behavior: none;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(ellipse at center, rgba(30,80,70,0.25) 0%, rgba(27,33,41,0) 70%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 input, button, textarea, select {
@@ -28,36 +41,15 @@ a {
   text-decoration: none;
 }
 
-/* Scrollbar — dark */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
+::-webkit-scrollbar { width: 0; height: 0; }
 
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.18);
-}
-
-/* Selection */
 ::selection {
   background: rgba(45, 186, 142, 0.3);
-  color: #e6edf3;
+  color: #e8ecf1;
 }
 
-/* Focus rings for accessibility */
 button:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
+input:focus-visible {
   outline: 2px solid #2dba8e;
   outline-offset: 2px;
 }
