@@ -22,7 +22,7 @@ function fmtDate(k) {
 
 // Shared styles
 const card = { background: '#252a31', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, margin: '0 16px 8px', overflow: 'hidden' };
-const secHeader = { fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: 2, padding: '22px 20px 10px' };
+const secHeader = { fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 2, padding: '22px 20px 10px' };
 
 const SYMPTOM_MAP = {
   reflux: { label: 'Reflux', icon: '🔥', color: '#f07068' },
@@ -134,10 +134,10 @@ export default function Home({ openPicker }) {
           </svg>
           <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
             <div style={{ fontSize: 32, fontWeight: 800, lineHeight: 1, letterSpacing: -0.5, color }}>{value}</div>
-            {unit && <div style={{ fontSize: 9, fontWeight: 600, color: 'rgba(255,255,255,0.4)', marginTop: 1, textTransform: 'uppercase', letterSpacing: 0.5 }}>{unit}</div>}
+            {unit && <div style={{ fontSize: 9, fontWeight: 500, color: 'rgba(255,255,255,0.5)', marginTop: 1, textTransform: 'uppercase', letterSpacing: 0.5 }}>{unit}</div>}
           </div>
         </div>
-        <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(255,255,255,0.45)', marginTop: 8 }}>{label} <span style={{ color: 'rgba(255,255,255,0.2)' }}>›</span></div>
+        <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(255,255,255,0.55)', marginTop: 8 }}>{label} <span style={{ color: 'rgba(255,255,255,0.2)' }}>›</span></div>
       </div>
     );
   };
@@ -168,14 +168,14 @@ export default function Home({ openPicker }) {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <button onClick={() => setCurDate(d => shiftDate(d, -1))} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 20 }}>‹</button>
-          <span style={{ fontSize: 11, fontWeight: 700, color: '#ffffff', textTransform: 'uppercase', letterSpacing: 1.2, padding: '5px 18px', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 20, background: '#252a31' }}>{fmtDate(curDate)}</span>
+          <span style={{ fontSize: 11, fontWeight: 600, color: '#ffffff', textTransform: 'uppercase', letterSpacing: 1.2, padding: '5px 18px', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 20, background: '#252a31' }}>{fmtDate(curDate)}</span>
           <button onClick={() => setCurDate(d => shiftDate(d, 1))} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 20 }}>›</button>
         </div>
         <div style={{ width: 34 }} />
       </div>
 
       {/* Brand */}
-      <div style={{ textAlign: 'center', padding: '8px 0 2px', fontSize: 15, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' }}>Vitals</div>
+      <div style={{ textAlign: 'center', padding: '8px 0 2px', fontSize: 15, fontWeight: 600, letterSpacing: 3, textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' }}>Vitals</div>
 
       {/* Three Rings */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: 6, padding: '16px 12px 4px' }}>
@@ -188,7 +188,7 @@ export default function Home({ openPicker }) {
         <div style={card}>
           <div style={{ padding: '16px 18px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-              <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.12)', padding: '3px 8px', borderRadius: 6 }}>Whoop</span>
+              <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.12)', padding: '3px 8px', borderRadius: 6 }}>Whoop</span>
               <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', fontWeight: 500 }}>Synced</span>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
@@ -220,10 +220,10 @@ export default function Home({ openPicker }) {
             <div style={{ width: 32, height: 32, borderRadius: 8, background: `${m.color}14`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: m.color }} />
             </div>
-            <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.2, color: 'rgba(255,255,255,0.45)', flex: 1 }}>{m.label}</div>
+            <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1.2, color: 'rgba(255,255,255,0.55)', flex: 1 }}>{m.label}</div>
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: -0.5, lineHeight: 1 }}>{m.val}<span style={{ fontSize: 16, color: 'rgba(255,255,255,0.3)' }}>{m.unit}</span></div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', fontWeight: 600, marginTop: 1 }}>{m.sub}</div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 500, marginTop: 1 }}>{m.sub}</div>
             </div>
           </div>
         ))}
@@ -245,7 +245,7 @@ export default function Home({ openPicker }) {
                   <span style={{ fontSize: 20, fontWeight: 800, color: empty ? `${color}50` : color, lineHeight: 1 }}>{empty ? '—' : cal}</span>
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.2, color: 'rgba(255,255,255,0.45)' }}>{slot}</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1.2, color: 'rgba(255,255,255,0.55)' }}>{slot}</div>
                   {empty && isToday && tot.cal > 0 && <div style={{ fontSize: 11, color: '#2dba8e', fontWeight: 500, marginTop: 2 }}>Target: {perMealCal} cal</div>}
                 </div>
                 {!empty && <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: 16 }}>›</span>}
@@ -257,7 +257,7 @@ export default function Home({ openPicker }) {
                     <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderTop: '1px solid #252a31' }}>
                       <span style={{ fontSize: 14, color: '#ffffff', fontWeight: 500 }}>{item.name}</span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', fontWeight: 600 }}>{item.calories} cal</span>
+                        <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', fontWeight: 500 }}>{item.calories} cal</span>
                         <button onClick={() => setDel({ label: item.name, action: () => deleteEntry(item.id) })} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.2)', fontSize: 16 }}>×</button>
                       </div>
                     </div>
@@ -266,13 +266,13 @@ export default function Home({ openPicker }) {
               )}
               {/* Add button for empty slots */}
               {empty && (
-                <button onClick={() => openPicker(slot, curDate)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '12px 18px', borderTop: '1px solid #252a31', color: 'rgba(255,255,255,0.25)', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, width: '100%', background: 'none', border: 'none', borderTop: '1px solid #252a31' }}>
+                <button onClick={() => openPicker(slot, curDate)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '12px 18px', borderTop: '1px solid #252a31', color: 'rgba(255,255,255,0.35)', fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, width: '100%', background: 'none', border: 'none', borderTop: '1px solid #252a31' }}>
                   + Add Food
                 </button>
               )}
               {/* Add more button for filled slots */}
               {!empty && (
-                <button onClick={() => openPicker(slot, curDate)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px 18px', color: 'rgba(255,255,255,0.2)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, width: '100%', background: 'none', border: 'none', borderTop: '1px solid #252a31' }}>
+                <button onClick={() => openPicker(slot, curDate)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px 18px', color: 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, width: '100%', background: 'none', border: 'none', borderTop: '1px solid #252a31' }}>
                   + Add More
                 </button>
               )}
@@ -285,7 +285,7 @@ export default function Home({ openPicker }) {
       <div style={card}>
         <div style={{ padding: '16px 18px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.35)' }}>My Journal</span>
+            <span style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.5)' }}>My Journal</span>
             <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: 16 }}>›</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-around', padding: '4px 0' }}>
@@ -306,7 +306,7 @@ export default function Home({ openPicker }) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5b9ef0" strokeWidth="2.5" strokeLinecap="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" /></svg>
-                <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.35)' }}>Water</span>
+                <span style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.5)' }}>Water</span>
               </div>
               <span style={{ fontSize: 18, fontWeight: 800, color: '#5b9ef0' }}>{r1(totalWater / 1000)}<span style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', fontWeight: 500 }}>/ {r1(goals.waterMl / 1000)}L</span></span>
             </div>
@@ -329,7 +329,7 @@ export default function Home({ openPicker }) {
         <div style={card}>
           <div style={{ padding: '16px 18px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
-              <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.35)' }}>Supplements</span>
+              <span style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.5)' }}>Supplements</span>
               <span style={{ fontSize: 12, fontWeight: 700, color: '#2dba8e' }}>{suppLogs.length}/{supplements.length}</span>
             </div>
             {supplements.map(sup => {
@@ -355,7 +355,7 @@ export default function Home({ openPicker }) {
       {daySymptoms.length > 0 && (
         <div style={card}>
           <div style={{ padding: '16px 18px' }}>
-            <div style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.35)', marginBottom: 12 }}>Symptoms Today</div>
+            <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.5)', marginBottom: 12 }}>Symptoms Today</div>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               {daySymptoms.map(s => {
                 const st = SYMPTOM_MAP[s.type];
