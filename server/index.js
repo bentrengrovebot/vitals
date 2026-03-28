@@ -58,6 +58,9 @@ app.use('/api/supplements', supplementRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/data', dataRoutes);
 
+// Serve prototype and static files from root
+app.use(express.static(path.join(__dirname, '..')));
+
 // Serve frontend in production
 if (process.env.NODE_ENV === 'production') {
   const clientDist = path.join(__dirname, '..', 'client', 'dist');
