@@ -123,21 +123,21 @@ export default function Home({ openPicker }) {
 
   // Ring component
   const Ring = ({ pct, color, value, unit, label }) => {
-    const circ = 2 * Math.PI * 48;
+    const circ = 2 * Math.PI * 44;
     const dash = (pct / 100) * circ;
     return (
       <div style={{ textAlign: 'center', flex: 1, maxWidth: 130 }}>
         <div style={{ position: 'relative', width: 110, height: 110, margin: '0 auto' }}>
-          <svg viewBox="0 0 120 120" width="110" height="110" style={{ filter: `drop-shadow(0 0 8px ${color}40)` }}>
-            <circle cx="60" cy="60" r="48" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="9" />
-            <circle cx="60" cy="60" r="48" fill="none" stroke={color} strokeWidth="9" strokeDasharray={`${dash} ${circ}`} strokeLinecap="round" transform="rotate(-90 60 60)" />
+          <svg viewBox="0 0 120 120" width="110" height="110">
+            <circle cx="60" cy="60" r="44" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="6" />
+            <circle cx="60" cy="60" r="44" fill="none" stroke={color} strokeWidth="6" strokeDasharray={`${dash} ${circ}`} strokeLinecap="round" transform="rotate(-90 60 60)" />
           </svg>
           <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ fontSize: 32, fontWeight: 700, lineHeight: 1, letterSpacing: -0.5, color }}>{value}</div>
-            {unit && <div style={{ fontSize: 9, fontWeight: 500, color: 'rgba(255,255,255,0.65)', marginTop: 1, textTransform: 'uppercase', letterSpacing: 0.5 }}>{unit}</div>}
+            <div style={{ fontSize: 30, fontWeight: 600, lineHeight: 1, letterSpacing: -0.5, color }}>{value}</div>
+            {unit && <div style={{ fontSize: 9, fontWeight: 400, color: 'rgba(255,255,255,0.5)', marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>{unit}</div>}
           </div>
         </div>
-        <div style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(255,255,255,0.7)', marginTop: 8 }}>{label} <span style={{ color: 'rgba(255,255,255,0.35)' }}>›</span></div>
+        <div style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(255,255,255,0.5)', marginTop: 8 }}>{label} <span style={{ color: 'rgba(255,255,255,0.25)' }}>›</span></div>
       </div>
     );
   };
