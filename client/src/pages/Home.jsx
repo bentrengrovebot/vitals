@@ -3,7 +3,7 @@ import { api } from '../api';
 
 const SLOTS = ['Breakfast', 'Lunch', 'Dinner', 'Snacks'];
 const SLOT_COLORS = { Breakfast: '#e0a526', Lunch: '#5b9ef0', Dinner: '#8b5ef6', Snacks: '#2dba8e' };
-const SLOT_ICONS = { Breakfast: '🌅', Lunch: '☀️', Dinner: '🌙', Snacks: '🍫' };
+const SLOT_ICONS = { Breakfast: null, Lunch: null, Dinner: null, Snacks: null };
 const r1 = n => Math.round(n * 10) / 10;
 
 function dateKey(d = new Date()) {
@@ -242,7 +242,6 @@ export default function Home({ openPicker }) {
             <div key={slot}>
               <div style={{ display: 'flex', alignItems: 'center', padding: '14px 18px', gap: 12, borderTop: i > 0 ? '1px solid #252a31' : 'none' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '7px 14px', borderRadius: 10, background: `${color}14`, borderLeft: `3px solid ${color}` }}>
-                  <span style={{ fontSize: 15 }}>{SLOT_ICONS[slot]}</span>
                   <span style={{ fontSize: 20, fontWeight: 800, color: empty ? `${color}50` : color, lineHeight: 1 }}>{empty ? '—' : cal}</span>
                 </div>
                 <div style={{ flex: 1 }}>
