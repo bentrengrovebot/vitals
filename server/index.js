@@ -20,6 +20,7 @@ import bloodsRoutes from './routes/bloods.js';
 import weeklyRoutes from './routes/weekly.js';
 import cronRoutes from './routes/cron.js';
 import whoopRoutes from './routes/whoop.js';
+import seedRoutes from './routes/seed.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -62,6 +63,7 @@ app.use('/api/supplements', supplementRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/data', dataRoutes);
 app.use('/api/bloods', bloodsRoutes);
+app.use('/api/seed', seedRoutes);
 app.use('/api/weekly', weeklyRoutes);
 app.use('/api/cron', cronRoutes);
 app.use('/api/whoop', whoopRoutes);
