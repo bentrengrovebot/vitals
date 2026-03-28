@@ -44,6 +44,7 @@ export default function Home({ openPicker }) {
   const [supplements, setSupplements] = useState([]);
   const [suppLogs, setSuppLogs] = useState([]);
   const [symptoms, setSymptoms] = useState([]);
+  const [whoop, setWhoop] = useState(null);
   const [del, setDel] = useState(null);
 
   const isToday = curDate === dateKey();
@@ -60,6 +61,7 @@ export default function Home({ openPicker }) {
         api.getWater(curDate), api.getSupplements(), api.getSupplementLogs(curDate),
       ]);
       setWaterLogs(w); setSupplements(s.filter(x => x.isActive)); setSuppLogs(sl);
+      api.getWhoopDaily(curDate).then(setWhoop).catch(() => setWhoop(null));
     }
   }
 
@@ -181,6 +183,29 @@ export default function Home({ openPicker }) {
         <Ring pct={protPct} color="#e0a526" value={`${protPct}%`} label="Protein" />
         <Ring pct={waterPct} color="#2dba8e" value={r1(totalWater / 1000)} unit="litres" label="Water" />
       </div>
+
+      {whoop && (
+        <div style={card}>
+          <div style={{ padding: '16px 18px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+              <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.12)', padding: '3px 8px', borderRadius: 6 }}>Whoop</span>
+              <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', fontWeight: 500 }}>Synced</span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+              {[
+                { label: 'Sleep', value: whoop.sleepPerformance ? `${Math.round(whoop.sleepPerformance)}%` : '—', color: '#5b9ef0' },
+                { label: 'Recovery', value: whoop.recoveryScore ? `${whoop.recoveryScore}%` : '—', color: '#e0a526' },
+                { label: 'Strain', value: whoop.strain ? whoop.strain.toFixed(1) : '—', color: '#2dba8e' },
+              ].map(m => (
+                <div key={m.label} style={{ textAlign: 'center', padding: '10px 4px', background: 'rgba(255,255,255,0.03)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.04)' }}>
+                  <div style={{ fontSize: 22, fontWeight: 800, lineHeight: 1, color: m.color }}>{m.value}</div>
+                  <div style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>{m.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Dashboard */}
       <div style={secHeader}>Dashboard</div>

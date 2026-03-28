@@ -72,7 +72,27 @@ export const api = {
   estimate: (name, grams) => request('/ai/estimate', { method: 'POST', body: JSON.stringify({ name, grams }) }),
   getInsights: () => request('/ai/insights'),
 
+  // Bloods & Biomarkers
+  getBloods: () => request('/bloods'),
+  getBloodTest: (id) => request(`/bloods/${id}`),
+  createBloodTest: (data) => request('/bloods', { method: 'POST', body: JSON.stringify(data) }),
+  deleteBloodTest: (id) => request(`/bloods/${id}`, { method: 'DELETE' }),
+  extractBloodPdf: (content) => request('/bloods/extract', { method: 'POST', body: JSON.stringify({ content }) }),
+  getMarkerHistory: (name) => request(`/bloods/marker/${name}`),
+
+  // Weekly
+  runWeeklyCheckin: () => request('/weekly/run', { method: 'POST' }),
+  getLatestWeekly: () => request('/weekly/latest'),
+  getWeeklyHistory: () => request('/weekly/history'),
+  acceptWeeklyTargets: (id) => request(`/weekly/${id}/accept`, { method: 'POST' }),
+
   // Data
   clearAll: () => request('/data/all', { method: 'DELETE' }),
   exportData: () => request('/data/export'),
+
+  // Whoop
+  getWhoopStatus: () => request('/whoop/status'),
+  syncWhoop: () => request('/whoop/sync', { method: 'POST' }),
+  getWhoopDaily: (date) => request(`/whoop/daily/${date}`),
+  disconnectWhoop: () => request('/whoop/disconnect', { method: 'POST' }),
 };

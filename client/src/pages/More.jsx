@@ -28,15 +28,16 @@ export default function More({ goTo, onRefresh, openRecipeEdit }) {
   const [wiVal, setWiVal] = useState('');
   const [suppForm, setSuppForm] = useState({ name: '', ingredient: '', dose: '' });
   const [addingSupp, setAddingSupp] = useState(false);
+  const [whoopStatus, setWhoopStatus] = useState(null);
   const [confirmClear, setConfirmClear] = useState(false);
   const [saved, setSaved] = useState('');
 
   useEffect(() => {
-    Promise.all([api.getProfile(), api.getGoals(), api.getSupplements(), api.getRecipes(), api.getWeighIns(30)])
-      .then(([p, g, s, r, w]) => {
+    Promise.all([api.getProfile(), api.getGoals(), api.getSupplements(), api.getRecipes(), api.getWeighIns(30), api.getWhoopStatus().catch(() => null)])
+      .then(([p, g, s, r, w, wh]) => {
         if (p) setProfile({ name: p.name || '', dob: p.dob ? p.dob.split('T')[0] : '', sex: p.sex || 'Male', heightCm: p.heightCm || '', weightKg: p.weightKg || '', weightGoalKg: p.weightGoalKg || '' });
         if (g) setGoals({ calories: g.calories, proteinG: g.proteinG, fatG: g.fatG, carbsG: g.carbsG, waterMl: g.waterMl || 2500 });
-        setSupplements(s); setRecipes(r); setWeighIns(w);
+        setSupplements(s); setRecipes(r); setWeighIns(w); setWhoopStatus(wh);
       });
   }, []);
 
@@ -76,6 +77,8 @@ export default function More({ goTo, onRefresh, openRecipeEdit }) {
         {menuItem('Recipes', `${recipes.length} recipes`, () => setSection('recipes'))}
         {menuItem('Supplements', `${supplements.filter(s => s.isActive).length} active`, () => setSection('supps'))}
         {menuItem('Log Weight', weighIns.length > 0 ? `${weighIns[0].weightKg}kg` : 'No weigh-ins', () => setSection('weight'))}
+        {menuItem('Whoop', whoopStatus?.connected ? 'Connected' : 'Not connected', () => setSection('whoop'))}
+        {menuItem('Blood Work', 'Lab results & biomarkers', () => setSection('bloods'))}
       </div>
 
       <div style={{ ...card, marginTop: 8 }}>
@@ -89,7 +92,7 @@ export default function More({ goTo, onRefresh, openRecipeEdit }) {
     <div style={{ paddingBottom: 92 }}>
       <div style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', gap: 12 }}>
         {backBtn}
-        <div style={{ fontSize: 18, fontWeight: 800, color: t1, letterSpacing: -0.3, flex: 1 }}>{section === 'profile' ? 'Profile' : section === 'goals' ? 'Goals' : section === 'recipes' ? 'Recipes' : section === 'supps' ? 'Supplements' : section === 'weight' ? 'Log Weight' : 'Data'}</div>
+        <div style={{ fontSize: 18, fontWeight: 800, color: t1, letterSpacing: -0.3, flex: 1 }}>{section === 'profile' ? 'Profile' : section === 'goals' ? 'Goals' : section === 'recipes' ? 'Recipes' : section === 'supps' ? 'Supplements' : section === 'weight' ? 'Log Weight' : section === 'whoop' ? 'Whoop' : section === 'bloods' ? 'Blood Work' : 'Data'}</div>
       </div>
 
       {saved && <div style={{ margin: '0 16px 12px', padding: '10px 16px', borderRadius: 12, background: 'rgba(45,186,142,0.12)', color: ac, fontSize: 14, fontWeight: 600 }}>{saved}</div>}
@@ -202,6 +205,38 @@ export default function More({ goTo, onRefresh, openRecipeEdit }) {
                 <button onClick={async () => { await api.deleteWeighIn(w.id); setWeighIns(await api.getWeighIns(30)); }} style={{ background: 'none', border: 'none', color: t3, fontSize: 16 }}>×</button>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Whoop */}
+        {section === 'whoop' && (
+          <div>
+            {whoopStatus?.connected ? (
+              <div>
+                <div style={{ background: '#252a31', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: 18, marginBottom: 12 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#ffffff', marginBottom: 4 }}>Whoop Connected</div>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)' }}>Token expires: {whoopStatus.expiresAt ? new Date(whoopStatus.expiresAt).toLocaleDateString('en-NZ') : 'Unknown'}</div>
+                </div>
+                <button onClick={async () => { await api.syncWhoop(); alert('Whoop data synced!'); }}
+                  style={{ width: '100%', padding: 14, borderRadius: 12, border: 'none', background: '#2dba8e', color: '#fff', fontSize: 14, fontWeight: 700, marginBottom: 8 }}>Sync Now</button>
+                <button onClick={async () => { await api.disconnectWhoop(); setWhoopStatus({ connected: false }); }}
+                  style={{ width: '100%', padding: 14, borderRadius: 12, border: '1px solid rgba(248,81,73,0.2)', background: 'rgba(248,81,73,0.06)', color: '#f85149', fontSize: 14, fontWeight: 600 }}>Disconnect Whoop</button>
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', marginBottom: 16 }}>Connect your Whoop to sync sleep, recovery, and strain data.</div>
+                <a href="/api/whoop/auth" style={{ display: 'block', width: '100%', padding: 14, borderRadius: 12, background: '#2dba8e', color: '#fff', fontSize: 14, fontWeight: 700, textAlign: 'center', textDecoration: 'none' }}>Connect Whoop</a>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Blood Work */}
+        {section === 'bloods' && (
+          <div>
+            <button onClick={() => { /* TODO: open blood test entry */ }}
+              style={{ width: '100%', padding: 14, borderRadius: 12, border: '1px solid rgba(45,186,142,0.2)', background: 'rgba(45,186,142,0.06)', color: '#2dba8e', fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>+ Add Blood Test</button>
+            <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 14, padding: 20, textAlign: 'center' }}>Blood work management coming soon. View results in the Health tab.</div>
           </div>
         )}
 

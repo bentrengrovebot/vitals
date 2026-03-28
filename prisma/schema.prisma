@@ -159,3 +159,60 @@ model AiInsight {
   response     String   @db.Text
   dataSources  Json?
 }
+
+model BloodTest {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime @db.Date
+  source    String   @default("manual")
+  markers   Json
+  createdAt DateTime @default(now())
+}
+
+model WhoopToken {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  accessToken   String
+  refreshToken  String
+  expiresAt     DateTime
+  scopes        String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model WhoopDaily {
+  id                  String   @id @default(cuid())
+  userId              String
+  date                DateTime @db.Date
+  sleepDurationMins   Int?
+  sleepPerformance    Float?
+  sleepEfficiency     Float?
+  recoveryScore       Int?
+  hrv                 Float?
+  restingHr           Int?
+  strain              Float?
+  calories            Float?
+  sportName           String?
+  workoutStrain       Float?
+  workoutCalories     Float?
+  workoutDurationMins Int?
+  rawData             Json?
+  createdAt           DateTime @default(now())
+  @@unique([userId, date])
+}
+
+model WeeklyCheckin {
+  id               String   @id @default(cuid())
+  userId           String
+  weekStart        DateTime @db.Date
+  weekEnd          DateTime @db.Date
+  avgCalories      Float?
+  avgProtein       Float?
+  weightChangeKg   Float?
+  estimatedTdee    Float?
+  aiSummary        String?  @db.Text
+  recommendations  String?  @db.Text
+  targetAdjustment Json?
+  accepted         Boolean  @default(false)
+  createdAt        DateTime @default(now())
+}

@@ -21,10 +21,12 @@ export default function Health() {
   const [profile, setProfile] = useState({});
   const [days, setDays] = useState(7);
   const [loading, setLoading] = useState(false);
+  const [weekly, setWeekly] = useState([]);
+  const [bloods, setBloods] = useState([]);
 
   useEffect(() => {
-    Promise.all([api.getWeighIns(30), api.getInsights(), api.getProfile()])
-      .then(([w, i, p]) => { setWeighIns(w); setInsights(i); if (p) setProfile(p); });
+    Promise.all([api.getWeighIns(30), api.getInsights(), api.getProfile(), api.getWeeklyHistory(), api.getBloods()])
+      .then(([w, i, p, wk, bl]) => { setWeighIns(w); setInsights(i); if (p) setProfile(p); setWeekly(wk); setBloods(bl); });
   }, []);
 
   async function runAnalysis() {
@@ -143,6 +145,64 @@ export default function Health() {
           </div>
         </div>
       ))}
+
+      {/* Weekly Check-ins */}
+      <div style={secHeader}>WEEKLY CHECK-INS</div>
+      <div style={card}>
+        <div style={{ padding: '16px 18px' }}>
+          <button onClick={async () => { const r = await api.runWeeklyCheckin(); setWeekly(prev => [r, ...prev]); }}
+            style={{ width: '100%', padding: 14, borderRadius: 12, border: 'none', background: '#e0a526', color: '#191d21', fontSize: 14, fontWeight: 700 }}>
+            Run Weekly Check-in
+          </button>
+        </div>
+      </div>
+      {weekly.map(w => (
+        <div key={w.id} style={card}>
+          <div style={{ padding: '16px 18px' }}>
+            <div style={{ fontSize: 10, color: t2, marginBottom: 8, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>
+              Week of {new Date(w.weekStart).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short' })}
+            </div>
+            {w.estimatedTdee && <div style={{ fontSize: 13, color: t1, marginBottom: 4 }}>Estimated TDEE: <strong>{Math.round(w.estimatedTdee)}</strong> cal</div>}
+            <div style={{ fontSize: 14, lineHeight: 1.7, color: t1, whiteSpace: 'pre-wrap', marginTop: 8 }}>{w.aiSummary}</div>
+            {w.targetAdjustment && !w.accepted && (
+              <div style={{ marginTop: 12, padding: '12px 14px', borderRadius: 10, background: 'rgba(224,165,38,0.08)', border: '1px solid rgba(224,165,38,0.15)' }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#e0a526', marginBottom: 4 }}>Suggested Adjustment</div>
+                <div style={{ fontSize: 13, color: t1 }}>{w.targetAdjustment.reason || JSON.stringify(w.targetAdjustment)}</div>
+                <button onClick={async () => { await api.acceptWeeklyTargets(w.id); setWeekly(prev => prev.map(x => x.id === w.id ? { ...x, accepted: true } : x)); }}
+                  style={{ marginTop: 8, padding: '10px 16px', borderRadius: 10, border: 'none', background: ac, color: '#fff', fontSize: 13, fontWeight: 700 }}>Accept</button>
+              </div>
+            )}
+            {w.accepted && <div style={{ marginTop: 8, fontSize: 12, color: ac, fontWeight: 600 }}>✓ Targets accepted</div>}
+          </div>
+        </div>
+      ))}
+
+      {/* Blood Work */}
+      <div style={secHeader}>BLOOD WORK</div>
+      {bloods.length > 0 ? bloods.map(b => (
+        <div key={b.id} style={card}>
+          <div style={{ padding: '16px 18px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <span style={{ fontSize: 10, color: t2, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>
+                {new Date(b.date).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' })}
+              </span>
+              <span style={{ fontSize: 10, color: t3, fontWeight: 600, textTransform: 'uppercase' }}>{b.source}</span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
+              {Object.entries(b.markers || {}).slice(0, 9).map(([key, m]) => (
+                <div key={key} style={{ padding: '8px', borderRadius: 8, background: 'rgba(255,255,255,0.03)', textAlign: 'center' }}>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: m.status === 'normal' ? ac : m.status === 'low' ? '#e0a526' : '#f85149' }}>{m.value}</div>
+                  <div style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: t2, marginTop: 2 }}>{key.replace(/_/g, ' ')}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )) : (
+        <div style={{ ...card, padding: '24px 18px', textAlign: 'center' }}>
+          <div style={{ fontSize: 13, color: t2 }}>No blood tests yet</div>
+        </div>
+      )}
 
       <div style={{ height: 20 }} />
     </div>
