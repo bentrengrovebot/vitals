@@ -26,12 +26,12 @@ export default function ResetPassword() {
     setLoading(false);
   };
 
-  const inp = { width: '100%', padding: '14px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: '#232a33', fontSize: 15, marginTop: 4, color: '#e6edf3' };
+  const inp = { width: '100%', padding: '14px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: '#232a33', fontSize: 15, marginTop: 4, color: '#ffffff' };
 
   if (!token) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, background: '#191d21' }}>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8, color: '#e6edf3' }}>Invalid reset link</div>
+        <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8, color: '#ffffff' }}>Invalid reset link</div>
         <Link to="/forgot-password" style={{ fontSize: 14, color: '#58a6ff', textDecoration: 'none' }}>Request a new one</Link>
       </div>
     </div>
@@ -41,11 +41,11 @@ export default function ResetPassword() {
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, background: '#191d21' }}>
       <div style={{ width: '100%', maxWidth: 380, background: 'rgba(255,255,255,0.05)', borderRadius: 16, padding: 32 }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-1px', color: '#e6edf3' }}>Vitals</div>
+          <div style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-1px', color: '#ffffff' }}>Vitals</div>
         </div>
         {success ? (
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8, color: '#e6edf3' }}>Password updated</div>
+            <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8, color: '#ffffff' }}>Password updated</div>
             <Link to="/login" style={{ fontSize: 14, color: '#58a6ff', textDecoration: 'none' }}>Log in</Link>
           </div>
         ) : (

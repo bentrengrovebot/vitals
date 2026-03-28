@@ -36,7 +36,7 @@ export default function VitalsChat({ onBack }) {
     setLoading(false);
   }
 
-  const t1 = '#e6edf3', t2 = '#8b949e', t3 = '#484f58', ac = '#2dba8e', brd = 'rgba(255,255,255,0.08)';
+  const t1 = '#ffffff', t2 = '#8b949e', t3 = '#484f58', ac = '#2dba8e', brd = 'rgba(255,255,255,0.08)';
   const cardBg = 'rgba(255,255,255,0.05)';
 
   const pill = {

@@ -62,7 +62,7 @@ export default function Shell() {
                     flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
                     background: active ? 'rgba(255,255,255,0.08)' : 'transparent',
                     border: 'none', padding: '10px 0', borderRadius: 12,
-                    color: active ? '#e2e4e9' : 'rgba(255,255,255,0.25)',
+                    color: active ? '#ffffff' : 'rgba(255,255,255,0.25)',
                     fontSize: 9, fontWeight: 600, letterSpacing: '0.5px',
                     boxShadow: active ? '0 0 12px rgba(255,255,255,0.04)' : 'none',
                     transition: 'all 0.2s ease',

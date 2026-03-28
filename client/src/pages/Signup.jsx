@@ -26,13 +26,13 @@ export default function Signup() {
     setLoading(false);
   };
 
-  const inp = { width: '100%', padding: '14px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: '#232a33', fontSize: 15, marginTop: 4, color: '#e6edf3' };
+  const inp = { width: '100%', padding: '14px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: '#232a33', fontSize: 15, marginTop: 4, color: '#ffffff' };
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, background: '#191d21' }}>
       <div style={{ width: '100%', maxWidth: 380, background: 'rgba(255,255,255,0.05)', borderRadius: 16, padding: 32 }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-1px', color: '#e6edf3' }}>Vitals</div>
+          <div style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-1px', color: '#ffffff' }}>Vitals</div>
         </div>
         <form onSubmit={handleSubmit}>
           {error && <div style={{ padding: '12px 16px', borderRadius: 12, background: 'rgba(248,81,73,0.1)', border: '1px solid rgba(248,81,73,0.2)', color: '#f85149', fontSize: 14, marginBottom: 16 }}>{error}</div>}

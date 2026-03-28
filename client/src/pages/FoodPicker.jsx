@@ -57,7 +57,7 @@ export default function FoodPicker({ slot, date, onBack }) {
     background: active ? 'rgba(45,186,142,0.15)' : 'rgba(255,255,255,0.05)',
     color: active ? '#2dba8e' : '#8b949e',
   });
-  const inp = { width: '100%', padding: '14px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: '#232a33', fontSize: 15, boxSizing: 'border-box', color: '#e6edf3' };
+  const inp = { width: '100%', padding: '14px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: '#232a33', fontSize: 15, boxSizing: 'border-box', color: '#ffffff' };
   const t2 = '#8b949e', t3 = '#484f58', ac = '#2dba8e', brd = 'rgba(255,255,255,0.08)';
 
   const filterItems = (items, getName) => {
@@ -69,7 +69,7 @@ export default function FoodPicker({ slot, date, onBack }) {
     <div style={{ paddingBottom: 20, background: '#191d21', minHeight: '100vh' }}>
       <div style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', gap: 12 }}>
         <button onClick={onBack} style={{ background: 'none', border: 'none', color: t2, fontSize: 22 }}>←</button>
-        <div style={{ fontSize: 17, fontWeight: 700, flex: 1, color: '#e6edf3' }}>Add to {slot}</div>
+        <div style={{ fontSize: 17, fontWeight: 700, flex: 1, color: '#ffffff' }}>Add to {slot}</div>
       </div>
       <div style={{ padding: '0 20px' }}>
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search..." style={{ ...inp, marginBottom: 14 }} autoFocus />
@@ -86,7 +86,7 @@ export default function FoodPicker({ slot, date, onBack }) {
               return (
                 <div key={r.id} style={{ display: 'flex', alignItems: 'center', padding: '14px 0', borderBottom: `1px solid ${brd}` }}>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: '#e6edf3' }}>{r.name}</div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: '#ffffff' }}>{r.name}</div>
                     <div style={{ fontSize: 12, color: t2, marginTop: 2 }}>{ps.cal} cal · {ps.protein}g P · {ps.fat}g F · {ps.carbs}g C</div>
                   </div>
                   <button onClick={() => addItem({ name: r.name, cal: ps.cal, protein: ps.protein, fat: ps.fat, carbs: ps.carbs, portion: `1/${r.servings} serve` })}
@@ -107,7 +107,7 @@ export default function FoodPicker({ slot, date, onBack }) {
             {filterItems(recent, r => r.name).map((item, idx) => (
               <div key={idx} style={{ display: 'flex', alignItems: 'center', padding: '14px 0', borderBottom: `1px solid ${brd}` }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: '#e6edf3' }}>{item.name}</div>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: '#ffffff' }}>{item.name}</div>
                   <div style={{ fontSize: 12, color: t2 }}>{item.calories} cal · {item.proteinG}g P</div>
                 </div>
                 <button onClick={() => addItem({ name: item.name, cal: item.calories, protein: item.proteinG, fat: item.fatG, carbs: item.carbsG, portion: item.portion })}

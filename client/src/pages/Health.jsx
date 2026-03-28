@@ -4,7 +4,7 @@ import { api } from '../api';
 const r1 = n => Math.round(n * 10) / 10;
 const card = { background: '#252a31', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, margin: '0 16px 8px', overflow: 'hidden' };
 const secHeader = { fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: 2, padding: '22px 20px 10px' };
-const t1 = '#e2e4e9', t2 = 'rgba(255,255,255,0.45)', t3 = 'rgba(255,255,255,0.2)', ac = '#2dba8e';
+const t1 = '#ffffff', t2 = 'rgba(255,255,255,0.45)', t3 = 'rgba(255,255,255,0.2)', ac = '#2dba8e';
 
 function fmtDate(k) {
   if (!k) return '';
