@@ -10,6 +10,7 @@ html, body {
   background: #191d21;
   color: #ffffff;
   font-weight: 400;
+  -webkit-text-stroke: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overscroll-behavior: none;
