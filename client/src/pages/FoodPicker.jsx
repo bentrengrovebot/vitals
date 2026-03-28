@@ -53,12 +53,12 @@ export default function FoodPicker({ slot, date, onBack }) {
 
   const pill = (active) => ({
     padding: '7px 16px', borderRadius: 20, fontSize: 13, fontWeight: 600,
-    border: active ? 'none' : '1.5px solid #eaeaef',
-    background: active ? '#3b82f6' : '#fff',
-    color: active ? '#fff' : '#6b7280',
+    border: active ? '1px solid #2dba8e' : '1px solid rgba(255,255,255,0.1)',
+    background: active ? 'rgba(45,186,142,0.15)' : 'rgba(255,255,255,0.05)',
+    color: active ? '#2dba8e' : '#8b949e',
   });
-  const inp = { width: '100%', padding: '14px 16px', borderRadius: 12, border: '1.5px solid #eaeaef', background: '#fff', fontSize: 15, boxSizing: 'border-box' };
-  const t2 = '#6b7280', t3 = '#9ca3af', ac = '#3b82f6', brd = '#eaeaef';
+  const inp = { width: '100%', padding: '14px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: '#161b22', fontSize: 15, boxSizing: 'border-box', color: '#e6edf3' };
+  const t2 = '#8b949e', t3 = '#484f58', ac = '#2dba8e', brd = 'rgba(255,255,255,0.08)';
 
   const filterItems = (items, getName) => {
     if (!search) return items;
@@ -66,10 +66,10 @@ export default function FoodPicker({ slot, date, onBack }) {
   };
 
   return (
-    <div style={{ paddingBottom: 20, background: '#fff', minHeight: '100vh' }}>
+    <div style={{ paddingBottom: 20, background: '#0d1117', minHeight: '100vh' }}>
       <div style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', gap: 12 }}>
         <button onClick={onBack} style={{ background: 'none', border: 'none', color: t2, fontSize: 22 }}>←</button>
-        <div style={{ fontSize: 17, fontWeight: 700, flex: 1 }}>Add to {slot}</div>
+        <div style={{ fontSize: 17, fontWeight: 700, flex: 1, color: '#e6edf3' }}>Add to {slot}</div>
       </div>
       <div style={{ padding: '0 20px' }}>
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search..." style={{ ...inp, marginBottom: 14 }} autoFocus />
@@ -86,11 +86,11 @@ export default function FoodPicker({ slot, date, onBack }) {
               return (
                 <div key={r.id} style={{ display: 'flex', alignItems: 'center', padding: '14px 0', borderBottom: `1px solid ${brd}` }}>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 15, fontWeight: 600 }}>{r.name}</div>
-                    <div style={{ fontSize: 12, color: t3, marginTop: 2 }}>{ps.cal} cal · {ps.protein}g P · {ps.fat}g F · {ps.carbs}g C</div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: '#e6edf3' }}>{r.name}</div>
+                    <div style={{ fontSize: 12, color: t2, marginTop: 2 }}>{ps.cal} cal · {ps.protein}g P · {ps.fat}g F · {ps.carbs}g C</div>
                   </div>
                   <button onClick={() => addItem({ name: r.name, cal: ps.cal, protein: ps.protein, fat: ps.fat, carbs: ps.carbs, portion: `1/${r.servings} serve` })}
-                    style={{ width: 36, height: 36, borderRadius: 12, background: ac + '10', border: 'none', color: ac, fontSize: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+                    style={{ width: 36, height: 36, borderRadius: 12, background: 'rgba(45,186,142,0.15)', border: 'none', color: ac, fontSize: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
                 </div>
               );
             })}
@@ -107,11 +107,11 @@ export default function FoodPicker({ slot, date, onBack }) {
             {filterItems(recent, r => r.name).map((item, idx) => (
               <div key={idx} style={{ display: 'flex', alignItems: 'center', padding: '14px 0', borderBottom: `1px solid ${brd}` }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 15, fontWeight: 600 }}>{item.name}</div>
-                  <div style={{ fontSize: 12, color: t3 }}>{item.calories} cal · {item.proteinG}g P</div>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: '#e6edf3' }}>{item.name}</div>
+                  <div style={{ fontSize: 12, color: t2 }}>{item.calories} cal · {item.proteinG}g P</div>
                 </div>
                 <button onClick={() => addItem({ name: item.name, cal: item.calories, protein: item.proteinG, fat: item.fatG, carbs: item.carbsG, portion: item.portion })}
-                  style={{ width: 36, height: 36, borderRadius: 12, background: ac + '10', border: 'none', color: ac, fontSize: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+                  style={{ width: 36, height: 36, borderRadius: 12, background: 'rgba(45,186,142,0.15)', border: 'none', color: ac, fontSize: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
               </div>
             ))}
             {!recent.length && <div style={{ color: t3, fontSize: 14, padding: 24, textAlign: 'center' }}>No recent entries.</div>}

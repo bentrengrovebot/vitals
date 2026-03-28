@@ -166,8 +166,8 @@ export default function Diary({ openPicker, goTo }) {
     loadWeekData(goals);
   }
 
-  const card = { background: '#fff', borderRadius: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.05)', overflow: 'hidden' };
-  const ac = '#3b82f6', gn = '#22c55e', or = '#f59e0b', rd = '#ef4444', t1 = '#111827', t2 = '#6b7280', t3 = '#9ca3af', brd = '#eaeaef';
+  const card = { background: 'rgba(255,255,255,0.05)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.08)', overflow: 'hidden' };
+  const ac = '#2dba8e', gn = '#2dba8e', or = '#e0a526', rd = '#f85149', t1 = '#e6edf3', t2 = '#8b949e', t3 = '#484f58', brd = 'rgba(255,255,255,0.08)';
 
   // Day symptoms
   const daySymptoms = symptoms.filter(s => s.timestamp?.split('T')[0] === curDate);
@@ -191,7 +191,7 @@ export default function Diary({ openPicker, goTo }) {
             <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 6 }}>Delete?</div>
             <div style={{ fontSize: 14, color: t2, marginBottom: 20 }}>{del.label}</div>
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => setDel(null)} style={{ flex: 1, padding: 12, borderRadius: 12, border: `1px solid ${brd}`, background: '#fff', color: t1, fontSize: 14, fontWeight: 600 }}>Cancel</button>
+              <button onClick={() => setDel(null)} style={{ flex: 1, padding: 12, borderRadius: 12, border: `1px solid ${brd}`, background: 'rgba(255,255,255,0.05)', color: t1, fontSize: 14, fontWeight: 600 }}>Cancel</button>
               <button onClick={del.action} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: rd, color: '#fff', fontSize: 14, fontWeight: 600 }}>Delete</button>
             </div>
           </div>
@@ -217,9 +217,9 @@ export default function Diary({ openPicker, goTo }) {
 
       {/* Date nav */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '14px 20px 6px', gap: 20 }}>
-        <button onClick={() => setCurDate(d => shiftDate(d, -1))} style={{ width: 36, height: 36, borderRadius: 12, background: '#fff', border: `1px solid ${brd}`, color: t2, fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>‹</button>
+        <button onClick={() => setCurDate(d => shiftDate(d, -1))} style={{ width: 36, height: 36, borderRadius: 12, background: 'rgba(255,255,255,0.05)', border: `1px solid ${brd}`, color: t2, fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>‹</button>
         <div style={{ fontSize: 16, fontWeight: 700, minWidth: 120, textAlign: 'center' }}>{fmtDate(curDate)}</div>
-        <button onClick={() => setCurDate(d => shiftDate(d, 1))} style={{ width: 36, height: 36, borderRadius: 12, background: '#fff', border: `1px solid ${brd}`, color: t2, fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>›</button>
+        <button onClick={() => setCurDate(d => shiftDate(d, 1))} style={{ width: 36, height: 36, borderRadius: 12, background: 'rgba(255,255,255,0.05)', border: `1px solid ${brd}`, color: t2, fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>›</button>
       </div>
 
       {/* Calorie hero card */}

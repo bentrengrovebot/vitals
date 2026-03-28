@@ -38,7 +38,7 @@ export default function Shell() {
   const showNav = screen !== 'vitals' && screen !== 'picker' && screen !== 'recipe_edit';
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8f8fa', maxWidth: 480, margin: '0 auto', position: 'relative' }}>
+    <div style={{ minHeight: '100vh', background: '#0d1117', maxWidth: 480, margin: '0 auto', position: 'relative' }}>
       {screen === 'diary' && <Diary key={refreshKey} openPicker={openPicker} goTo={setScreen} />}
       {screen === 'recipes' && <Recipes onEdit={openRecipeEdit} goTo={setScreen} />}
       {screen === 'recipe_edit' && <RecipeEdit recipe={editRecipe} onBack={() => { setScreen('recipes'); refresh(); }} />}
@@ -50,7 +50,7 @@ export default function Shell() {
       {showNav && (
         <div style={{
           position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)',
-          width: '100%', maxWidth: 480, background: '#fff', borderTop: '1px solid #eaeaef',
+          width: '100%', maxWidth: 480, background: '#0d1117', borderTop: '1px solid rgba(255,255,255,0.08)',
           display: 'flex', zIndex: 50, padding: '6px 8px 28px',
         }}>
           {[
@@ -64,7 +64,7 @@ export default function Shell() {
               style={{
                 flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
                 background: 'none', border: 'none', padding: '8px 0',
-                color: screen === tab.id ? '#3b82f6' : '#9ca3af', fontSize: 10, fontWeight: 600,
+                color: screen === tab.id ? '#2dba8e' : '#484f58', fontSize: 10, fontWeight: 600,
               }}>
               {NAV_ICONS[tab.id]}
               {tab.label}

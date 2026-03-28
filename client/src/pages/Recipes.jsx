@@ -18,13 +18,13 @@ export default function Recipes({ onEdit, goTo }) {
 
   useEffect(() => { api.getRecipes().then(setRecipes); }, []);
 
-  const card = { background: '#fff', borderRadius: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.05)' };
-  const t2 = '#6b7280', ac = '#3b82f6';
+  const card = { background: 'rgba(255,255,255,0.05)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.08)' };
+  const t2 = '#8b949e', ac = '#2dba8e';
 
   return (
     <div style={{ paddingBottom: 100 }}>
       <div style={{ display: 'flex', alignItems: 'center', padding: 20, gap: 12 }}>
-        <div style={{ fontSize: 20, fontWeight: 800, flex: 1 }}>Recipes</div>
+        <div style={{ fontSize: 20, fontWeight: 800, flex: 1, color: '#e6edf3' }}>Recipes</div>
         <button onClick={() => onEdit({ id: null, name: '', servings: 1, ingredients: [] })}
           style={{ padding: '10px 18px', borderRadius: 12, background: ac, border: 'none', color: '#fff', fontSize: 13, fontWeight: 700 }}>+ New</button>
       </div>
@@ -33,12 +33,12 @@ export default function Recipes({ onEdit, goTo }) {
           const ps = recipeNutrition(r);
           return (
             <div key={r.id} onClick={() => onEdit(r)} style={{ ...card, padding: '16px 18px', marginBottom: 10, cursor: 'pointer' }}>
-              <div style={{ fontSize: 15, fontWeight: 700 }}>{r.name || 'Untitled'}</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: '#e6edf3' }}>{r.name || 'Untitled'}</div>
               <div style={{ fontSize: 12, color: t2, marginTop: 4 }}>{r.servings} serve{r.servings !== 1 ? 's' : ''} · {ps.cal} cal · {ps.protein}g P</div>
             </div>
           );
         })}
-        {!recipes.length && <div style={{ color: '#9ca3af', fontSize: 14, padding: 30, textAlign: 'center' }}>No recipes yet.</div>}
+        {!recipes.length && <div style={{ color: '#484f58', fontSize: 14, padding: 30, textAlign: 'center' }}>No recipes yet.</div>}
       </div>
     </div>
   );

@@ -67,25 +67,25 @@ export default function RecipeEdit({ recipe, onBack }) {
   };
 
   const ps = perServe();
-  const card = { background: '#fff', borderRadius: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.05)' };
-  const inp = { width: '100%', padding: '14px 16px', borderRadius: 12, border: '1.5px solid #eaeaef', background: '#fff', fontSize: 15, boxSizing: 'border-box' };
-  const ac = '#3b82f6', or = '#f59e0b', rd = '#ef4444', t1 = '#111827', t2 = '#6b7280', t3 = '#9ca3af', brd = '#eaeaef', gn = '#22c55e';
+  const card = { background: 'rgba(255,255,255,0.05)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.08)' };
+  const inp = { width: '100%', padding: '14px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: '#161b22', fontSize: 15, boxSizing: 'border-box', color: '#e6edf3' };
+  const ac = '#2dba8e', or = '#e0a526', rd = '#f85149', t1 = '#e6edf3', t2 = '#8b949e', t3 = '#484f58', brd = 'rgba(255,255,255,0.08)';
 
   return (
-    <div style={{ paddingBottom: 100, background: '#fff', minHeight: '100vh' }}>
+    <div style={{ paddingBottom: 100, background: '#0d1117', minHeight: '100vh' }}>
       <div style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', gap: 12 }}>
         <button onClick={onBack} style={{ background: 'none', border: 'none', color: t2, fontSize: 22 }}>←</button>
-        <div style={{ fontSize: 17, fontWeight: 700, flex: 1 }}>{rec.name || 'New Recipe'}</div>
+        <div style={{ fontSize: 17, fontWeight: 700, flex: 1, color: t1 }}>{rec.name || 'New Recipe'}</div>
         <button onClick={save} style={{ padding: '10px 18px', borderRadius: 12, background: ac, border: 'none', color: '#fff', fontSize: 13, fontWeight: 700 }}>Save</button>
       </div>
       <div style={{ padding: '0 20px' }}>
-        <label style={{ fontSize: 11, fontWeight: 700, color: t3, textTransform: 'uppercase' }}>Name</label>
+        <label style={{ fontSize: 11, fontWeight: 700, color: t2, textTransform: 'uppercase', letterSpacing: 1 }}>Name</label>
         <input value={rec.name} onChange={e => setRec(r => ({ ...r, name: e.target.value }))} placeholder="e.g. Cottage snack" style={{ ...inp, marginTop: 4, marginBottom: 14 }} />
-        <label style={{ fontSize: 11, fontWeight: 700, color: t3, textTransform: 'uppercase' }}>Servings</label>
+        <label style={{ fontSize: 11, fontWeight: 700, color: t2, textTransform: 'uppercase', letterSpacing: 1 }}>Servings</label>
         <input type="number" value={rec.servings} onChange={e => setRec(r => ({ ...r, servings: Math.max(1, parseInt(e.target.value) || 1) }))} style={{ ...inp, marginTop: 4, marginBottom: 16, width: 80 }} />
 
         {rec.ingredients.length > 0 && (
-          <div style={{ ...card, padding: '16px 18px', marginBottom: 16, background: 'linear-gradient(135deg,#3b82f6,#8b5cf6)', color: '#fff' }}>
+          <div style={{ ...card, padding: '16px 18px', marginBottom: 16, background: 'linear-gradient(135deg,#2dba8e,#1a8a6a)', color: '#fff', border: 'none' }}>
             <div style={{ fontSize: 10, fontWeight: 700, opacity: 0.6, textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.5px' }}>Per Serve</div>
             <div style={{ display: 'flex', gap: 14 }}>
               <div><span style={{ fontSize: 24, fontWeight: 800 }}>{ps.cal}</span> <span style={{ fontSize: 12, opacity: 0.6 }}>Cal</span></div>
@@ -96,12 +96,12 @@ export default function RecipeEdit({ recipe, onBack }) {
           </div>
         )}
 
-        <div style={{ fontSize: 11, fontWeight: 700, color: t3, textTransform: 'uppercase', marginBottom: 8 }}>Ingredients</div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: t2, textTransform: 'uppercase', marginBottom: 8, letterSpacing: 1 }}>Ingredients</div>
         {rec.ingredients.map((ing, i) => (
           <div key={i} style={{ display: 'flex', alignItems: 'center', padding: '12px 0', borderBottom: `1px solid ${brd}` }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 14, fontWeight: 600 }}>{ing.name}</div>
-              <div style={{ fontSize: 12, color: t3 }}>{ing.grams}g · {ing.calories}cal · {ing.proteinG}g P · {ing.fatG}g F · {ing.carbsG}g C</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: t1 }}>{ing.name}</div>
+              <div style={{ fontSize: 12, color: t2 }}>{ing.grams}g · {ing.calories}cal · {ing.proteinG}g P · {ing.fatG}g F · {ing.carbsG}g C</div>
             </div>
             <button onClick={() => setRec(r => ({ ...r, ingredients: r.ingredients.filter((_, idx) => idx !== i) }))} style={{ background: 'none', border: 'none', color: t3, fontSize: 18 }}>×</button>
           </div>
@@ -109,25 +109,25 @@ export default function RecipeEdit({ recipe, onBack }) {
 
         {addIng ? (
           <div style={{ ...card, padding: 18, marginTop: 12 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>Add Ingredient</div>
+            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12, color: t1 }}>Add Ingredient</div>
             <input value={ingF.name} onChange={e => setIngF(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Anchor Cottage Cheese" style={{ ...inp, marginBottom: 8 }} />
             <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
               <input type="number" value={ingF.grams} onChange={e => setIngF(f => ({ ...f, grams: e.target.value }))} placeholder="Grams" style={{ ...inp, flex: 1 }} />
               <button onClick={estimateNutrition} disabled={!ingF.name || !ingF.grams || est}
-                style={{ padding: '12px 16px', borderRadius: 12, border: `1.5px solid ${or}40`, background: or + '10', color: ingF.name && ingF.grams ? or : t3, fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>
+                style={{ padding: '12px 16px', borderRadius: 12, border: `1px solid rgba(224,165,38,0.3)`, background: 'rgba(224,165,38,0.1)', color: ingF.name && ingF.grams ? or : t3, fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>
                 {est ? '...' : '✨ AI'}
               </button>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 6, marginBottom: 14 }}>
               {['cal', 'protein', 'fat', 'carbs'].map(k => (
                 <div key={k}>
-                  <label style={{ fontSize: 10, color: t3, fontWeight: 600, textTransform: 'uppercase' }}>{k}</label>
+                  <label style={{ fontSize: 10, color: t2, fontWeight: 600, textTransform: 'uppercase' }}>{k}</label>
                   <input type="number" value={ingF[k]} onChange={e => setIngF(f => ({ ...f, [k]: e.target.value }))} style={{ ...inp, padding: '10px 8px', fontSize: 14, marginTop: 2 }} />
                 </div>
               ))}
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={() => { setAddIng(false); setIngF({ name: '', grams: '', cal: '', protein: '', fat: '', carbs: '' }); }} style={{ flex: 1, padding: 12, borderRadius: 12, border: `1px solid ${brd}`, background: '#fff', color: t1, fontSize: 14, fontWeight: 600 }}>Cancel</button>
+              <button onClick={() => { setAddIng(false); setIngF({ name: '', grams: '', cal: '', protein: '', fat: '', carbs: '' }); }} style={{ flex: 1, padding: 12, borderRadius: 12, border: `1px solid ${brd}`, background: 'rgba(255,255,255,0.05)', color: t1, fontSize: 14, fontWeight: 600 }}>Cancel</button>
               <button onClick={addIngredient} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: ac, color: '#fff', fontSize: 14, fontWeight: 700 }}>Add</button>
             </div>
           </div>
@@ -136,7 +136,7 @@ export default function RecipeEdit({ recipe, onBack }) {
         )}
 
         {rec.id && (
-          <button onClick={deleteRecipe} style={{ marginTop: 24, padding: 12, borderRadius: 12, border: `1px solid ${rd}30`, background: rd + '08', color: rd, fontSize: 14, fontWeight: 600, width: '100%' }}>Delete Recipe</button>
+          <button onClick={deleteRecipe} style={{ marginTop: 24, padding: 12, borderRadius: 12, border: `1px solid rgba(248,81,73,0.3)`, background: 'rgba(248,81,73,0.08)', color: rd, fontSize: 14, fontWeight: 600, width: '100%' }}>Delete Recipe</button>
         )}
       </div>
     </div>

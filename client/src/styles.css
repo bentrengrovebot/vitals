@@ -7,8 +7,8 @@
 
 html, body {
   font-family: -apple-system, system-ui, 'Segoe UI', sans-serif;
-  background: #f8f8fa;
-  color: #111827;
+  background: #0d1117;
+  color: #e6edf3;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overscroll-behavior: none;
@@ -24,12 +24,40 @@ button {
 }
 
 a {
-  color: #3b82f6;
+  color: #58a6ff;
   text-decoration: none;
 }
 
-/* Scrollbar */
+/* Scrollbar — dark */
 ::-webkit-scrollbar {
-  width: 0;
-  height: 0;
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* Selection */
+::selection {
+  background: rgba(45, 186, 142, 0.3);
+  color: #e6edf3;
+}
+
+/* Focus rings for accessibility */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #2dba8e;
+  outline-offset: 2px;
 }
