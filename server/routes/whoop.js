@@ -70,7 +70,7 @@ async function whoopFetch(prisma, whoopToken, url) {
   return res.json();
 }
 
-// GET /auth — Initiate OAuth2 flow
+// GET /auth — Initiate OAuth2 flow (redirects to Whoop)
 router.get('/auth', authMiddleware, (req, res) => {
   const params = new URLSearchParams({
     response_type: 'code',
@@ -79,7 +79,7 @@ router.get('/auth', authMiddleware, (req, res) => {
     scope: SCOPES,
     state: req.userId,
   });
-  res.json({ url: `${WHOOP_AUTH_URL}?${params.toString()}` });
+  res.redirect(`${WHOOP_AUTH_URL}?${params.toString()}`);
 });
 
 // GET /callback — OAuth2 callback (no auth middleware — redirected from Whoop)
