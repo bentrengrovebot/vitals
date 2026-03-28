@@ -57,7 +57,7 @@ export default function FoodPicker({ slot, date, onBack }) {
     background: active ? 'rgba(45,186,142,0.15)' : 'rgba(255,255,255,0.05)',
     color: active ? '#2dba8e' : '#8b949e',
   });
-  const inp = { width: '100%', padding: '14px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: '#232a33', fontSize: 15, boxSizing: 'border-box', color: '#ffffff' };
+  const inp = { width: '100%', padding: '14px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: '#1e2228', fontSize: 15, boxSizing: 'border-box', color: '#ffffff' };
   const t2 = '#8b949e', t3 = '#484f58', ac = '#2dba8e', brd = 'rgba(255,255,255,0.08)';
 
   const filterItems = (items, getName) => {
@@ -66,7 +66,7 @@ export default function FoodPicker({ slot, date, onBack }) {
   };
 
   return (
-    <div style={{ paddingBottom: 20, background: '#191d21', minHeight: '100vh' }}>
+    <div style={{ paddingBottom: 20, background: '#12151a', minHeight: '100vh' }}>
       <div style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', gap: 12 }}>
         <button onClick={onBack} style={{ background: 'none', border: 'none', color: t2, fontSize: 22 }}>←</button>
         <div style={{ fontSize: 17, fontWeight: 700, flex: 1, color: '#ffffff' }}>Add to {slot}</div>

@@ -23,10 +23,10 @@ export default function Login() {
     setLoading(false);
   };
 
-  const inp = { width: '100%', padding: '14px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: '#232a33', fontSize: 15, marginTop: 4, color: '#ffffff' };
+  const inp = { width: '100%', padding: '14px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: '#1e2228', fontSize: 15, marginTop: 4, color: '#ffffff' };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, background: '#191d21' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, background: '#12151a' }}>
       <div style={{ width: '100%', maxWidth: 380, background: 'rgba(255,255,255,0.05)', borderRadius: 16, padding: 32 }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <div style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-1px', color: '#ffffff' }}>Vitals</div>

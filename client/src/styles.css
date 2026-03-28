@@ -7,7 +7,7 @@
 
 html, body {
   font-family: 'Inter', 'SF Pro Display', -apple-system, system-ui, 'Helvetica Neue', sans-serif;
-  background: #191d21;
+  background: #12151a;
   color: #ffffff;
   font-weight: 400;
   -webkit-text-stroke: 0;
@@ -25,7 +25,7 @@ body::before {
   transform: translateX(-50%);
   width: 600px;
   height: 400px;
-  background: radial-gradient(ellipse at center, rgba(25,60,55,0.2) 0%, rgba(25,29,33,0) 70%);
+  background: radial-gradient(ellipse at center, rgba(20,50,45,0.15) 0%, rgba(18,21,26,0) 70%);
   pointer-events: none;
   z-index: 0;
 }
