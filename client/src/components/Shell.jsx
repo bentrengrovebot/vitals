@@ -43,7 +43,7 @@ export default function Shell() {
           width: '100%', maxWidth: 430,
           display: 'flex', alignItems: 'center',
           padding: '6px 10px 30px',
-          background: 'linear-gradient(180deg, rgba(27,33,41,0.8), rgba(27,33,41,0.98))',
+          background: 'linear-gradient(180deg, rgba(25,29,33,0.85), rgba(25,29,33,0.98))',
           backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
           borderTop: '1px solid rgba(255,255,255,0.06)',
           zIndex: 100,
@@ -58,7 +58,7 @@ export default function Shell() {
                 style={{
                   flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
                   background: 'none', border: 'none', padding: '8px 0',
-                  color: screen === tab.id ? '#e8ecf1' : 'rgba(255,255,255,0.25)',
+                  color: screen === tab.id ? '#e2e4e9' : 'rgba(255,255,255,0.25)',
                   fontSize: 9, fontWeight: 600, letterSpacing: '0.5px',
                 }}>
                 {tab.icon}

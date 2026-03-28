@@ -45,7 +45,7 @@ export default function VitalsChat({ onBack }) {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#1b2129' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#191d21' }}>
       <div style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', gap: 12, borderBottom: `1px solid ${brd}` }}>
         <button onClick={onBack} style={{ background: 'none', border: 'none', color: t2, fontSize: 22 }}>←</button>
         <div style={{ width: 36, height: 36, borderRadius: 12, background: 'linear-gradient(135deg,#2dba8e,#1a8a6a)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { api } from '../api';
 
 const r1 = n => Math.round(n * 10) / 10;
-const card = { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, margin: '0 16px 8px', overflow: 'hidden' };
+const card = { background: '#252a31', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, margin: '0 16px 8px', overflow: 'hidden' };
 const secHeader = { fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: 2, padding: '22px 20px 10px' };
-const t1 = '#e8ecf1', t2 = 'rgba(255,255,255,0.45)', t3 = 'rgba(255,255,255,0.2)', ac = '#2dba8e';
+const t1 = '#e2e4e9', t2 = 'rgba(255,255,255,0.45)', t3 = 'rgba(255,255,255,0.2)', ac = '#2dba8e';
 
 function fmtDate(k) {
   if (!k) return '';
@@ -64,9 +64,9 @@ export default function Health() {
           </div>
           <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ overflow: 'visible' }}>
             {[0, 0.25, 0.5, 0.75, 1].map((p, i) => { const y = pad + p * (H - pad * 2); return (<g key={i}><line x1={pad} y1={y} x2={W - pad} y2={y} stroke="rgba(255,255,255,0.06)" strokeWidth="1" strokeDasharray="4,4" /><text x={pad - 4} y={y + 4} textAnchor="end" fontSize="9" fill="rgba(255,255,255,0.3)">{r1(mx - p * rng)}</text></g>); })}
-            {pts.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="4" fill="rgba(255,255,255,0.15)" stroke="#1b2129" strokeWidth="2" />)}
+            {pts.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="4" fill="rgba(255,255,255,0.15)" stroke="#191d21" strokeWidth="2" />)}
             <path d={trendLine} fill="none" stroke="#5b9ef0" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            {pts.map((p, i) => <circle key={`t${i}`} cx={p.x} cy={p.ty} r="4" fill="#5b9ef0" stroke="#1b2129" strokeWidth="2" />)}
+            {pts.map((p, i) => <circle key={`t${i}`} cx={p.x} cy={p.ty} r="4" fill="#5b9ef0" stroke="#191d21" strokeWidth="2" />)}
             {profile.weightGoalKg && (() => { const gy = pad + (1 - (profile.weightGoalKg - mn) / rng) * (H - pad * 2); if (gy > 0 && gy < H) return (<><line x1={pad} y1={gy} x2={W - pad} y2={gy} stroke={ac} strokeWidth="1.5" strokeDasharray="6,4" /><text x={W - pad + 4} y={gy + 4} fontSize="9" fill={ac}>Goal</text></>); return null; })()}
           </svg>
           <div style={{ display: 'flex', gap: 16, marginTop: 8, fontSize: 10, color: t2 }}>
@@ -82,7 +82,7 @@ export default function Health() {
   const pill = (active) => ({
     padding: '6px 14px', borderRadius: 16, fontSize: 12, fontWeight: 700,
     border: active ? '1px solid #2dba8e' : '1px solid rgba(255,255,255,0.08)',
-    background: active ? 'rgba(45,186,142,0.12)' : 'rgba(255,255,255,0.04)',
+    background: active ? 'rgba(45,186,142,0.12)' : '#252a31',
     color: active ? '#2dba8e' : t2,
     letterSpacing: 0.5,
   });

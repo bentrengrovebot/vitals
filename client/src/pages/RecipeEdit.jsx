@@ -72,7 +72,7 @@ export default function RecipeEdit({ recipe, onBack }) {
   const ac = '#2dba8e', or = '#e0a526', rd = '#f85149', t1 = '#e6edf3', t2 = '#8b949e', t3 = '#484f58', brd = 'rgba(255,255,255,0.08)';
 
   return (
-    <div style={{ paddingBottom: 100, background: '#1b2129', minHeight: '100vh' }}>
+    <div style={{ paddingBottom: 100, background: '#191d21', minHeight: '100vh' }}>
       <div style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', gap: 12 }}>
         <button onClick={onBack} style={{ background: 'none', border: 'none', color: t2, fontSize: 22 }}>←</button>
         <div style={{ fontSize: 17, fontWeight: 700, flex: 1, color: t1 }}>{rec.name || 'New Recipe'}</div>

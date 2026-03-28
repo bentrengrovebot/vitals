@@ -6,23 +6,24 @@
 }
 
 html, body {
-  font-family: -apple-system, system-ui, 'Helvetica Neue', sans-serif;
-  background: #1b2129;
-  color: #e8ecf1;
+  font-family: -apple-system, system-ui, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+  background: #191d21;
+  color: #e2e4e9;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overscroll-behavior: none;
+  letter-spacing: -0.01em;
 }
 
 body::before {
   content: '';
   position: fixed;
-  top: 0;
+  top: -100px;
   left: 50%;
   transform: translateX(-50%);
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(ellipse at center, rgba(30,80,70,0.25) 0%, rgba(27,33,41,0) 70%);
+  width: 600px;
+  height: 400px;
+  background: radial-gradient(ellipse at center, rgba(25,60,55,0.2) 0%, rgba(25,29,33,0) 70%);
   pointer-events: none;
   z-index: 0;
 }
@@ -30,6 +31,7 @@ body::before {
 input, button, textarea, select {
   font-family: inherit;
   outline: none;
+  letter-spacing: inherit;
 }
 
 button {
@@ -42,14 +44,3 @@ a {
 }
 
 ::-webkit-scrollbar { width: 0; height: 0; }
-
-::selection {
-  background: rgba(45, 186, 142, 0.3);
-  color: #e8ecf1;
-}
-
-button:focus-visible,
-input:focus-visible {
-  outline: 2px solid #2dba8e;
-  outline-offset: 2px;
-}
