@@ -159,14 +159,19 @@ export default function FoodPicker({ slot, date, onBack }) {
               <div style={{ color: t3, fontSize: 13, padding: 20, textAlign: 'center' }}>Type to search foods from the database</div>
             )}
             {results.map((p, idx) => (
-              <button key={idx} onClick={() => selectDbFood(p)} style={{ display: 'flex', alignItems: 'center', padding: '14px 0', borderBottom: `1px solid ${brd}`, width: '100%', background: 'none', border: 'none', borderBottom: `1px solid ${brd}`, textAlign: 'left' }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 500, color: '#ffffff' }}>{p.name}</div>
-                  <div style={{ fontSize: 11, color: t2, marginTop: 2 }}>
-                    {p.brand && `${p.brand} · `}{p.per100g.calories} cal · {p.per100g.protein}g P <span style={{ color: t3 }}>per 100g</span>
+              <button key={idx} onClick={() => selectDbFood(p)} style={{ display: 'flex', alignItems: 'center', padding: '12px 0', borderBottom: `1px solid ${brd}`, width: '100%', background: 'none', border: 'none', borderBottom: `1px solid ${brd}`, textAlign: 'left', gap: 10 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: '#ffffff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: '#5b9ef0' }}>{p.per100g.calories}🔥</span>
+                    <span style={{ fontSize: 11, fontWeight: 500, color: '#e0a526' }}>{p.per100g.protein}P</span>
+                    <span style={{ fontSize: 11, fontWeight: 500, color: '#2dba8e' }}>{p.per100g.fat}F</span>
+                    <span style={{ fontSize: 11, fontWeight: 500, color: '#8b5ef6' }}>{p.per100g.carbs}C</span>
+                    {p.brand && <span style={{ fontSize: 10, color: t3 }}>· {p.brand}</span>}
+                    <span style={{ fontSize: 10, color: t3 }}>/ 100{p.servingUnit || 'g'}</span>
                   </div>
                 </div>
-                <span style={{ color: t3, fontSize: 14 }}>›</span>
+                <span style={{ color: t3, fontSize: 14, flexShrink: 0 }}>›</span>
               </button>
             ))}
           </>
