@@ -2,8 +2,6 @@ import { useState, useEffect } from 'react';
 import { api } from '../api';
 
 const r1 = n => Math.round(n * 10) / 10;
-const card = { background: '#1e2228', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, margin: '0 16px 8px', overflow: 'hidden' };
-const secHeader = { fontSize: 10, fontWeight: 500, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 2, padding: '22px 20px 10px' };
 
 function dateKey(d = new Date()) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -12,10 +10,7 @@ function shiftDate(k, n) {
   const clean = k.split('T')[0];
   const d = new Date(clean + 'T12:00:00'); d.setDate(d.getDate() + n); return dateKey(d);
 }
-function cleanDate(k) {
-  if (!k) return '';
-  return k.split('T')[0];
-}
+function cleanDate(k) { return k ? k.split('T')[0] : ''; }
 function fmtDate(k) {
   if (!k) return 'Today';
   const clean = k.split('T')[0];
@@ -27,10 +22,25 @@ function fmtDate(k) {
 }
 function dayLabel(k) {
   if (!k) return '?';
-  const clean = k.split('T')[0];
-  const d = new Date(clean + 'T12:00:00');
+  const d = new Date(k.split('T')[0] + 'T12:00:00');
   return ['S','M','T','W','T','F','S'][d.getDay()];
 }
+function fmtMins(mins) {
+  if (!mins) return '—';
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return `${h}:${String(m).padStart(2, '0')}`;
+}
+
+// Recovery color: green (67+), yellow (34-66), red (<34)
+function recoveryColor(score) {
+  if (!score) return 'rgba(255,255,255,0.15)';
+  if (score >= 67) return '#2dba8e';
+  if (score >= 34) return '#e0a526';
+  return '#f85149';
+}
+
+const card = { background: '#1e2228', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, margin: '0 16px 8px', overflow: 'hidden' };
 
 export default function WhoopScreen() {
   const [curDate, setCurDate] = useState(dateKey());
@@ -45,22 +55,19 @@ export default function WhoopScreen() {
     try {
       const [s, d] = await Promise.all([
         api.getWhoopStatus(),
-        api.getWhoopDaily(curDate).catch(() => null),
+        api.getWhoopDaily(cleanDate(curDate)).catch(() => null),
       ]);
       setStatus(s);
       setData(d);
     } catch { setStatus({ connected: false }); }
 
-    // Load 7 days for weekly view
     const days = [];
     for (let i = 6; i >= 0; i--) {
       const dk = shiftDate(dateKey(), -i);
       try {
         const d = await api.getWhoopDaily(dk);
         days.push({ date: dk, ...d });
-      } catch {
-        days.push({ date: dk });
-      }
+      } catch { days.push({ date: dk }); }
     }
     setWeekData(days);
   }
@@ -68,134 +75,209 @@ export default function WhoopScreen() {
   async function syncNow() {
     setSyncing(true);
     try {
-      const result = await api.syncWhoop();
-      console.log('Whoop sync result:', result);
+      await api.syncWhoop();
       await loadData();
     } catch (err) {
-      console.error('Whoop sync failed:', err);
       alert('Sync failed: ' + err.message);
     }
     setSyncing(false);
   }
 
-  const Ring = ({ value, max, color, label, display }) => {
+  // Ring component matching Whoop style
+  const Ring = ({ value, max, color, display, size = 110 }) => {
     const pct = max > 0 ? Math.min(100, (value / max) * 100) : 0;
-    const circ = 2 * Math.PI * 44;
+    const r = (size - 14) / 2;
+    const circ = 2 * Math.PI * r;
     const dash = (pct / 100) * circ;
     return (
-      <div style={{ textAlign: 'center', flex: 1 }}>
-        <div style={{ position: 'relative', width: 90, height: 90, margin: '0 auto' }}>
-          <svg viewBox="0 0 120 120" width="90" height="90">
-            <circle cx="60" cy="60" r="44" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="6" />
-            <circle cx="60" cy="60" r="44" fill="none" stroke={color} strokeWidth="6" strokeDasharray={`${dash} ${circ}`} strokeLinecap="round" transform="rotate(-90 60 60)" />
-          </svg>
-          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ fontSize: 24, fontWeight: 600, color }}>{display}</div>
-          </div>
+      <div style={{ position: 'relative', width: size, height: size }}>
+        <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size}>
+          <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="7" />
+          <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth="7" strokeDasharray={`${dash} ${circ}`} strokeLinecap="round" transform={`rotate(-90 ${size/2} ${size/2})`} style={{ transition: 'stroke-dasharray 0.5s ease' }} />
+        </svg>
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ fontSize: size * 0.28, fontWeight: 600, color, lineHeight: 1 }}>{display}</div>
         </div>
-        <div style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(255,255,255,0.5)', marginTop: 6 }}>{label}</div>
       </div>
     );
   };
 
+  // Not connected
   if (!status?.connected) {
     return (
       <div style={{ paddingBottom: 92 }}>
         <div style={{ padding: '20px 20px 0' }}>
-          <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: -0.3 }}>Whoop</div>
+          <div style={{ fontSize: 22, fontWeight: 600, letterSpacing: -0.3 }}>Whoop</div>
         </div>
         <div style={{ padding: '40px 20px', textAlign: 'center' }}>
           <div style={{ fontSize: 32, marginBottom: 16 }}>⌚</div>
           <div style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', marginBottom: 20, lineHeight: 1.6 }}>Connect your Whoop to see sleep, recovery, and strain data here.</div>
-          <button onClick={() => { window.location.href = '/api/whoop/auth'; }} style={{ display: 'inline-block', padding: '14px 32px', borderRadius: 12, background: '#2dba8e', color: '#fff', fontSize: 14, fontWeight: 600, border: 'none' }}>Connect Whoop</button>
+          <button onClick={() => { window.location.href = '/api/whoop/auth'; }} style={{ padding: '14px 32px', borderRadius: 12, background: '#2dba8e', color: '#fff', fontSize: 14, fontWeight: 600, border: 'none' }}>Connect Whoop</button>
         </div>
       </div>
     );
   }
 
+  const recColor = recoveryColor(data?.recoveryScore);
+
   return (
     <div style={{ paddingBottom: 92 }}>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px 6px' }}>
-        <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.12)', padding: '4px 10px', borderRadius: 6 }}>Whoop</div>
+      {/* Top bar — like Whoop */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px 4px' }}>
+        <button onClick={syncNow} disabled={syncing} style={{ background: 'none', border: 'none', color: '#2dba8e', fontSize: 11, fontWeight: 500 }}>{syncing ? 'Syncing...' : 'Sync'}</button>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <button onClick={() => setCurDate(d => shiftDate(d, -1))} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 20 }}>‹</button>
-          <span style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, color: '#ffffff' }}>{fmtDate(curDate)}</span>
+          <span style={{ fontSize: 11, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 1.2, color: '#ffffff', padding: '5px 16px', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 20, background: '#1e2228' }}>{fmtDate(curDate)}</span>
           <button onClick={() => setCurDate(d => shiftDate(d, 1))} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 20 }}>›</button>
         </div>
-        <button onClick={syncNow} disabled={syncing} style={{ background: 'none', border: 'none', color: '#2dba8e', fontSize: 11, fontWeight: 600 }}>{syncing ? 'Syncing...' : 'Sync'}</button>
+        <div style={{ width: 40 }} />
       </div>
 
-      {/* Rings */}
+      {/* WHOOP brand */}
+      <div style={{ textAlign: 'center', padding: '6px 0 4px', fontSize: 14, fontWeight: 600, letterSpacing: 3, textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)' }}>Whoop</div>
+
+      {/* Three rings */}
+      {data ? (
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, padding: '12px 16px 4px' }}>
+          <div style={{ textAlign: 'center', flex: 1 }}>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <Ring value={data.sleepPerformance || 0} max={100} color="#5b9ef0" display={data.sleepPerformance ? `${Math.round(data.sleepPerformance)}%` : '—'} />
+            </div>
+            <div style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(255,255,255,0.5)', marginTop: 6 }}>Sleep <span style={{ color: 'rgba(255,255,255,0.2)' }}>›</span></div>
+          </div>
+          <div style={{ textAlign: 'center', flex: 1 }}>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <Ring value={data.recoveryScore || 0} max={100} color={recColor} display={data.recoveryScore ? `${data.recoveryScore}%` : '—'} />
+            </div>
+            <div style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(255,255,255,0.5)', marginTop: 6 }}>Recovery <span style={{ color: 'rgba(255,255,255,0.2)' }}>›</span></div>
+          </div>
+          <div style={{ textAlign: 'center', flex: 1 }}>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <Ring value={data.strain || 0} max={21} color="#58a6ff" display={data.strain ? data.strain.toFixed(1) : '—'} />
+            </div>
+            <div style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(255,255,255,0.5)', marginTop: 6 }}>Strain <span style={{ color: 'rgba(255,255,255,0.2)' }}>›</span></div>
+          </div>
+        </div>
+      ) : (
+        <div style={{ padding: '30px 20px', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>No data for this day</div>
+      )}
+
+      {/* Health Monitor + Stress Monitor — like Whoop's two-card row */}
       {data && (
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 6, padding: '20px 12px 8px' }}>
-          <Ring value={data.sleepPerformance || 0} max={100} color="#5b9ef0" label="Sleep" display={data.sleepPerformance ? `${Math.round(data.sleepPerformance)}%` : '—'} />
-          <Ring value={data.recoveryScore || 0} max={100} color="#2dba8e" label="Recovery" display={data.recoveryScore ? `${data.recoveryScore}%` : '—'} />
-          <Ring value={data.strain || 0} max={21} color="#e0a526" label="Strain" display={data.strain ? data.strain.toFixed(1) : '—'} />
+        <div style={{ display: 'flex', gap: 8, padding: '12px 16px 0' }}>
+          <div style={{ ...card, margin: 0, flex: 1, padding: '14px 16px' }}>
+            <div style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(255,255,255,0.5)', marginBottom: 10 }}>Recovery <span style={{ color: 'rgba(255,255,255,0.2)' }}>›</span></div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ width: 20, height: 20, borderRadius: 4, background: recColor + '20', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 8, height: 8, borderRadius: 2, background: recColor }} />
+              </div>
+              <span style={{ fontSize: 13, fontWeight: 600, color: recColor }}>{data.recoveryScore >= 67 ? 'GREEN' : data.recoveryScore >= 34 ? 'YELLOW' : 'RED'}</span>
+            </div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 4 }}>{data.recoveryScore || 0}% Recovery</div>
+          </div>
+          <div style={{ ...card, margin: 0, flex: 1, padding: '14px 16px' }}>
+            <div style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(255,255,255,0.5)', marginBottom: 10 }}>Strain <span style={{ color: 'rgba(255,255,255,0.2)' }}>›</span></div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 20, fontWeight: 600, color: '#58a6ff' }}>{data.strain ? data.strain.toFixed(1) : '—'}</span>
+            </div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 4 }}>Day Strain</div>
+          </div>
         </div>
       )}
 
-      {!data && (
-        <div style={{ padding: '40px 20px', textAlign: 'center', color: 'rgba(255,255,255,0.35)', fontSize: 13 }}>No data for this day. Try syncing.</div>
+      {/* Sleep card — like Whoop's "TONIGHT'S SLEEP" */}
+      {data && data.sleepDurationMins && (
+        <div style={{ padding: '8px 16px 0' }}>
+          <div style={{ ...card, margin: 0, padding: '16px 18px' }}>
+            <div style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(255,255,255,0.5)', marginBottom: 14 }}>Sleep <span style={{ color: 'rgba(255,255,255,0.2)' }}>›</span></div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div style={{ fontSize: 28, fontWeight: 600, color: '#5b9ef0', lineHeight: 1 }}>{fmtMins(data.sleepDurationMins)}</div>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 4, textTransform: 'uppercase', letterSpacing: 1 }}>Duration</div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 22, fontWeight: 600, color: data.sleepPerformance >= 70 ? '#2dba8e' : '#e0a526', lineHeight: 1 }}>{data.sleepPerformance ? `${Math.round(data.sleepPerformance)}%` : '—'}</div>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 4, textTransform: 'uppercase', letterSpacing: 1 }}>Performance</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: 22, fontWeight: 600, color: data.sleepEfficiency >= 85 ? '#2dba8e' : '#e0a526', lineHeight: 1 }}>{data.sleepEfficiency ? `${Math.round(data.sleepEfficiency)}%` : '—'}</div>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 4, textTransform: 'uppercase', letterSpacing: 1 }}>Efficiency</div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
-      {/* Detail metrics */}
+      {/* Activity card — like Whoop's "TODAY'S ACTIVITIES" */}
       {data && (
-        <>
-          <div style={secHeader}>DETAILS</div>
-          <div style={card}>
-            {[
-              { label: 'Sleep Duration', value: data.sleepDurationMins ? `${Math.floor(data.sleepDurationMins / 60)}h ${data.sleepDurationMins % 60}m` : '—', color: '#5b9ef0' },
-              { label: 'Sleep Efficiency', value: data.sleepEfficiency ? `${Math.round(data.sleepEfficiency)}%` : '—', color: '#5b9ef0' },
-              { label: 'HRV', value: data.hrv ? `${Math.round(data.hrv)} ms` : '—', color: '#2dba8e' },
-              { label: 'Resting HR', value: data.restingHr ? `${data.restingHr} bpm` : '—', color: '#e0a526' },
-              { label: 'Calories Burned', value: data.calories ? `${Math.round(data.calories)} cal` : '—', color: '#8b5ef6' },
-            ].map((m, i) => (
-              <div key={m.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px', borderTop: i > 0 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-                <span style={{ fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 1 }}>{m.label}</span>
-                <span style={{ fontSize: 18, fontWeight: 600, color: m.color }}>{m.value}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Workout */}
-          {data.sportName && (
-            <>
-              <div style={secHeader}>ACTIVITY</div>
-              <div style={card}>
-                <div style={{ padding: '16px 18px' }}>
-                  <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>{data.sportName}</div>
-                  <div style={{ display: 'flex', gap: 16, fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
-                    {data.workoutStrain && <span>Strain: <span style={{ color: '#e0a526', fontWeight: 600 }}>{data.workoutStrain.toFixed(1)}</span></span>}
-                    {data.workoutCalories && <span>{Math.round(data.workoutCalories)} cal</span>}
-                    {data.workoutDurationMins && <span>{data.workoutDurationMins} min</span>}
+        <div style={{ padding: '8px 16px 0' }}>
+          <div style={{ ...card, margin: 0, padding: 0 }}>
+            <div style={{ padding: '14px 18px', fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(255,255,255,0.5)' }}>Today's Activity</div>
+            {data.sportName ? (
+              <div style={{ padding: '0 18px 16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ padding: '8px 14px', borderRadius: 10, background: 'rgba(88,166,255,0.1)', borderLeft: '3px solid #58a6ff', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 15 }}>🏋️</span>
+                    <span style={{ fontSize: 18, fontWeight: 600, color: '#58a6ff' }}>{data.workoutStrain ? data.workoutStrain.toFixed(1) : '—'}</span>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: '#ffffff' }}>{data.sportName}</div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
+                      {data.workoutDurationMins && `${data.workoutDurationMins} min`}
+                      {data.workoutCalories && ` · ${Math.round(data.workoutCalories)} cal`}
+                    </div>
                   </div>
                 </div>
               </div>
-            </>
-          )}
-        </>
+            ) : (
+              <div style={{ padding: '0 18px 16px', fontSize: 13, color: 'rgba(255,255,255,0.3)' }}>No activity logged</div>
+            )}
+          </div>
+        </div>
       )}
 
-      {/* 7-day overview */}
-      <div style={secHeader}>LAST 7 DAYS</div>
-      <div style={card}>
-        <div style={{ padding: '16px 14px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
+      {/* Metrics grid — HRV, RHR, Calories */}
+      {data && (
+        <div style={{ padding: '8px 16px 0' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+            {[
+              { label: 'HRV', value: data.hrv ? Math.round(data.hrv) : '—', unit: 'ms', color: '#2dba8e' },
+              { label: 'RHR', value: data.restingHr || '—', unit: 'bpm', color: '#e0a526' },
+              { label: 'Calories', value: data.calories ? Math.round(data.calories) : '—', unit: 'cal', color: '#8b5ef6' },
+            ].map(m => (
+              <div key={m.label} style={{ ...card, margin: 0, padding: '14px 12px', textAlign: 'center' }}>
+                <div style={{ fontSize: 22, fontWeight: 600, color: m.color, lineHeight: 1 }}>{m.value}</div>
+                <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>{m.unit}</div>
+                <div style={{ fontSize: 9, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 1, color: 'rgba(255,255,255,0.4)', marginTop: 6 }}>{m.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 7-Day Recovery Overview */}
+      <div style={{ padding: '20px 20px 8px', fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.5)' }}>Last 7 Days</div>
+      <div style={{ ...card, margin: '0 16px' }}>
+        <div style={{ padding: '14px 10px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2 }}>
             {weekData.map(d => {
               const dk = cleanDate(d.date);
+              const isSelected = dk === cleanDate(curDate);
+              const isToday = dk === dateKey();
+              const rc = recoveryColor(d.recoveryScore);
               return (
-              <div key={dk} style={{ textAlign: 'center', padding: '8px 0', borderRadius: 8, background: dk === cleanDate(curDate) ? 'rgba(255,255,255,0.06)' : 'transparent', cursor: 'pointer' }} onClick={() => setCurDate(dk)}>
-                <div style={{ fontSize: 9, fontWeight: 500, color: dk === dateKey() ? '#ffffff' : 'rgba(255,255,255,0.3)', textTransform: 'uppercase', marginBottom: 6 }}>
-                  {dayLabel(dk)}
+                <div key={dk} onClick={() => setCurDate(dk)} style={{ textAlign: 'center', padding: '8px 2px', borderRadius: 10, background: isSelected ? 'rgba(255,255,255,0.06)' : 'transparent', cursor: 'pointer', transition: 'background 0.15s' }}>
+                  <div style={{ fontSize: 9, fontWeight: 500, color: isToday ? '#ffffff' : 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>{dayLabel(dk)}</div>
+                  {/* Mini recovery ring */}
+                  <div style={{ position: 'relative', width: 32, height: 32, margin: '0 auto' }}>
+                    <svg viewBox="0 0 32 32" width="32" height="32">
+                      <circle cx="16" cy="16" r="12" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="3" />
+                      {d.recoveryScore && <circle cx="16" cy="16" r="12" fill="none" stroke={rc} strokeWidth="3" strokeDasharray={`${(d.recoveryScore / 100) * 75.4} 75.4`} strokeLinecap="round" transform="rotate(-90 16 16)" />}
+                    </svg>
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 600, color: rc }}>{d.recoveryScore || '—'}</div>
+                  </div>
+                  <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.25)', marginTop: 4 }}>{d.strain ? d.strain.toFixed(1) : ''}</div>
                 </div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: d.recoveryScore ? (d.recoveryScore >= 67 ? '#2dba8e' : d.recoveryScore >= 34 ? '#e0a526' : '#f85149') : 'rgba(255,255,255,0.15)' }}>
-                  {d.recoveryScore ? `${d.recoveryScore}%` : '—'}
-                </div>
-                <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.25)', marginTop: 2 }}>
-                  {d.strain ? d.strain.toFixed(1) : ''}
-                </div>
-              </div>
               );
             })}
           </div>
