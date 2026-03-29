@@ -71,8 +71,11 @@ async function whoopFetch(prisma, whoopToken, url) {
 }
 
 // GET /auth — Initiate OAuth2 flow (redirects to Whoop)
-// No authMiddleware — this is a browser redirect, cookies may not work
 router.get('/auth', async (req, res) => {
+  console.log('Whoop auth hit. WHOOP_CLIENT_ID:', process.env.WHOOP_CLIENT_ID ? 'SET' : 'MISSING');
+  console.log('WHOOP_REDIRECT_URI:', process.env.WHOOP_REDIRECT_URI || 'MISSING');
+  console.log('Cookies:', Object.keys(req.cookies || {}));
+
   if (!process.env.WHOOP_CLIENT_ID || !process.env.WHOOP_REDIRECT_URI) {
     return res.status(500).send('Whoop not configured. Add WHOOP_CLIENT_ID and WHOOP_REDIRECT_URI to env vars.');
   }
@@ -80,26 +83,34 @@ router.get('/auth', async (req, res) => {
   // Try to get userId from cookie
   let userId = null;
   const token = req.cookies?.token;
+  console.log('Token cookie present:', !!token);
+
   if (token) {
     try {
       const jwt = await import('jsonwebtoken');
       const decoded = jwt.default.verify(token, process.env.JWT_SECRET || 'dev-secret-change-me');
       userId = decoded.userId;
-    } catch {}
+      console.log('Decoded userId:', userId);
+    } catch (err) {
+      console.log('JWT verify failed:', err.message);
+    }
   }
 
   if (!userId) {
-    return res.redirect('/?error=not_authenticated');
+    console.log('No userId — redirecting to home with error');
+    return res.status(401).send('Not authenticated. Please log in first, then try connecting Whoop again.');
   }
 
-  const params = new URLSearchParams({
+  const authUrl = `${WHOOP_AUTH_URL}?${new URLSearchParams({
     response_type: 'code',
     client_id: process.env.WHOOP_CLIENT_ID,
     redirect_uri: process.env.WHOOP_REDIRECT_URI,
     scope: SCOPES,
     state: userId,
-  });
-  res.redirect(`${WHOOP_AUTH_URL}?${params.toString()}`);
+  }).toString()}`;
+
+  console.log('Redirecting to Whoop:', authUrl.substring(0, 100) + '...');
+  res.redirect(authUrl);
 });
 
 // GET /callback — OAuth2 callback (no auth middleware — redirected from Whoop)

@@ -264,7 +264,7 @@ export default function More({ goTo, onRefresh, openRecipeEdit }) {
             ) : (
               <div style={{ textAlign: 'center', padding: '20px 0' }}>
                 <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', marginBottom: 16 }}>Connect your Whoop to sync sleep, recovery, and strain data.</div>
-                <a href="/api/whoop/auth" style={{ display: 'block', width: '100%', padding: 14, borderRadius: 12, background: '#2dba8e', color: '#fff', fontSize: 14, fontWeight: 700, textAlign: 'center', textDecoration: 'none' }}>Connect Whoop</a>
+                <button onClick={() => { window.location.href = '/api/whoop/auth'; }} style={{ display: 'block', width: '100%', padding: 14, borderRadius: 12, background: '#2dba8e', color: '#fff', fontSize: 14, fontWeight: 700, textAlign: 'center', border: 'none' }}>Connect Whoop</button>
               </div>
             )}
           </div>
