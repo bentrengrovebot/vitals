@@ -70,6 +70,31 @@ async function whoopFetch(prisma, whoopToken, url) {
   return res.json();
 }
 
+// GET /debug — See raw Whoop API response
+router.get('/debug', authMiddleware, async (req, res) => {
+  try {
+    const token = await req.prisma.whoopToken.findUnique({ where: { userId: req.userId } });
+    if (!token) return res.json({ error: 'No token' });
+
+    const end = new Date().toISOString();
+    const start = new Date(Date.now() - 2 * 86400000).toISOString();
+
+    const results = {};
+    for (const endpoint of ['activity/sleep', 'recovery', 'cycle', 'activity/workout']) {
+      try {
+        const url = `${WHOOP_API_BASE}/${endpoint}?start=${start}&end=${end}`;
+        const raw = await whoopFetch(req.prisma, token, url);
+        results[endpoint] = raw;
+      } catch (err) {
+        results[endpoint] = { error: err.message };
+      }
+    }
+    res.json(results);
+  } catch (err) {
+    res.json({ error: err.message });
+  }
+});
+
 // GET /test — Debug endpoint
 router.get('/test', (req, res) => {
   res.json({
