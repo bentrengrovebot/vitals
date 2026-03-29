@@ -9,14 +9,27 @@ function dateKey(d = new Date()) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 function shiftDate(k, n) {
-  const d = new Date(k + 'T00:00:00'); d.setDate(d.getDate() + n); return dateKey(d);
+  const clean = k.split('T')[0];
+  const d = new Date(clean + 'T12:00:00'); d.setDate(d.getDate() + n); return dateKey(d);
+}
+function cleanDate(k) {
+  if (!k) return '';
+  return k.split('T')[0];
 }
 function fmtDate(k) {
-  const d = new Date(k + 'T00:00:00'), t = new Date(), y = new Date();
+  if (!k) return 'Today';
+  const clean = k.split('T')[0];
+  const d = new Date(clean + 'T12:00:00'), t = new Date(), y = new Date();
   y.setDate(y.getDate() - 1);
   if (d.toDateString() === t.toDateString()) return 'Today';
   if (d.toDateString() === y.toDateString()) return 'Yesterday';
   return d.toLocaleDateString('en-NZ', { weekday: 'short', day: 'numeric', month: 'short' });
+}
+function dayLabel(k) {
+  if (!k) return '?';
+  const clean = k.split('T')[0];
+  const d = new Date(clean + 'T12:00:00');
+  return ['S','M','T','W','T','F','S'][d.getDay()];
 }
 
 export default function WhoopScreen() {
@@ -169,10 +182,12 @@ export default function WhoopScreen() {
       <div style={card}>
         <div style={{ padding: '16px 14px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
-            {weekData.map(d => (
-              <div key={d.date} style={{ textAlign: 'center', padding: '8px 0', borderRadius: 8, background: d.date === curDate ? 'rgba(255,255,255,0.06)' : 'transparent', cursor: 'pointer' }} onClick={() => setCurDate(d.date)}>
-                <div style={{ fontSize: 9, fontWeight: 500, color: d.date === dateKey() ? '#ffffff' : 'rgba(255,255,255,0.3)', textTransform: 'uppercase', marginBottom: 6 }}>
-                  {new Date(d.date + 'T00:00:00').toLocaleDateString('en-NZ', { weekday: 'short' }).charAt(0)}
+            {weekData.map(d => {
+              const dk = cleanDate(d.date);
+              return (
+              <div key={dk} style={{ textAlign: 'center', padding: '8px 0', borderRadius: 8, background: dk === cleanDate(curDate) ? 'rgba(255,255,255,0.06)' : 'transparent', cursor: 'pointer' }} onClick={() => setCurDate(dk)}>
+                <div style={{ fontSize: 9, fontWeight: 500, color: dk === dateKey() ? '#ffffff' : 'rgba(255,255,255,0.3)', textTransform: 'uppercase', marginBottom: 6 }}>
+                  {dayLabel(dk)}
                 </div>
                 <div style={{ fontSize: 13, fontWeight: 600, color: d.recoveryScore ? (d.recoveryScore >= 67 ? '#2dba8e' : d.recoveryScore >= 34 ? '#e0a526' : '#f85149') : 'rgba(255,255,255,0.15)' }}>
                   {d.recoveryScore ? `${d.recoveryScore}%` : '—'}
@@ -181,7 +196,8 @@ export default function WhoopScreen() {
                   {d.strain ? d.strain.toFixed(1) : ''}
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
