@@ -281,24 +281,6 @@ export default function Home({ openPicker }) {
         })}
       </div>
 
-      {/* My Journal */}
-      <div style={card}>
-        <div style={{ padding: '16px 18px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <span style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.65)' }}>My Journal</span>
-            <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: 16 }}>›</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-around', padding: '4px 0' }}>
-            {getWeekDots().map(d => (
-              <div key={d.label} style={{ textAlign: 'center', flex: 1 }}>
-                <div style={{ fontSize: 9, fontWeight: 700, color: d.isToday ? '#ffffff' : 'rgba(255,255,255,0.2)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>{d.label}</div>
-                <div style={{ width: 22, height: 22, borderRadius: '50%', margin: '0 auto', background: 'rgba(255,255,255,0.03)', border: d.isToday ? '1.5px solid rgba(255,255,255,0.4)' : '1.5px solid rgba(255,255,255,0.08)' }} />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
       {/* Water */}
       {isToday && (
         <div style={card}>

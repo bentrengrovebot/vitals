@@ -21,6 +21,7 @@ import weeklyRoutes from './routes/weekly.js';
 import cronRoutes from './routes/cron.js';
 import whoopRoutes from './routes/whoop.js';
 import seedRoutes from './routes/seed.js';
+import foodsRoutes from './routes/foods.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -67,6 +68,7 @@ app.use('/api/seed', seedRoutes);
 app.use('/api/weekly', weeklyRoutes);
 app.use('/api/cron', cronRoutes);
 app.use('/api/whoop', whoopRoutes);
+app.use('/api/foods', foodsRoutes);
 
 // Serve prototype and static files from root
 app.use(express.static(path.join(__dirname, '..')));

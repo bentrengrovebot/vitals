@@ -90,6 +90,10 @@ export const api = {
   clearAll: () => request('/data/all', { method: 'DELETE' }),
   exportData: () => request('/data/export'),
 
+  // Foods
+  searchFoods: (q) => request(`/foods/search?q=${encodeURIComponent(q)}`),
+  aiSearchFood: (name, grams) => request('/foods/ai-search', { method: 'POST', body: JSON.stringify({ name, grams }) }),
+
   // Whoop
   getWhoopStatus: () => request('/whoop/status'),
   syncWhoop: () => request('/whoop/sync', { method: 'POST' }),
