@@ -69,7 +69,7 @@ export default function FoodPicker({ slot, date, onBack }) {
 
   function selectDbFood(product) {
     setSelectedFood(product);
-    setGrams('100');
+    setGrams(String(product.defaultServing || 100));
   }
 
   function addDbFood() {
