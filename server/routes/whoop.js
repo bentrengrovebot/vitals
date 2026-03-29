@@ -6,7 +6,7 @@ const router = Router();
 const WHOOP_AUTH_URL = 'https://api.prod.whoop.com/oauth/oauth2/auth';
 const WHOOP_TOKEN_URL = 'https://api.prod.whoop.com/oauth/oauth2/token';
 const WHOOP_API_BASE = 'https://api.prod.whoop.com/developer/v1';
-const SCOPES = 'read:recovery read:cycles read:workout read:sleep read:body_measurement read:profile';
+const SCOPES = 'read:recovery read:cycles read:workout read:sleep read:body_measurement read:profile offline';
 
 // Helper: refresh access token
 async function refreshAccessToken(prisma, whoopToken) {
@@ -23,7 +23,7 @@ async function refreshAccessToken(prisma, whoopToken) {
 
   if (!res.ok) {
     // Token refresh failed — mark as expired
-    await prisma.whoopToken.delete({ where: { id: whoopToken.id } });
+    try { await prisma.whoopToken.delete({ where: { id: whoopToken.id } }); } catch {}
     return null;
   }
 

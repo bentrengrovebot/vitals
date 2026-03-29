@@ -102,8 +102,8 @@ export default function WhoopScreen() {
     );
   };
 
-  // Not connected
-  if (!status?.connected) {
+  // Not connected or expired
+  if (!status?.connected || status?.expired) {
     return (
       <div style={{ paddingBottom: 92 }}>
         <div style={{ padding: '20px 20px 0' }}>
@@ -111,8 +111,12 @@ export default function WhoopScreen() {
         </div>
         <div style={{ padding: '40px 20px', textAlign: 'center' }}>
           <div style={{ fontSize: 32, marginBottom: 16 }}>⌚</div>
-          <div style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', marginBottom: 20, lineHeight: 1.6 }}>Connect your Whoop to see sleep, recovery, and strain data here.</div>
-          <button onClick={() => { window.location.href = '/api/whoop/auth'; }} style={{ padding: '14px 32px', borderRadius: 12, background: '#2dba8e', color: '#fff', fontSize: 14, fontWeight: 600, border: 'none' }}>Connect Whoop</button>
+          <div style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', marginBottom: 20, lineHeight: 1.6 }}>
+            {status?.expired ? 'Your Whoop connection has expired. Reconnect to keep syncing data.' : 'Connect your Whoop to see sleep, recovery, and strain data here.'}
+          </div>
+          <button onClick={() => { window.location.href = '/api/whoop/auth'; }} style={{ padding: '14px 32px', borderRadius: 12, background: '#2dba8e', color: '#fff', fontSize: 14, fontWeight: 600, border: 'none' }}>
+            {status?.expired ? 'Reconnect Whoop' : 'Connect Whoop'}
+          </button>
         </div>
       </div>
     );
