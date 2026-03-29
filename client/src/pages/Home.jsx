@@ -234,7 +234,7 @@ export default function Home({ openPicker }) {
         });
         const maxCal = Math.max(goals.calories, ...weekDays.map(d => d.cal));
         const hasData = weekDays.some(d => d.cal > 0);
-        if (!hasData) return null;
+        // Always show — empty bars show targets exist
         return (
           <>
             <div style={secHeader}>This Week</div>
@@ -245,8 +245,8 @@ export default function Home({ openPicker }) {
                     const pct = maxCal > 0 ? Math.min(100, (d.cal / maxCal) * 100) : 0;
                     return (
                       <div key={i} style={{ flex: 1, textAlign: 'center' }}>
-                        <div style={{ height: 50, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', marginBottom: 6 }}>
-                          <div style={{ width: '100%', maxWidth: 20, borderRadius: 4, background: d.cal > goals.calories ? '#f85149' : d.isToday ? '#5b9ef0' : d.cal > 0 ? 'rgba(91,158,240,0.4)' : 'rgba(255,255,255,0.04)', height: `${Math.max(pct, 3)}%`, transition: 'height 0.3s' }} />
+                        <div style={{ height: 50, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', marginBottom: 6, background: 'rgba(255,255,255,0.03)', borderRadius: 4 }}>
+                          <div style={{ width: '100%', maxWidth: 20, borderRadius: 4, background: d.cal > goals.calories ? '#f85149' : d.isToday ? '#5b9ef0' : d.cal > 0 ? 'rgba(91,158,240,0.4)' : 'transparent', height: `${Math.max(pct, d.cal > 0 ? 3 : 0)}%`, transition: 'height 0.3s' }} />
                         </div>
                         <div style={{ fontSize: 9, fontWeight: 500, color: d.isToday ? '#ffffff' : 'rgba(255,255,255,0.35)' }}>{d.label}</div>
                       </div>
