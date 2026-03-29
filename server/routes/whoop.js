@@ -71,16 +71,33 @@ async function whoopFetch(prisma, whoopToken, url) {
 }
 
 // GET /auth — Initiate OAuth2 flow (redirects to Whoop)
-router.get('/auth', authMiddleware, (req, res) => {
+// No authMiddleware — this is a browser redirect, cookies may not work
+router.get('/auth', async (req, res) => {
   if (!process.env.WHOOP_CLIENT_ID || !process.env.WHOOP_REDIRECT_URI) {
-    return res.status(500).json({ error: 'Whoop not configured. Add WHOOP_CLIENT_ID and WHOOP_REDIRECT_URI to env vars.' });
+    return res.status(500).send('Whoop not configured. Add WHOOP_CLIENT_ID and WHOOP_REDIRECT_URI to env vars.');
   }
+
+  // Try to get userId from cookie
+  let userId = null;
+  const token = req.cookies?.token;
+  if (token) {
+    try {
+      const jwt = await import('jsonwebtoken');
+      const decoded = jwt.default.verify(token, process.env.JWT_SECRET || 'dev-secret-change-me');
+      userId = decoded.userId;
+    } catch {}
+  }
+
+  if (!userId) {
+    return res.redirect('/?error=not_authenticated');
+  }
+
   const params = new URLSearchParams({
     response_type: 'code',
     client_id: process.env.WHOOP_CLIENT_ID,
     redirect_uri: process.env.WHOOP_REDIRECT_URI,
     scope: SCOPES,
-    state: req.userId,
+    state: userId,
   });
   res.redirect(`${WHOOP_AUTH_URL}?${params.toString()}`);
 });
@@ -132,9 +149,8 @@ router.get('/callback', async (req, res) => {
       },
     });
 
-    // Redirect to settings or home page
-    const frontendUrl = process.env.FRONTEND_URL || '';
-    res.redirect(`${frontendUrl}/settings?whoop=connected`);
+    // Redirect back to app
+    res.redirect('/?whoop=connected');
   } catch (err) {
     console.error('Whoop callback error:', err);
     res.status(500).json({ error: 'OAuth callback failed' });
