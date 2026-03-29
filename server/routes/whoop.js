@@ -70,6 +70,17 @@ async function whoopFetch(prisma, whoopToken, url) {
   return res.json();
 }
 
+// GET /test — Debug endpoint
+router.get('/test', (req, res) => {
+  res.json({
+    clientId: process.env.WHOOP_CLIENT_ID ? 'SET' : 'MISSING',
+    clientSecret: process.env.WHOOP_CLIENT_SECRET ? 'SET' : 'MISSING',
+    redirectUri: process.env.WHOOP_REDIRECT_URI || 'MISSING',
+    cookies: Object.keys(req.cookies || {}),
+    hasToken: !!req.cookies?.token,
+  });
+});
+
 // GET /auth — Initiate OAuth2 flow (redirects to Whoop)
 router.get('/auth', async (req, res) => {
   console.log('Whoop auth hit. WHOOP_CLIENT_ID:', process.env.WHOOP_CLIENT_ID ? 'SET' : 'MISSING');
