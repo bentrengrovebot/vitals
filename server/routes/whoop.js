@@ -175,7 +175,7 @@ router.get('/callback', async (req, res) => {
     res.redirect('/?whoop=connected');
   } catch (err) {
     console.error('Whoop callback error:', err);
-    res.status(500).json({ error: 'OAuth callback failed' });
+    res.status(500).json({ error: 'OAuth callback failed', details: err.message });
   }
 });
 
