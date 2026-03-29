@@ -1,9 +1,13 @@
 const BASE = '/api';
 
+function getTimezone() {
+  try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch { return 'Pacific/Auckland'; }
+}
+
 async function request(path, options = {}) {
   const res = await fetch(`${BASE}${path}`, {
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...options.headers },
+    headers: { 'Content-Type': 'application/json', 'X-Timezone': getTimezone(), ...options.headers },
     ...options,
   });
   if (res.status === 401 && !path.includes('/auth/')) {

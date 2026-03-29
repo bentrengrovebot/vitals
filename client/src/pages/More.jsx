@@ -196,6 +196,45 @@ export default function More({ goTo, onRefresh, openRecipeEdit }) {
                 setWeighIns(await api.getWeighIns(30)); setProfile(p => ({ ...p, weightKg: parseFloat(wiVal) })); setWiVal(''); flash('Weigh-in logged');
               }} style={{ padding: '12px 20px', borderRadius: 12, background: ac, border: 'none', color: '#fff', fontSize: 14, fontWeight: 700 }}>Log</button>
             </div>
+            {/* Weight trend chart */}
+            {weighIns.length >= 2 && (() => {
+              const sorted = [...weighIns].sort((a, b) => new Date(a.date) - new Date(b.date)).slice(-14);
+              const withTrend = sorted.map((w, i) => {
+                const win = sorted.slice(Math.max(0, i - 6), i + 1);
+                return { ...w, trend: r1(win.reduce((s, x) => s + x.weightKg, 0) / win.length) };
+              });
+              const allV = [...withTrend.map(w => w.weightKg), ...withTrend.map(w => w.trend)];
+              const mn = Math.min(...allV) - 0.5, mx = Math.max(...allV) + 0.5, rng = mx - mn || 1;
+              const W = 340, H = 120, pad = 30;
+              const pts = withTrend.map((w, i) => ({
+                x: pad + i * ((W - pad * 2) / (withTrend.length - 1 || 1)),
+                y: pad + (1 - (w.weightKg - mn) / rng) * (H - pad * 2),
+                ty: pad + (1 - (w.trend - mn) / rng) * (H - pad * 2),
+              }));
+              const trendLine = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.ty}`).join(' ');
+              const wkCh = withTrend.length >= 7 ? r1(withTrend[withTrend.length - 1].trend - withTrend[Math.max(0, withTrend.length - 8)].trend) : null;
+              return (
+                <div style={{ background: '#1e2228', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '16px 18px', marginBottom: 16 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                    <span style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 2, color: t2 }}>Weight Trend</span>
+                    {wkCh !== null && <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 6, background: wkCh < 0 ? 'rgba(45,186,142,0.12)' : 'rgba(248,81,73,0.12)', color: wkCh < 0 ? ac : '#f85149' }}>{wkCh > 0 ? '+' : ''}{wkCh} kg/wk</span>}
+                  </div>
+                  <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ overflow: 'visible' }}>
+                    {[0, 0.25, 0.5, 0.75, 1].map((p, i) => { const y = pad + p * (H - pad * 2); return (<g key={i}><line x1={pad} y1={y} x2={W - pad} y2={y} stroke="rgba(255,255,255,0.04)" strokeWidth="1" strokeDasharray="4,4" /><text x={pad - 4} y={y + 4} textAnchor="end" fontSize="9" fill="rgba(255,255,255,0.3)">{r1(mx - p * rng)}</text></g>); })}
+                    {pts.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="3.5" fill="rgba(255,255,255,0.12)" stroke="#12151a" strokeWidth="2" />)}
+                    <path d={trendLine} fill="none" stroke="#5b9ef0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    {pts.map((p, i) => <circle key={`t${i}`} cx={p.x} cy={p.ty} r="3.5" fill="#5b9ef0" stroke="#12151a" strokeWidth="2" />)}
+                    {profile.weightGoalKg && (() => { const gy = pad + (1 - (parseFloat(profile.weightGoalKg) - mn) / rng) * (H - pad * 2); if (gy > 0 && gy < H) return (<><line x1={pad} y1={gy} x2={W - pad} y2={gy} stroke={ac} strokeWidth="1.5" strokeDasharray="6,4" /><text x={W - pad + 4} y={gy + 4} fontSize="9" fill={ac}>Goal</text></>); return null; })()}
+                  </svg>
+                  <div style={{ display: 'flex', gap: 14, marginTop: 8, fontSize: 10, color: t2 }}>
+                    <span><span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: 3, background: 'rgba(255,255,255,0.12)', marginRight: 4, verticalAlign: 'middle' }} />Daily</span>
+                    <span><span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: 3, background: '#5b9ef0', marginRight: 4, verticalAlign: 'middle' }} />Trend</span>
+                    {profile.weightGoalKg && weighIns.length > 0 && <span>{r1(weighIns[0].weightKg - parseFloat(profile.weightGoalKg))}kg to go</span>}
+                  </div>
+                </div>
+              );
+            })()}
+
             {weighIns.map(w => (
               <div key={w.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid #1e2228' }}>
                 <div>

@@ -52,6 +52,7 @@ router.post('/', async (req, res) => {
         portion,
         calories,
         proteinG,
+        mealTime: new Date(), // timestamp when food was actually logged
         fatG,
         carbsG,
         recipeId,

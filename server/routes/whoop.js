@@ -72,6 +72,9 @@ async function whoopFetch(prisma, whoopToken, url) {
 
 // GET /auth — Initiate OAuth2 flow (redirects to Whoop)
 router.get('/auth', authMiddleware, (req, res) => {
+  if (!process.env.WHOOP_CLIENT_ID || !process.env.WHOOP_REDIRECT_URI) {
+    return res.status(500).json({ error: 'Whoop not configured. Add WHOOP_CLIENT_ID and WHOOP_REDIRECT_URI to env vars.' });
+  }
   const params = new URLSearchParams({
     response_type: 'code',
     client_id: process.env.WHOOP_CLIENT_ID,
