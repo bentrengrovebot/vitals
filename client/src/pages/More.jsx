@@ -197,6 +197,19 @@ export default function More({ goTo, onRefresh, openRecipeEdit }) {
               }} style={{ padding: '12px 20px', borderRadius: 12, background: ac, border: 'none', color: '#fff', fontSize: 14, fontWeight: 700 }}>Log</button>
             </div>
             {/* Weight trend chart */}
+            {weighIns.length < 2 && (
+              <div style={{ background: '#1e2228', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '24px 18px', marginBottom: 16, textAlign: 'center' }}>
+                <div style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 2, color: t2, marginBottom: 12 }}>Weight Trend</div>
+                <div style={{ height: 80, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="200" height="50" viewBox="0 0 200 50">
+                    <line x1="10" y1="40" x2="190" y2="40" stroke="rgba(255,255,255,0.06)" strokeWidth="1" strokeDasharray="4,4" />
+                    <line x1="10" y1="25" x2="190" y2="25" stroke="rgba(255,255,255,0.06)" strokeWidth="1" strokeDasharray="4,4" />
+                    <line x1="10" y1="10" x2="190" y2="10" stroke="rgba(255,255,255,0.06)" strokeWidth="1" strokeDasharray="4,4" />
+                  </svg>
+                </div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>Log {weighIns.length === 0 ? '2' : '1 more'} weigh-in{weighIns.length === 0 ? 's' : ''} to see your trend</div>
+              </div>
+            )}
             {weighIns.length >= 2 && (() => {
               const sorted = [...weighIns].sort((a, b) => new Date(a.date) - new Date(b.date)).slice(-14);
               const withTrend = sorted.map((w, i) => {
