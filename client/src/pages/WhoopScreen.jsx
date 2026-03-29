@@ -54,8 +54,14 @@ export default function WhoopScreen() {
 
   async function syncNow() {
     setSyncing(true);
-    await api.syncWhoop();
-    await loadData();
+    try {
+      const result = await api.syncWhoop();
+      console.log('Whoop sync result:', result);
+      await loadData();
+    } catch (err) {
+      console.error('Whoop sync failed:', err);
+      alert('Sync failed: ' + err.message);
+    }
     setSyncing(false);
   }
 

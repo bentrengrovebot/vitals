@@ -194,18 +194,34 @@ router.post('/sync', authMiddleware, async (req, res) => {
     const startISO = start.toISOString();
     const endISO = end.toISOString();
 
-    // Fetch all data in parallel
-    const [sleepData, recoveryData, cycleData, workoutData] = await Promise.all([
-      whoopFetch(req.prisma, token, `${WHOOP_API_BASE}/activity/sleep?start=${startISO}&end=${endISO}`),
-      whoopFetch(req.prisma, token, `${WHOOP_API_BASE}/recovery?start=${startISO}&end=${endISO}`),
-      whoopFetch(req.prisma, token, `${WHOOP_API_BASE}/cycle?start=${startISO}&end=${endISO}`),
-      whoopFetch(req.prisma, token, `${WHOOP_API_BASE}/activity/workout?start=${startISO}&end=${endISO}`),
-    ]);
+    console.log('Whoop sync: fetching data from', startISO, 'to', endISO);
 
-    const sleepRecords = sleepData.records || [];
-    const recoveryRecords = recoveryData.records || [];
-    const cycleRecords = cycleData.records || [];
-    const workoutRecords = workoutData.records || [];
+    // Fetch each endpoint individually with error handling
+    let sleepRecords = [], recoveryRecords = [], cycleRecords = [], workoutRecords = [];
+
+    try {
+      const sleepData = await whoopFetch(req.prisma, token, `${WHOOP_API_BASE}/activity/sleep?start=${startISO}&end=${endISO}`);
+      sleepRecords = sleepData.records || sleepData || [];
+      console.log('Whoop sleep records:', sleepRecords.length);
+    } catch (err) { console.error('Whoop sleep fetch failed:', err.message); }
+
+    try {
+      const recoveryData = await whoopFetch(req.prisma, token, `${WHOOP_API_BASE}/recovery?start=${startISO}&end=${endISO}`);
+      recoveryRecords = recoveryData.records || recoveryData || [];
+      console.log('Whoop recovery records:', recoveryRecords.length);
+    } catch (err) { console.error('Whoop recovery fetch failed:', err.message); }
+
+    try {
+      const cycleData = await whoopFetch(req.prisma, token, `${WHOOP_API_BASE}/cycle?start=${startISO}&end=${endISO}`);
+      cycleRecords = cycleData.records || cycleData || [];
+      console.log('Whoop cycle records:', cycleRecords.length);
+    } catch (err) { console.error('Whoop cycle fetch failed:', err.message); }
+
+    try {
+      const workoutData = await whoopFetch(req.prisma, token, `${WHOOP_API_BASE}/activity/workout?start=${startISO}&end=${endISO}`);
+      workoutRecords = workoutData.records || workoutData || [];
+      console.log('Whoop workout records:', workoutRecords.length);
+    } catch (err) { console.error('Whoop workout fetch failed:', err.message); }
 
     // Build a map of date -> aggregated data
     const dailyMap = {};
