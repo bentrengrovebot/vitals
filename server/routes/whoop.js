@@ -159,14 +159,14 @@ router.get('/callback', async (req, res) => {
       create: {
         userId,
         accessToken: data.access_token,
-        refreshToken: data.refresh_token,
-        expiresAt: new Date(Date.now() + data.expires_in * 1000),
+        refreshToken: data.refresh_token || '',
+        expiresAt: new Date(Date.now() + (data.expires_in || 86400) * 1000),
         scopes: SCOPES,
       },
       update: {
         accessToken: data.access_token,
-        refreshToken: data.refresh_token,
-        expiresAt: new Date(Date.now() + data.expires_in * 1000),
+        refreshToken: data.refresh_token || '',
+        expiresAt: new Date(Date.now() + (data.expires_in || 86400) * 1000),
         scopes: SCOPES,
       },
     });
