@@ -12,7 +12,7 @@ const PROMPTS = [
   "Should I adjust targets?",
 ];
 
-export default function VitalsChat({ onBack }) {
+export default function VitalsChat({ onBack, isPanel }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -49,14 +49,14 @@ export default function VitalsChat({ onBack }) {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#f5f5f7' }}>
-      <div style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', gap: 12, borderBottom: `1px solid ${brd}` }}>
-        <button onClick={onBack} style={{ background: 'none', border: 'none', color: t2, fontSize: 22 }}>←</button>
-        <div style={{ width: 36, height: 36, borderRadius: 12, background: 'linear-gradient(135deg,#2dba8e,#1a8a6a)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    <div style={{ display: 'flex', flexDirection: 'column', height: isPanel ? '100%' : '100vh', background: isPanel ? '#ffffff' : '#f5f5f7' }}>
+      <div style={{ display: 'flex', alignItems: 'center', padding: isPanel ? '16px 18px' : '16px 20px', gap: 12, borderBottom: `1px solid ${brd}` }}>
+        {!isPanel && <button onClick={onBack} style={{ background: 'none', border: 'none', color: t2, fontSize: 22 }}>←</button>}
+        <div style={{ width: 32, height: 32, borderRadius: 10, background: 'linear-gradient(135deg,#2dba8e,#1a8a6a)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
         </div>
         <div>
-          <div style={{ fontSize: 16, fontWeight: 700, color: t1 }}>Vitals</div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: t1 }}>Vitals AI</div>
           <div style={{ fontSize: 11, color: t2 }}>Your health coach</div>
         </div>
       </div>
@@ -94,7 +94,7 @@ export default function VitalsChat({ onBack }) {
         <div ref={chatEnd} />
       </div>
 
-      <div style={{ padding: '12px 20px 28px', display: 'flex', gap: 8, borderTop: `1px solid ${brd}` }}>
+      <div style={{ padding: isPanel ? '12px 18px 16px' : '12px 20px 28px', display: 'flex', gap: 8, borderTop: `1px solid ${brd}` }}>
         <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') sendMessage(); }}
           placeholder="Ask about your health..." style={{ flex: 1, padding: '14px 16px', borderRadius: 12, border: '1px solid #e5e5e7', background: '#ffffff', fontSize: 15, color: t1 }} />
         <button onClick={() => sendMessage()} disabled={loading || !input.trim()}
