@@ -216,3 +216,11 @@ model WeeklyCheckin {
   accepted         Boolean  @default(false)
   createdAt        DateTime @default(now())
 }
+
+model UserContext {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  context   Json     // persistent memory: preferences, conditions, patterns, notes
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}

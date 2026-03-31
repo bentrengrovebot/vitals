@@ -372,6 +372,312 @@ IMPORTANT RULES:
 - When giving calorie/macro advice, always reference their specific targets.
 - When discussing weight, always contextualise with rate of change and goal.`;
 
+// AI Tool definitions for Claude tool use
+const TOOLS = [
+  {
+    name: "log_food",
+    description: "Log a food item to the user's diary. Use when the user describes what they ate, e.g. 'I had eggs on toast for breakfast'. Estimate the nutrition using NZ food data.",
+    input_schema: {
+      type: "object",
+      properties: {
+        date: { type: "string", description: "YYYY-MM-DD format. Default to today." },
+        slot: { type: "string", enum: ["Breakfast", "Lunch", "Dinner", "Snacks"], description: "Meal slot" },
+        name: { type: "string", description: "Food name" },
+        portion: { type: "string", description: "Portion description e.g. '2 eggs on 1 slice toast'" },
+        calories: { type: "number" },
+        proteinG: { type: "number" },
+        fatG: { type: "number" },
+        carbsG: { type: "number" },
+      },
+      required: ["date", "slot", "name", "calories", "proteinG", "fatG", "carbsG"]
+    }
+  },
+  {
+    name: "create_recipe",
+    description: "Create a new recipe with ingredients. Use when user says 'build me a recipe for...' or 'create a meal with...'",
+    input_schema: {
+      type: "object",
+      properties: {
+        name: { type: "string" },
+        servings: { type: "number", description: "Number of servings. Default 1." },
+        ingredients: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              name: { type: "string" },
+              grams: { type: "number" },
+              calories: { type: "number" },
+              proteinG: { type: "number" },
+              fatG: { type: "number" },
+              carbsG: { type: "number" },
+            },
+            required: ["name", "grams", "calories", "proteinG", "fatG", "carbsG"]
+          }
+        }
+      },
+      required: ["name", "servings", "ingredients"]
+    }
+  },
+  {
+    name: "log_weight",
+    description: "Record a weight measurement. Use when user says 'I weighed 98.5 today' or 'log my weight'.",
+    input_schema: {
+      type: "object",
+      properties: {
+        weightKg: { type: "number" },
+      },
+      required: ["weightKg"]
+    }
+  },
+  {
+    name: "log_water",
+    description: "Log water intake. Use when user says 'log 500ml water' or 'I drank a glass of water'.",
+    input_schema: {
+      type: "object",
+      properties: {
+        amountMl: { type: "number", description: "Amount in millilitres" },
+      },
+      required: ["amountMl"]
+    }
+  },
+  {
+    name: "log_symptom",
+    description: "Record a symptom. Use when user reports feeling unwell, e.g. 'getting reflux', 'tired', 'bloated'.",
+    input_schema: {
+      type: "object",
+      properties: {
+        type: { type: "string", enum: ["reflux", "bloating", "energy_high", "energy_low", "mood_good", "mood_bad", "headache", "gut_good"] },
+        severity: { type: "number", description: "1-5 scale" },
+        notes: { type: "string" },
+      },
+      required: ["type", "severity"]
+    }
+  },
+  {
+    name: "update_goals",
+    description: "Update the user's daily nutrition targets. Use when user says 'set my calories to 2100' or 'increase protein target'.",
+    input_schema: {
+      type: "object",
+      properties: {
+        calories: { type: "number" },
+        proteinG: { type: "number" },
+        fatG: { type: "number" },
+        carbsG: { type: "number" },
+        waterMl: { type: "number" },
+      },
+      required: []
+    }
+  },
+  {
+    name: "toggle_supplement",
+    description: "Mark a supplement as taken or not taken today. Use when user says 'I took my iron' or 'mark creatine as done'.",
+    input_schema: {
+      type: "object",
+      properties: {
+        supplementName: { type: "string", description: "Name of the supplement to toggle" },
+      },
+      required: ["supplementName"]
+    }
+  },
+  {
+    name: "build_meal_plan",
+    description: "Create a full day's meal plan and log all meals to the diary. Use when user says 'build me a meal plan for today' or 'plan my meals'. Creates diary entries for each meal.",
+    input_schema: {
+      type: "object",
+      properties: {
+        date: { type: "string", description: "YYYY-MM-DD" },
+        targetCalories: { type: "number" },
+        targetProteinG: { type: "number" },
+        meals: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              slot: { type: "string", enum: ["Breakfast", "Lunch", "Dinner", "Snacks"] },
+              name: { type: "string" },
+              portion: { type: "string" },
+              calories: { type: "number" },
+              proteinG: { type: "number" },
+              fatG: { type: "number" },
+              carbsG: { type: "number" },
+            },
+            required: ["slot", "name", "calories", "proteinG", "fatG", "carbsG"]
+          }
+        }
+      },
+      required: ["date", "meals"]
+    }
+  },
+  {
+    name: "save_memory",
+    description: "Save important information about the user for future reference. Use when user shares preferences, conditions, history, or anything the AI should remember long-term. Examples: 'I'm lactose intolerant', 'I train at 6am', 'I get reflux from spicy food', 'I'm training for a half marathon'.",
+    input_schema: {
+      type: "object",
+      properties: {
+        key: { type: "string", description: "Category: 'preferences', 'conditions', 'training', 'history', 'notes'" },
+        value: { type: "string", description: "The information to remember" },
+      },
+      required: ["key", "value"]
+    }
+  },
+  {
+    name: "search_food",
+    description: "Look up nutrition information for a food item. Use when the user asks 'how many calories in...' or you need nutrition data to log food.",
+    input_schema: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "Food name to search" },
+        grams: { type: "number", description: "Amount in grams. Default 100." },
+      },
+      required: ["query"]
+    }
+  },
+];
+
+// Execute a tool call against the database
+async function executeTool(toolName, toolInput, prisma, userId) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  switch (toolName) {
+    case 'log_food': {
+      const entry = await prisma.diaryEntry.create({
+        data: {
+          userId,
+          date: new Date(toolInput.date),
+          slot: toolInput.slot,
+          name: toolInput.name,
+          portion: toolInput.portion || null,
+          calories: toolInput.calories,
+          proteinG: toolInput.proteinG,
+          fatG: toolInput.fatG,
+          carbsG: toolInput.carbsG,
+          mealTime: new Date(),
+        },
+      });
+      return { success: true, message: `Logged ${toolInput.name} to ${toolInput.slot}` };
+    }
+    case 'create_recipe': {
+      const recipe = await prisma.recipe.create({
+        data: {
+          userId,
+          name: toolInput.name,
+          servings: toolInput.servings || 1,
+          ingredients: {
+            create: toolInput.ingredients.map(i => ({
+              name: i.name, grams: i.grams, calories: i.calories,
+              proteinG: i.proteinG, fatG: i.fatG, carbsG: i.carbsG,
+              source: 'ai_estimated',
+            })),
+          },
+        },
+        include: { ingredients: true },
+      });
+      return { success: true, message: `Created recipe "${toolInput.name}" with ${toolInput.ingredients.length} ingredients` };
+    }
+    case 'log_weight': {
+      const weighIn = await prisma.weighIn.create({
+        data: { userId, date: today, weightKg: toolInput.weightKg },
+      });
+      await prisma.profile.updateMany({
+        where: { userId },
+        data: { weightKg: toolInput.weightKg },
+      });
+      return { success: true, message: `Logged weight: ${toolInput.weightKg}kg` };
+    }
+    case 'log_water': {
+      await prisma.waterLog.create({
+        data: { userId, amountMl: toolInput.amountMl },
+      });
+      return { success: true, message: `Logged ${toolInput.amountMl}ml water` };
+    }
+    case 'log_symptom': {
+      await prisma.symptomLog.create({
+        data: { userId, type: toolInput.type, severity: toolInput.severity, notes: toolInput.notes || null },
+      });
+      return { success: true, message: `Logged ${toolInput.type} (severity ${toolInput.severity}/5)` };
+    }
+    case 'update_goals': {
+      const current = await prisma.goals.findFirst({ where: { userId }, orderBy: { effectiveFrom: 'desc' } });
+      const newGoals = {
+        calories: toolInput.calories || current?.calories || 2300,
+        proteinG: toolInput.proteinG || current?.proteinG || 150,
+        fatG: toolInput.fatG || current?.fatG || 80,
+        carbsG: toolInput.carbsG || current?.carbsG || 250,
+        waterMl: toolInput.waterMl || current?.waterMl || 2500,
+      };
+      await prisma.goals.create({ data: { userId, ...newGoals } });
+      return { success: true, message: `Updated goals: ${newGoals.calories}cal, ${newGoals.proteinG}g P, ${newGoals.fatG}g F, ${newGoals.carbsG}g C` };
+    }
+    case 'toggle_supplement': {
+      const sup = await prisma.supplement.findFirst({
+        where: { userId, isActive: true, name: { contains: toolInput.supplementName, mode: 'insensitive' } },
+      });
+      if (!sup) return { success: false, message: `Supplement "${toolInput.supplementName}" not found` };
+      const existing = await prisma.supplementLog.findFirst({
+        where: { userId, supplementId: sup.id, date: today },
+      });
+      if (existing) {
+        await prisma.supplementLog.delete({ where: { id: existing.id } });
+        return { success: true, message: `Unmarked ${sup.name} as taken` };
+      } else {
+        await prisma.supplementLog.create({
+          data: { userId, supplementId: sup.id, date: today, takenAt: new Date() },
+        });
+        return { success: true, message: `Marked ${sup.name} as taken` };
+      }
+    }
+    case 'build_meal_plan': {
+      for (const meal of toolInput.meals) {
+        await prisma.diaryEntry.create({
+          data: {
+            userId,
+            date: new Date(toolInput.date),
+            slot: meal.slot,
+            name: meal.name,
+            portion: meal.portion || null,
+            calories: meal.calories,
+            proteinG: meal.proteinG,
+            fatG: meal.fatG,
+            carbsG: meal.carbsG,
+            mealTime: new Date(),
+          },
+        });
+      }
+      const totalCal = toolInput.meals.reduce((s, m) => s + m.calories, 0);
+      return { success: true, message: `Built meal plan: ${toolInput.meals.length} meals, ${Math.round(totalCal)} cal total` };
+    }
+    case 'save_memory': {
+      const existing = await prisma.userContext.findUnique({ where: { userId } });
+      const context = existing?.context || {};
+      if (!context[toolInput.key]) context[toolInput.key] = [];
+      context[toolInput.key].push({ value: toolInput.value, savedAt: new Date().toISOString() });
+      await prisma.userContext.upsert({
+        where: { userId },
+        create: { userId, context },
+        update: { context },
+      });
+      return { success: true, message: `Remembered: ${toolInput.value}` };
+    }
+    case 'search_food': {
+      const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+      const grams = toolInput.grams || 100;
+      const response = await client.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 200,
+        system: 'Nutrition database. Given food+grams, respond ONLY JSON: {"cal":number,"protein":number,"fat":number,"carbs":number}. Use NZ food data. Round to 1dp.',
+        messages: [{ role: 'user', content: `"${toolInput.query}", ${grams}g` }],
+      });
+      const text = (response.content[0]?.text || '').replace(/```json|```/g, '').trim();
+      const parsed = JSON.parse(text);
+      return { success: true, message: `${toolInput.query} (${grams}g): ${parsed.cal}cal, ${parsed.protein}g P, ${parsed.fat}g F, ${parsed.carbs}g C`, data: parsed };
+    }
+    default:
+      return { success: false, message: `Unknown tool: ${toolName}` };
+  }
+}
+
 // POST /api/ai/chat
 router.post('/chat', async (req, res) => {
   try {
@@ -379,42 +685,65 @@ router.post('/chat', async (req, res) => {
     const context = await buildContext(req.prisma, req.userId, 14);
     const client = getClient();
 
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1000,
-      system: `${CHAT_SYSTEM}\n\n${context}`,
-      messages: messages.map(m => ({ role: m.role, content: m.content })),
-    });
-
-    const text = response.content.map(c => c.text || '').join('\n');
-
-    // Check if AI detected a symptom to log
-    const symptomTypes = ['reflux', 'bloating', 'energy_high', 'energy_low', 'mood_good', 'mood_bad', 'headache', 'gut_good'];
-    const lastUserMsg = messages[messages.length - 1]?.content?.toLowerCase() || '';
-    const detectedSymptom = symptomTypes.find(t => {
-      const keywords = {
-        reflux: ['reflux', 'heartburn', 'acid'],
-        bloating: ['bloat', 'bloated', 'bloating'],
-        energy_high: ['energy high', 'energetic', 'great energy'],
-        energy_low: ['tired', 'fatigue', 'low energy', 'exhausted', 'sluggish'],
-        mood_good: ['mood good', 'happy', 'great mood', 'feeling good'],
-        mood_bad: ['mood bad', 'irritable', 'angry', 'frustrated', 'anxious'],
-        headache: ['headache', 'head hurts', 'migraine'],
-        gut_good: ['gut good', 'digestion good', 'stomach good'],
-      };
-      return keywords[t]?.some(k => lastUserMsg.includes(k));
-    });
-
-    if (detectedSymptom) {
-      await req.prisma.symptomLog.create({
-        data: { userId: req.userId, type: detectedSymptom, severity: 3 },
+    // Load persistent memory
+    const userCtx = await req.prisma.userContext.findUnique({ where: { userId: req.userId } });
+    let memoryCtx = '';
+    if (userCtx?.context) {
+      memoryCtx = '\n=== PERSISTENT MEMORY (things the user has told you to remember) ===\n';
+      Object.entries(userCtx.context).forEach(([key, items]) => {
+        memoryCtx += `${key}:\n`;
+        items.forEach(item => { memoryCtx += `  - ${item.value}\n`; });
       });
     }
 
-    res.json({ response: text, symptomLogged: detectedSymptom || null });
+    let apiMessages = messages.map(m => ({ role: m.role, content: m.content }));
+    const actions = [];
+
+    // Tool use loop - keep calling until no more tool use
+    let finalText = '';
+    for (let i = 0; i < 5; i++) { // max 5 tool rounds
+      const response = await client.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        system: `${CHAT_SYSTEM}\n\n${context}\n${memoryCtx}`,
+        messages: apiMessages,
+        tools: TOOLS,
+      });
+
+      // Collect text blocks and tool use blocks
+      const textBlocks = response.content.filter(b => b.type === 'text');
+      const toolBlocks = response.content.filter(b => b.type === 'tool_use');
+
+      if (textBlocks.length) {
+        finalText += textBlocks.map(b => b.text).join('\n');
+      }
+
+      if (toolBlocks.length === 0) break; // No tools to execute - done
+
+      // Execute tools and collect results
+      const toolResults = [];
+      for (const tool of toolBlocks) {
+        const result = await executeTool(tool.name, tool.input, req.prisma, req.userId);
+        actions.push({ tool: tool.name, input: tool.input, result });
+        toolResults.push({
+          type: 'tool_result',
+          tool_use_id: tool.id,
+          content: JSON.stringify(result),
+        });
+      }
+
+      // Add assistant response + tool results to messages for next round
+      apiMessages = [
+        ...apiMessages,
+        { role: 'assistant', content: response.content },
+        { role: 'user', content: toolResults },
+      ];
+    }
+
+    res.json({ response: finalText, actions });
   } catch (err) {
     console.error('AI chat error:', err);
-    res.status(500).json({ error: 'AI request failed' });
+    res.status(500).json({ error: 'AI request failed', details: err.message });
   }
 });
 

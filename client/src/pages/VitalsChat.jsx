@@ -30,6 +30,10 @@ export default function VitalsChat({ onBack }) {
     try {
       const data = await api.chat(newMsgs);
       setMessages([...newMsgs, { role: 'assistant', content: data.response }]);
+      if (data.actions?.length) {
+        const actionSummary = data.actions.map(a => `\u2713 ${a.result.message}`).join('\n');
+        console.log('AI actions:', data.actions);
+      }
     } catch {
       setMessages([...newMsgs, { role: 'assistant', content: 'Connection error. Please try again.' }]);
     }
