@@ -67,12 +67,12 @@ export default function RecipeEdit({ recipe, onBack }) {
   };
 
   const ps = perServe();
-  const card = { background: 'rgba(255,255,255,0.05)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.08)' };
-  const inp = { width: '100%', padding: '14px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: '#1e2228', fontSize: 15, boxSizing: 'border-box', color: '#ffffff' };
-  const ac = '#2dba8e', or = '#e0a526', rd = '#f85149', t1 = '#ffffff', t2 = '#8b949e', t3 = '#484f58', brd = 'rgba(255,255,255,0.08)';
+  const card = { background: '#ffffff', borderRadius: 16, border: '1px solid #e5e5e7' };
+  const inp = { width: '100%', padding: '14px 16px', borderRadius: 12, border: '1px solid #e5e5e7', background: '#ffffff', fontSize: 15, boxSizing: 'border-box', color: '#1a1a1a' };
+  const ac = '#2dba8e', or = '#e0a526', rd = '#f85149', t1 = '#1a1a1a', t2 = '#6b7280', t3 = '#9ca3af', brd = '#e5e5e7';
 
   return (
-    <div style={{ paddingBottom: 100, background: '#12151a', minHeight: '100vh' }}>
+    <div style={{ paddingBottom: 100, background: '#f5f5f7', minHeight: '100vh' }}>
       <div style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', gap: 12 }}>
         <button onClick={onBack} style={{ background: 'none', border: 'none', color: t2, fontSize: 22 }}>←</button>
         <div style={{ fontSize: 17, fontWeight: 700, flex: 1, color: t1 }}>{rec.name || 'New Recipe'}</div>
@@ -127,7 +127,7 @@ export default function RecipeEdit({ recipe, onBack }) {
               ))}
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={() => { setAddIng(false); setIngF({ name: '', grams: '', cal: '', protein: '', fat: '', carbs: '' }); }} style={{ flex: 1, padding: 12, borderRadius: 12, border: `1px solid ${brd}`, background: 'rgba(255,255,255,0.05)', color: t1, fontSize: 14, fontWeight: 600 }}>Cancel</button>
+              <button onClick={() => { setAddIng(false); setIngF({ name: '', grams: '', cal: '', protein: '', fat: '', carbs: '' }); }} style={{ flex: 1, padding: 12, borderRadius: 12, border: `1px solid ${brd}`, background: '#ffffff', color: t1, fontSize: 14, fontWeight: 600 }}>Cancel</button>
               <button onClick={addIngredient} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: ac, color: '#fff', fontSize: 14, fontWeight: 700 }}>Add</button>
             </div>
           </div>

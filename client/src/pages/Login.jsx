@@ -23,23 +23,23 @@ export default function Login() {
     setLoading(false);
   };
 
-  const inp = { width: '100%', padding: '14px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: '#1e2228', fontSize: 15, marginTop: 4, color: '#ffffff' };
+  const inp = { width: '100%', padding: '14px 16px', borderRadius: 12, border: '1px solid #e5e5e7', background: '#ffffff', fontSize: 15, marginTop: 4, color: '#1a1a1a' };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, background: '#12151a' }}>
-      <div style={{ width: '100%', maxWidth: 380, background: 'rgba(255,255,255,0.05)', borderRadius: 16, padding: 32 }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, background: '#f5f5f7' }}>
+      <div style={{ width: '100%', maxWidth: 380, background: '#ffffff', border: '1px solid #e5e5e7', borderRadius: 16, padding: 32 }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-1px', color: '#ffffff' }}>Vitals</div>
+          <div style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-1px', color: '#1a1a1a' }}>Vitals</div>
         </div>
         <form onSubmit={handleSubmit}>
           {error && <div style={{ padding: '12px 16px', borderRadius: 12, background: 'rgba(248,81,73,0.1)', border: '1px solid rgba(248,81,73,0.2)', color: '#f85149', fontSize: 14, marginBottom: 16 }}>{error}</div>}
           <div style={{ marginBottom: 14 }}>
-            <label style={{ fontSize: 11, fontWeight: 700, color: '#8b949e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Email</label>
+            <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Email</label>
             <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="you@example.com"
               style={inp} />
           </div>
           <div style={{ marginBottom: 20 }}>
-            <label style={{ fontSize: 11, fontWeight: 700, color: '#8b949e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Password</label>
+            <label style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Password</label>
             <input type="password" value={password} onChange={e => setPassword(e.target.value)} required
               style={inp} />
           </div>
@@ -48,11 +48,11 @@ export default function Login() {
             {loading ? 'Logging in...' : 'Log In'}
           </button>
         </form>
-        <div style={{ textAlign: 'center', marginTop: 16, fontSize: 14, color: '#8b949e' }}>
-          <Link to="/forgot-password" style={{ color: '#58a6ff', textDecoration: 'none' }}>Forgot password?</Link>
+        <div style={{ textAlign: 'center', marginTop: 16, fontSize: 14, color: '#6b7280' }}>
+          <Link to="/forgot-password" style={{ color: '#3b82f6', textDecoration: 'none' }}>Forgot password?</Link>
         </div>
-        <div style={{ textAlign: 'center', marginTop: 12, fontSize: 14, color: '#8b949e' }}>
-          Don't have an account? <Link to="/signup" style={{ color: '#58a6ff', textDecoration: 'none' }}>Sign up</Link>
+        <div style={{ textAlign: 'center', marginTop: 12, fontSize: 14, color: '#6b7280' }}>
+          Don't have an account? <Link to="/signup" style={{ color: '#3b82f6', textDecoration: 'none' }}>Sign up</Link>
         </div>
       </div>
     </div>

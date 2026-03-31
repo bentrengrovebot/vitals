@@ -3,9 +3,9 @@ import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 
 const r1 = n => Math.round(n * 10) / 10;
-const card = { background: '#1e2228', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, margin: '0 16px 8px', overflow: 'hidden' };
-const inp = { width: '100%', padding: '14px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: '#1e2228', fontSize: 15, boxSizing: 'border-box', color: '#ffffff' };
-const t1 = '#ffffff', t2 = 'rgba(255,255,255,0.45)', t3 = 'rgba(255,255,255,0.2)', ac = '#2dba8e';
+const card = { background: '#ffffff', border: '1px solid #e5e5e7', borderRadius: 14, margin: '0 16px 8px', overflow: 'hidden' };
+const inp = { width: '100%', padding: '14px 16px', borderRadius: 12, border: '1px solid #e5e5e7', background: '#ffffff', fontSize: 15, boxSizing: 'border-box', color: '#1a1a1a' };
+const t1 = '#1a1a1a', t2 = '#6b7280', t3 = '#9ca3af', ac = '#2dba8e';
 
 function recipeNutrition(rec) {
   if (!rec?.ingredients?.length) return { cal: 0, protein: 0, fat: 0, carbs: 0 };
@@ -44,7 +44,7 @@ export default function More({ goTo, onRefresh, openRecipeEdit }) {
   function flash(msg) { setSaved(msg); setTimeout(() => setSaved(''), 2000); }
 
   const menuItem = (label, subtitle, onClick) => (
-    <button onClick={onClick} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '18px 18px', background: 'none', border: 'none', borderTop: '1px solid #1e2228', color: t1 }}>
+    <button onClick={onClick} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '18px 18px', background: 'none', border: 'none', borderTop: '1px solid #e5e5e7', color: t1 }}>
       <div style={{ textAlign: 'left' }}>
         <div style={{ fontSize: 14, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8 }}>{label}</div>
         {subtitle && <div style={{ fontSize: 11, color: t2, marginTop: 2, fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>{subtitle}</div>}
@@ -66,7 +66,7 @@ export default function More({ goTo, onRefresh, openRecipeEdit }) {
     <div style={{ paddingBottom: 92 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 20px 8px' }}>
         <div style={{ fontSize: 22, fontWeight: 800, color: t1, letterSpacing: -0.3 }}>More</div>
-        <button onClick={logout} style={{ padding: '7px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)', background: '#1e2228', color: t2, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>Logout</button>
+        <button onClick={logout} style={{ padding: '7px 14px', borderRadius: 10, border: '1px solid #e5e5e7', background: '#ffffff', color: t2, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>Logout</button>
       </div>
 
       {saved && <div style={{ margin: '8px 16px', padding: '10px 16px', borderRadius: 12, background: 'rgba(45,186,142,0.12)', color: ac, fontSize: 14, fontWeight: 600 }}>{saved}</div>}
@@ -112,7 +112,7 @@ export default function More({ goTo, onRefresh, openRecipeEdit }) {
               <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
                 {['Male', 'Female'].map(s => (
                   <button key={s} onClick={() => setProfile(p => ({ ...p, sex: s }))}
-                    style={{ padding: '8px 20px', borderRadius: 12, border: profile.sex === s ? '1px solid #2dba8e' : '1px solid rgba(255,255,255,0.08)', background: profile.sex === s ? 'rgba(45,186,142,0.12)' : '#1e2228', color: profile.sex === s ? ac : t2, fontSize: 13, fontWeight: 600 }}>{s}</button>
+                    style={{ padding: '8px 20px', borderRadius: 12, border: profile.sex === s ? '1px solid #2dba8e' : '1px solid #e5e5e7', background: profile.sex === s ? 'rgba(45,186,142,0.1)' : '#f0f0f2', color: profile.sex === s ? ac : t2, fontSize: 13, fontWeight: 600 }}>{s}</button>
                 ))}
               </div>
             </div>
@@ -141,7 +141,7 @@ export default function More({ goTo, onRefresh, openRecipeEdit }) {
             {recipes.map(r => {
               const ps = recipeNutrition(r);
               return (
-                <div key={r.id} onClick={() => openRecipeEdit(r)} style={{ background: '#1e2228', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '16px 18px', marginBottom: 8, cursor: 'pointer' }}>
+                <div key={r.id} onClick={() => openRecipeEdit(r)} style={{ background: '#ffffff', border: '1px solid #e5e5e7', borderRadius: 14, padding: '16px 18px', marginBottom: 8, cursor: 'pointer' }}>
                   <div style={{ fontSize: 15, fontWeight: 700, color: t1 }}>{r.name || 'Untitled'}</div>
                   <div style={{ fontSize: 12, color: t2, marginTop: 4 }}>{r.servings} serve{r.servings !== 1 ? 's' : ''} · {ps.cal} cal · {ps.protein}g P</div>
                 </div>
@@ -155,7 +155,7 @@ export default function More({ goTo, onRefresh, openRecipeEdit }) {
         {section === 'supps' && (
           <div>
             {supplements.filter(s => s.isActive).map(sup => (
-              <div key={sup.id} style={{ background: '#1e2228', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '14px 16px', marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div key={sup.id} style={{ background: '#ffffff', border: '1px solid #e5e5e7', borderRadius: 14, padding: '14px 16px', marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <div style={{ fontSize: 15, fontWeight: 600, color: t1 }}>{sup.name}</div>
                   <div style={{ fontSize: 12, color: t2, marginTop: 2 }}>{sup.activeDose}{sup.activeIngredient ? ` · ${sup.activeIngredient}` : ''}</div>
@@ -165,13 +165,13 @@ export default function More({ goTo, onRefresh, openRecipeEdit }) {
             ))}
             {!supplements.filter(s => s.isActive).length && !addingSupp && <div style={{ color: t3, fontSize: 14, padding: 20, textAlign: 'center' }}>No supplements yet.</div>}
             {addingSupp ? (
-              <div style={{ background: '#1e2228', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: 18, marginTop: 8 }}>
+              <div style={{ background: '#ffffff', border: '1px solid #e5e5e7', borderRadius: 14, padding: 18, marginTop: 8 }}>
                 <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12, color: t1 }}>Add Supplement</div>
                 <input value={suppForm.name} onChange={e => setSuppForm(f => ({ ...f, name: e.target.value }))} placeholder="Name" style={{ ...inp, marginBottom: 8 }} />
                 <input value={suppForm.dose} onChange={e => setSuppForm(f => ({ ...f, dose: e.target.value }))} placeholder="Dose (e.g. 30mg)" style={{ ...inp, marginBottom: 8 }} />
                 <input value={suppForm.ingredient} onChange={e => setSuppForm(f => ({ ...f, ingredient: e.target.value }))} placeholder="Active ingredient" style={{ ...inp, marginBottom: 12 }} />
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={() => { setAddingSupp(false); setSuppForm({ name: '', ingredient: '', dose: '' }); }} style={{ flex: 1, padding: 12, borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)', background: '#1e2228', color: t1, fontSize: 14, fontWeight: 600 }}>Cancel</button>
+                  <button onClick={() => { setAddingSupp(false); setSuppForm({ name: '', ingredient: '', dose: '' }); }} style={{ flex: 1, padding: 12, borderRadius: 12, border: '1px solid #e5e5e7', background: '#ffffff', color: t1, fontSize: 14, fontWeight: 600 }}>Cancel</button>
                   <button onClick={async () => {
                     if (!suppForm.name || !suppForm.dose) return;
                     await api.createSupplement({ name: suppForm.name, activeIngredient: suppForm.ingredient, activeDose: suppForm.dose });
@@ -198,16 +198,16 @@ export default function More({ goTo, onRefresh, openRecipeEdit }) {
             </div>
             {/* Weight trend chart */}
             {weighIns.length < 2 && (
-              <div style={{ background: '#1e2228', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '24px 18px', marginBottom: 16, textAlign: 'center' }}>
+              <div style={{ background: '#ffffff', border: '1px solid #e5e5e7', borderRadius: 14, padding: '24px 18px', marginBottom: 16, textAlign: 'center' }}>
                 <div style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 2, color: t2, marginBottom: 12 }}>Weight Trend</div>
                 <div style={{ height: 80, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <svg width="200" height="50" viewBox="0 0 200 50">
-                    <line x1="10" y1="40" x2="190" y2="40" stroke="rgba(255,255,255,0.06)" strokeWidth="1" strokeDasharray="4,4" />
-                    <line x1="10" y1="25" x2="190" y2="25" stroke="rgba(255,255,255,0.06)" strokeWidth="1" strokeDasharray="4,4" />
-                    <line x1="10" y1="10" x2="190" y2="10" stroke="rgba(255,255,255,0.06)" strokeWidth="1" strokeDasharray="4,4" />
+                    <line x1="10" y1="40" x2="190" y2="40" stroke="#e5e5e7" strokeWidth="1" strokeDasharray="4,4" />
+                    <line x1="10" y1="25" x2="190" y2="25" stroke="#e5e5e7" strokeWidth="1" strokeDasharray="4,4" />
+                    <line x1="10" y1="10" x2="190" y2="10" stroke="#e5e5e7" strokeWidth="1" strokeDasharray="4,4" />
                   </svg>
                 </div>
-                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>Log {weighIns.length === 0 ? '2' : '1 more'} weigh-in{weighIns.length === 0 ? 's' : ''} to see your trend</div>
+                <div style={{ fontSize: 13, color: '#9ca3af' }}>Log {weighIns.length === 0 ? '2' : '1 more'} weigh-in{weighIns.length === 0 ? 's' : ''} to see your trend</div>
               </div>
             )}
             {weighIns.length >= 2 && (() => {
@@ -227,20 +227,20 @@ export default function More({ goTo, onRefresh, openRecipeEdit }) {
               const trendLine = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.ty}`).join(' ');
               const wkCh = withTrend.length >= 7 ? r1(withTrend[withTrend.length - 1].trend - withTrend[Math.max(0, withTrend.length - 8)].trend) : null;
               return (
-                <div style={{ background: '#1e2228', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '16px 18px', marginBottom: 16 }}>
+                <div style={{ background: '#ffffff', border: '1px solid #e5e5e7', borderRadius: 14, padding: '16px 18px', marginBottom: 16 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                     <span style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 2, color: t2 }}>Weight Trend</span>
                     {wkCh !== null && <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 6, background: wkCh < 0 ? 'rgba(45,186,142,0.12)' : 'rgba(248,81,73,0.12)', color: wkCh < 0 ? ac : '#f85149' }}>{wkCh > 0 ? '+' : ''}{wkCh} kg/wk</span>}
                   </div>
                   <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ overflow: 'visible' }}>
-                    {[0, 0.25, 0.5, 0.75, 1].map((p, i) => { const y = pad + p * (H - pad * 2); return (<g key={i}><line x1={pad} y1={y} x2={W - pad} y2={y} stroke="rgba(255,255,255,0.04)" strokeWidth="1" strokeDasharray="4,4" /><text x={pad - 4} y={y + 4} textAnchor="end" fontSize="9" fill="rgba(255,255,255,0.3)">{r1(mx - p * rng)}</text></g>); })}
-                    {pts.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="3.5" fill="rgba(255,255,255,0.12)" stroke="#12151a" strokeWidth="2" />)}
+                    {[0, 0.25, 0.5, 0.75, 1].map((p, i) => { const y = pad + p * (H - pad * 2); return (<g key={i}><line x1={pad} y1={y} x2={W - pad} y2={y} stroke="#e5e5e7" strokeWidth="1" strokeDasharray="4,4" /><text x={pad - 4} y={y + 4} textAnchor="end" fontSize="9" fill="#9ca3af">{r1(mx - p * rng)}</text></g>); })}
+                    {pts.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="3.5" fill="#d1d5db" stroke="#f5f5f7" strokeWidth="2" />)}
                     <path d={trendLine} fill="none" stroke="#5b9ef0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    {pts.map((p, i) => <circle key={`t${i}`} cx={p.x} cy={p.ty} r="3.5" fill="#5b9ef0" stroke="#12151a" strokeWidth="2" />)}
+                    {pts.map((p, i) => <circle key={`t${i}`} cx={p.x} cy={p.ty} r="3.5" fill="#5b9ef0" stroke="#f5f5f7" strokeWidth="2" />)}
                     {profile.weightGoalKg && (() => { const gy = pad + (1 - (parseFloat(profile.weightGoalKg) - mn) / rng) * (H - pad * 2); if (gy > 0 && gy < H) return (<><line x1={pad} y1={gy} x2={W - pad} y2={gy} stroke={ac} strokeWidth="1.5" strokeDasharray="6,4" /><text x={W - pad + 4} y={gy + 4} fontSize="9" fill={ac}>Goal</text></>); return null; })()}
                   </svg>
                   <div style={{ display: 'flex', gap: 14, marginTop: 8, fontSize: 10, color: t2 }}>
-                    <span><span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: 3, background: 'rgba(255,255,255,0.12)', marginRight: 4, verticalAlign: 'middle' }} />Daily</span>
+                    <span><span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: 3, background: '#d1d5db', marginRight: 4, verticalAlign: 'middle' }} />Daily</span>
                     <span><span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: 3, background: '#5b9ef0', marginRight: 4, verticalAlign: 'middle' }} />Trend</span>
                     {profile.weightGoalKg && weighIns.length > 0 && <span>{r1(weighIns[0].weightKg - parseFloat(profile.weightGoalKg))}kg to go</span>}
                   </div>
@@ -249,7 +249,7 @@ export default function More({ goTo, onRefresh, openRecipeEdit }) {
             })()}
 
             {weighIns.map(w => (
-              <div key={w.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid #1e2228' }}>
+              <div key={w.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid #e5e5e7' }}>
                 <div>
                   <div style={{ fontSize: 15, fontWeight: 600, color: t1 }}>{w.weightKg} kg</div>
                   <div style={{ fontSize: 12, color: t2 }}>{w.date?.split('T')[0]}</div>
@@ -265,9 +265,9 @@ export default function More({ goTo, onRefresh, openRecipeEdit }) {
           <div>
             {whoopStatus?.connected ? (
               <div>
-                <div style={{ background: '#1e2228', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: 18, marginBottom: 12 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#ffffff', marginBottom: 4 }}>Whoop Connected</div>
-                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)' }}>Token expires: {whoopStatus.expiresAt ? new Date(whoopStatus.expiresAt).toLocaleDateString('en-NZ') : 'Unknown'}</div>
+                <div style={{ background: '#ffffff', border: '1px solid #e5e5e7', borderRadius: 14, padding: 18, marginBottom: 12 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#1a1a1a', marginBottom: 4 }}>Whoop Connected</div>
+                  <div style={{ fontSize: 13, color: '#6b7280' }}>Token expires: {whoopStatus.expiresAt ? new Date(whoopStatus.expiresAt).toLocaleDateString('en-NZ') : 'Unknown'}</div>
                 </div>
                 <button onClick={async () => { await api.syncWhoop(); alert('Whoop data synced!'); }}
                   style={{ width: '100%', padding: 14, borderRadius: 12, border: 'none', background: '#2dba8e', color: '#fff', fontSize: 14, fontWeight: 700, marginBottom: 8 }}>Sync Now</button>
@@ -276,7 +276,7 @@ export default function More({ goTo, onRefresh, openRecipeEdit }) {
               </div>
             ) : (
               <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', marginBottom: 16 }}>Connect your Whoop to sync sleep, recovery, and strain data.</div>
+                <div style={{ fontSize: 14, color: '#6b7280', marginBottom: 16 }}>Connect your Whoop to sync sleep, recovery, and strain data.</div>
                 <button onClick={() => { window.location.href = '/api/whoop/auth'; }} style={{ display: 'block', width: '100%', padding: 14, borderRadius: 12, background: '#2dba8e', color: '#fff', fontSize: 14, fontWeight: 700, textAlign: 'center', border: 'none' }}>Connect Whoop</button>
               </div>
             )}
@@ -288,25 +288,25 @@ export default function More({ goTo, onRefresh, openRecipeEdit }) {
           <div>
             <button onClick={() => { /* TODO: open blood test entry */ }}
               style={{ width: '100%', padding: 14, borderRadius: 12, border: '1px solid rgba(45,186,142,0.2)', background: 'rgba(45,186,142,0.06)', color: '#2dba8e', fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>+ Add Blood Test</button>
-            <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 14, padding: 20, textAlign: 'center' }}>Blood work management coming soon. View results in the Health tab.</div>
+            <div style={{ color: '#9ca3af', fontSize: 14, padding: 20, textAlign: 'center' }}>Blood work management coming soon. View results in the Health tab.</div>
           </div>
         )}
 
         {/* Data */}
         {section === 'data' && (
           <div>
-            <div style={{ background: '#1e2228', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: 18, marginBottom: 16 }}>
+            <div style={{ background: '#ffffff', border: '1px solid #e5e5e7', borderRadius: 14, padding: 18, marginBottom: 16 }}>
               <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4, color: t1 }}>Your Data</div>
               <div style={{ fontSize: 13, color: t2, lineHeight: 1.6 }}>{weighIns.length} weigh-ins · {supplements.length} supplements · {recipes.length} recipes</div>
             </div>
             {!confirmClear ? (
               <button onClick={() => setConfirmClear(true)} style={{ width: '100%', padding: 14, borderRadius: 12, border: '1px solid rgba(248,81,73,0.2)', background: 'rgba(248,81,73,0.06)', color: '#f85149', fontSize: 14, fontWeight: 600 }}>Clear All Data</button>
             ) : (
-              <div style={{ background: '#1e2228', border: '2px solid #f85149', borderRadius: 14, padding: 18 }}>
+              <div style={{ background: '#ffffff', border: '2px solid #f85149', borderRadius: 14, padding: 18 }}>
                 <div style={{ fontSize: 15, fontWeight: 700, color: '#f85149', marginBottom: 6 }}>Are you sure?</div>
                 <div style={{ fontSize: 13, color: t2, marginBottom: 16 }}>This permanently deletes all data.</div>
                 <div style={{ display: 'flex', gap: 10 }}>
-                  <button onClick={() => setConfirmClear(false)} style={{ flex: 1, padding: 12, borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)', background: '#1e2228', color: t1, fontSize: 14, fontWeight: 600 }}>Cancel</button>
+                  <button onClick={() => setConfirmClear(false)} style={{ flex: 1, padding: 12, borderRadius: 12, border: '1px solid #e5e5e7', background: '#ffffff', color: t1, fontSize: 14, fontWeight: 600 }}>Cancel</button>
                   <button onClick={async () => { await api.clearAll(); setConfirmClear(false); flash('All data cleared'); onRefresh(); }} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: '#f85149', color: '#fff', fontSize: 14, fontWeight: 600 }}>Delete</button>
                 </div>
               </div>

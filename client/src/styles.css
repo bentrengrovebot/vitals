@@ -6,43 +6,20 @@
 }
 
 html, body {
-  font-family: 'Inter', 'SF Pro Display', -apple-system, system-ui, 'Helvetica Neue', sans-serif;
-  background: #12151a;
-  color: #ffffff;
+  font-family: 'Inter', -apple-system, system-ui, 'Helvetica Neue', sans-serif;
+  background: #f5f5f7;
+  color: #1a1a1a;
   font-weight: 400;
-  -webkit-text-stroke: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overscroll-behavior: none;
-  letter-spacing: -0.01em;
-}
-
-body::before {
-  content: '';
-  position: fixed;
-  top: -100px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 600px;
-  height: 400px;
-  background: radial-gradient(ellipse at center, rgba(20,50,45,0.15) 0%, rgba(18,21,26,0) 70%);
-  pointer-events: none;
-  z-index: 0;
 }
 
 input, button, textarea, select {
   font-family: inherit;
   outline: none;
-  letter-spacing: inherit;
 }
 
-button {
-  cursor: pointer;
-}
-
-a {
-  color: #58a6ff;
-  text-decoration: none;
-}
-
+button { cursor: pointer; }
+a { color: #2dba8e; text-decoration: none; }
 ::-webkit-scrollbar { width: 0; height: 0; }

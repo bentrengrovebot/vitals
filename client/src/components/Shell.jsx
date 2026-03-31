@@ -52,7 +52,7 @@ export default function Shell() {
 
   const isOverlay = screen === 'vitals' || screen === 'picker' || screen === 'recipe_edit';
 
-  const t2 = 'rgba(255,255,255,0.45)';
+  const t2 = '#9ca3af';
 
   return (
     <div style={{ minHeight: '100vh', maxWidth: 430, margin: '0 auto', position: 'relative', zIndex: 1 }}>
@@ -66,27 +66,27 @@ export default function Shell() {
       {/* Shortcuts overlay */}
       {showShortcuts && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200 }} onClick={() => { setShowShortcuts(false); setShowWeightInput(false); }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)' }} />
           <div onClick={e => e.stopPropagation()} style={{
             position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)',
             width: '100%', maxWidth: 430, padding: '0 16px 100px',
           }}>
             <div style={{
-              background: '#1e2228', borderRadius: 16, border: '1px solid rgba(255,255,255,0.08)',
-              overflow: 'hidden',
+              background: '#ffffff', borderRadius: 16, border: '1px solid #e5e5e7',
+              overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
             }}>
               {/* Header */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 18px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                <span style={{ fontSize: 16, fontWeight: 600, color: '#ffffff' }}>Quick Actions</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 18px', borderBottom: '1px solid #e5e5e7' }}>
+                <span style={{ fontSize: 16, fontWeight: 600, color: '#1a1a1a' }}>Quick Actions</span>
                 <button onClick={() => { setShowShortcuts(false); setShowWeightInput(false); }} style={{ background: 'none', border: 'none', color: t2, fontSize: 18 }}>×</button>
               </div>
 
               {/* Weight input */}
               {showWeightInput && (
-                <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e5e7' }}>
                   <div style={{ display: 'flex', gap: 8 }}>
                     <input type="number" value={weightVal} onChange={e => setWeightVal(e.target.value)} placeholder="Weight (kg)" autoFocus step="0.1"
-                      style={{ flex: 1, padding: '12px 14px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: '#12151a', fontSize: 15, color: '#ffffff' }} />
+                      style={{ flex: 1, padding: '12px 14px', borderRadius: 10, border: '1px solid #e5e5e7', background: '#ffffff', fontSize: 15, color: '#1a1a1a' }} />
                     <button onClick={logWeight} style={{ padding: '12px 20px', borderRadius: 10, background: '#2dba8e', border: 'none', color: '#fff', fontSize: 14, fontWeight: 600 }}>Log</button>
                   </div>
                 </div>

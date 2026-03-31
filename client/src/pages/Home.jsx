@@ -21,14 +21,14 @@ function fmtDate(k) {
 }
 
 // Shared styles
-const card = { background: '#1e2228', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, margin: '0 16px 8px', overflow: 'hidden' };
-const secHeader = { fontSize: 10, fontWeight: 500, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: 2, padding: '22px 20px 10px' };
+const card = { background: '#ffffff', border: '1px solid #e5e5e7', borderRadius: 14, margin: '0 16px 8px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' };
+const secHeader = { fontSize: 10, fontWeight: 500, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 2, padding: '22px 20px 10px' };
 
 const SYMPTOM_MAP = {
   reflux: { label: 'Reflux', icon: '🔥', color: '#f07068' },
   bloating: { label: 'Bloating', icon: '🫧', color: '#a78bfa' },
   energy_high: { label: 'Energy ↑', icon: '⚡', color: '#e0a526' },
-  energy_low: { label: 'Energy ↓', icon: '😴', color: 'rgba(255,255,255,0.5)' },
+  energy_low: { label: 'Energy ↓', icon: '😴', color: '#6b7280' },
   mood_good: { label: 'Mood ↑', icon: '😊', color: '#2dba8e' },
   mood_bad: { label: 'Mood ↓', icon: '😤', color: '#f07068' },
   headache: { label: 'Headache', icon: '🤕', color: '#ec4899' },
@@ -141,15 +141,15 @@ export default function Home({ openPicker }) {
       <div style={{ textAlign: 'center', flex: 1, maxWidth: 130 }}>
         <div style={{ position: 'relative', width: 110, height: 110, margin: '0 auto' }}>
           <svg viewBox="0 0 120 120" width="110" height="110">
-            <circle cx="60" cy="60" r="44" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="6" />
+            <circle cx="60" cy="60" r="44" fill="none" stroke="#e5e5e7" strokeWidth="6" />
             <circle cx="60" cy="60" r="44" fill="none" stroke={color} strokeWidth="6" strokeDasharray={`${dash} ${circ}`} strokeLinecap="round" transform="rotate(-90 60 60)" />
           </svg>
           <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
             <div style={{ fontSize: 30, fontWeight: 600, lineHeight: 1, letterSpacing: -0.5, color }}>{value}</div>
-            {unit && <div style={{ fontSize: 9, fontWeight: 400, color: 'rgba(255,255,255,0.5)', marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>{unit}</div>}
+            {unit && <div style={{ fontSize: 9, fontWeight: 400, color: '#6b7280', marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>{unit}</div>}
           </div>
         </div>
-        <div style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(255,255,255,0.5)', marginTop: 8 }}>{label} <span style={{ color: 'rgba(255,255,255,0.25)' }}>›</span></div>
+        <div style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 1.5, color: '#6b7280', marginTop: 8 }}>{label} <span style={{ color: '#9ca3af' }}>›</span></div>
       </div>
     );
   };
@@ -158,13 +158,13 @@ export default function Home({ openPicker }) {
     <div style={{ paddingBottom: 92 }}>
       {/* Delete modal */}
       {del && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={() => setDel(null)}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={() => setDel(null)}>
           <div onClick={e => e.stopPropagation()} style={{ ...card, margin: 0, padding: 24, width: '100%', maxWidth: 300 }}>
-            <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 6, color: '#ffffff' }}>Delete?</div>
-            <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', marginBottom: 20 }}>{del.label}</div>
+            <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 6, color: '#1a1a1a' }}>Delete?</div>
+            <div style={{ fontSize: 14, color: '#6b7280', marginBottom: 20 }}>{del.label}</div>
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => setDel(null)} style={{ flex: 1, padding: 12, borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)', background: '#1e2228', color: '#ffffff', fontSize: 14, fontWeight: 500 }}>Cancel</button>
-              <button onClick={del.action} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: '#f85149', color: '#fff', fontSize: 14, fontWeight: 500 }}>Delete</button>
+              <button onClick={() => setDel(null)} style={{ flex: 1, padding: 12, borderRadius: 12, border: '1px solid #e5e5e7', background: '#ffffff', color: '#1a1a1a', fontSize: 14, fontWeight: 500 }}>Cancel</button>
+              <button onClick={del.action} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: '#ef4444', color: '#fff', fontSize: 14, fontWeight: 500 }}>Delete</button>
             </div>
           </div>
         </div>
@@ -179,15 +179,15 @@ export default function Home({ openPicker }) {
           {streak > 0 && <div style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 16, fontWeight: 700 }}>🔥 {streak}</div>}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <button onClick={() => setCurDate(d => shiftDate(d, -1))} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 20 }}>‹</button>
-          <span style={{ fontSize: 11, fontWeight: 400, color: '#ffffff', textTransform: 'uppercase', letterSpacing: 1.2, padding: '5px 18px', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 20, background: '#1e2228' }}>{fmtDate(curDate)}</span>
-          <button onClick={() => setCurDate(d => shiftDate(d, 1))} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 20 }}>›</button>
+          <button onClick={() => setCurDate(d => shiftDate(d, -1))} style={{ background: 'none', border: 'none', color: '#9ca3af', fontSize: 20 }}>‹</button>
+          <span style={{ fontSize: 11, fontWeight: 400, color: '#1a1a1a', textTransform: 'uppercase', letterSpacing: 1.2, padding: '5px 18px', border: '1px solid #e5e5e7', borderRadius: 20, background: '#ffffff' }}>{fmtDate(curDate)}</span>
+          <button onClick={() => setCurDate(d => shiftDate(d, 1))} style={{ background: 'none', border: 'none', color: '#9ca3af', fontSize: 20 }}>›</button>
         </div>
         <div style={{ width: 34 }} />
       </div>
 
       {/* Brand */}
-      <div style={{ textAlign: 'center', padding: '8px 0 2px', fontSize: 15, fontWeight: 500, letterSpacing: 3, textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)' }}>Vitals</div>
+      <div style={{ textAlign: 'center', padding: '8px 0 2px', fontSize: 15, fontWeight: 500, letterSpacing: 3, textTransform: 'uppercase', color: '#6b7280' }}>Vitals</div>
 
       {/* Three Rings */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: 6, padding: '16px 12px 4px' }}>
@@ -200,8 +200,8 @@ export default function Home({ openPicker }) {
         <div style={card}>
           <div style={{ padding: '16px 18px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-              <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.65)', border: '1px solid rgba(255,255,255,0.12)', padding: '3px 8px', borderRadius: 6 }}>Whoop</span>
-              <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', fontWeight: 500 }}>Synced</span>
+              <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: 2, textTransform: 'uppercase', color: '#6b7280', border: '1px solid #e5e5e7', padding: '3px 8px', borderRadius: 6 }}>Whoop</span>
+              <span style={{ fontSize: 10, color: '#9ca3af', fontWeight: 500 }}>Synced</span>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
               {[
@@ -209,9 +209,9 @@ export default function Home({ openPicker }) {
                 { label: 'Recovery', value: whoop.recoveryScore ? `${whoop.recoveryScore}%` : '—', color: '#e0a526' },
                 { label: 'Strain', value: whoop.strain ? whoop.strain.toFixed(1) : '—', color: '#2dba8e' },
               ].map(m => (
-                <div key={m.label} style={{ textAlign: 'center', padding: '10px 4px', background: 'rgba(255,255,255,0.03)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.04)' }}>
+                <div key={m.label} style={{ textAlign: 'center', padding: '10px 4px', background: '#f5f5f7', borderRadius: 10, border: '1px solid #e5e5e7' }}>
                   <div style={{ fontSize: 22, fontWeight: 700, lineHeight: 1, color: m.color }}>{m.value}</div>
-                  <div style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>{m.label}</div>
+                  <div style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: '#9ca3af', marginTop: 4 }}>{m.label}</div>
                 </div>
               ))}
             </div>
@@ -245,10 +245,10 @@ export default function Home({ openPicker }) {
                     const pct = maxCal > 0 ? Math.min(100, (d.cal / maxCal) * 100) : 0;
                     return (
                       <div key={i} style={{ flex: 1, textAlign: 'center' }}>
-                        <div style={{ height: 50, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', marginBottom: 6, background: 'rgba(255,255,255,0.03)', borderRadius: 4 }}>
+                        <div style={{ height: 50, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', marginBottom: 6, background: '#e5e5e7', borderRadius: 4 }}>
                           <div style={{ width: '100%', maxWidth: 20, borderRadius: 4, background: d.cal > goals.calories ? '#f85149' : d.isToday ? '#5b9ef0' : d.cal > 0 ? 'rgba(91,158,240,0.4)' : 'transparent', height: `${Math.max(pct, d.cal > 0 ? 3 : 0)}%`, transition: 'height 0.3s' }} />
                         </div>
-                        <div style={{ fontSize: 9, fontWeight: 500, color: d.isToday ? '#ffffff' : 'rgba(255,255,255,0.35)' }}>{d.label}</div>
+                        <div style={{ fontSize: 9, fontWeight: 500, color: d.isToday ? '#1a1a1a' : '#9ca3af' }}>{d.label}</div>
                       </div>
                     );
                   })}
@@ -262,7 +262,7 @@ export default function Home({ openPicker }) {
                   ].map(m => (
                     <div key={m.label} style={{ textAlign: 'center' }}>
                       <div style={{ fontSize: 14, fontWeight: 600, color: m.color }}>{r1(m.val)}</div>
-                      <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', marginTop: 1 }}>/ {r1(m.goal)} {m.label}</div>
+                      <div style={{ fontSize: 9, color: '#9ca3af', marginTop: 1 }}>/ {r1(m.goal)} {m.label}</div>
                     </div>
                   ))}
                 </div>
@@ -281,14 +281,14 @@ export default function Home({ openPicker }) {
           { label: 'Fat', val: tot.fat, sub: `${goals.fatG}g`, color: '#2dba8e', unit: 'g' },
           { label: 'Carbs', val: tot.carbs, sub: `${goals.carbsG}g`, color: '#8b5ef6', unit: 'g' },
         ].map((m, i) => (
-          <div key={m.label} style={{ display: 'flex', alignItems: 'center', padding: '16px 18px', gap: 14, borderTop: i > 0 ? '1px solid #1e2228' : 'none' }}>
+          <div key={m.label} style={{ display: 'flex', alignItems: 'center', padding: '16px 18px', gap: 14, borderTop: i > 0 ? '1px solid #e5e5e7' : 'none' }}>
             <div style={{ width: 32, height: 32, borderRadius: 8, background: `${m.color}14`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: m.color }} />
             </div>
-            <div style={{ fontSize: 11, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 1.2, color: 'rgba(255,255,255,0.7)', flex: 1 }}>{m.label}</div>
+            <div style={{ fontSize: 11, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 1.2, color: '#6b7280', flex: 1 }}>{m.label}</div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 30, fontWeight: 700, letterSpacing: -0.5, lineHeight: 1 }}>{m.val}<span style={{ fontSize: 16, color: 'rgba(255,255,255,0.3)' }}>{m.unit}</span></div>
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', fontWeight: 500, marginTop: 1 }}>{m.sub}</div>
+              <div style={{ fontSize: 30, fontWeight: 700, letterSpacing: -0.5, lineHeight: 1, color: '#1a1a1a' }}>{m.val}<span style={{ fontSize: 16, color: '#9ca3af' }}>{m.unit}</span></div>
+              <div style={{ fontSize: 12, color: '#6b7280', fontWeight: 500, marginTop: 1 }}>{m.sub}</div>
             </div>
           </div>
         ))}
@@ -305,25 +305,25 @@ export default function Home({ openPicker }) {
 
           return (
             <div key={slot}>
-              <div style={{ display: 'flex', alignItems: 'center', padding: '14px 18px', gap: 12, borderTop: i > 0 ? '1px solid #1e2228' : 'none' }}>
+              <div style={{ display: 'flex', alignItems: 'center', padding: '14px 18px', gap: 12, borderTop: i > 0 ? '1px solid #e5e5e7' : 'none' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '7px 14px', borderRadius: 10, background: `${color}14`, borderLeft: `3px solid ${color}` }}>
                   <span style={{ fontSize: 20, fontWeight: 700, color: empty ? `${color}50` : color, lineHeight: 1 }}>{empty ? '—' : cal}</span>
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 11, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 1.2, color: 'rgba(255,255,255,0.7)' }}>{slot}</div>
+                  <div style={{ fontSize: 11, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 1.2, color: '#6b7280' }}>{slot}</div>
                   {empty && isToday && tot.cal > 0 && <div style={{ fontSize: 11, color: '#2dba8e', fontWeight: 500, marginTop: 2 }}>Target: {perMealCal} cal</div>}
                 </div>
-                {!empty && <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: 16 }}>›</span>}
+                {!empty && <span style={{ color: '#9ca3af', fontSize: 16 }}>›</span>}
               </div>
               {/* Meal items */}
               {items.length > 0 && (
                 <div style={{ padding: '0 18px 10px' }}>
                   {items.map(item => (
-                    <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderTop: '1px solid #1e2228' }}>
-                      <span style={{ fontSize: 14, color: '#ffffff', fontWeight: 500 }}>{item.name}</span>
+                    <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderTop: '1px solid #e5e5e7' }}>
+                      <span style={{ fontSize: 14, color: '#1a1a1a', fontWeight: 500 }}>{item.name}</span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}>{item.calories} cal</span>
-                        <button onClick={() => setDel({ label: item.name, action: () => deleteEntry(item.id) })} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', fontSize: 16 }}>×</button>
+                        <span style={{ fontSize: 13, color: '#6b7280', fontWeight: 500 }}>{item.calories} cal</span>
+                        <button onClick={() => setDel({ label: item.name, action: () => deleteEntry(item.id) })} style={{ background: 'none', border: 'none', color: '#9ca3af', fontSize: 16 }}>×</button>
                       </div>
                     </div>
                   ))}
@@ -331,13 +331,13 @@ export default function Home({ openPicker }) {
               )}
               {/* Add button for empty slots */}
               {empty && (
-                <button onClick={() => openPicker(slot, curDate)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '12px 18px', borderTop: '1px solid #1e2228', color: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 1, width: '100%', background: 'none', border: 'none', borderTop: '1px solid #1e2228' }}>
+                <button onClick={() => openPicker(slot, curDate)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '12px 18px', color: '#6b7280', fontSize: 12, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 1, width: '100%', background: 'none', border: 'none', borderTop: '1px solid #e5e5e7' }}>
                   + Add Food
                 </button>
               )}
               {/* Add more button for filled slots */}
               {!empty && (
-                <button onClick={() => openPicker(slot, curDate)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px 18px', color: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 1, width: '100%', background: 'none', border: 'none', borderTop: '1px solid #1e2228' }}>
+                <button onClick={() => openPicker(slot, curDate)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px 18px', color: '#6b7280', fontSize: 11, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 1, width: '100%', background: 'none', border: 'none', borderTop: '1px solid #e5e5e7' }}>
                   + Add More
                 </button>
               )}
@@ -353,11 +353,11 @@ export default function Home({ openPicker }) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5b9ef0" strokeWidth="2.5" strokeLinecap="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" /></svg>
-                <span style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.65)' }}>Water</span>
+                <span style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 2, color: '#6b7280' }}>Water</span>
               </div>
-              <span style={{ fontSize: 18, fontWeight: 700, color: '#5b9ef0' }}>{r1(totalWater / 1000)}<span style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', fontWeight: 500 }}>/ {r1(goals.waterMl / 1000)}L</span></span>
+              <span style={{ fontSize: 18, fontWeight: 700, color: '#5b9ef0' }}>{r1(totalWater / 1000)}<span style={{ fontSize: 12, color: '#9ca3af', fontWeight: 500 }}>/ {r1(goals.waterMl / 1000)}L</span></span>
             </div>
-            <div style={{ height: 3, borderRadius: 2, background: '#1e2228', margin: '8px 0 12px', overflow: 'hidden' }}>
+            <div style={{ height: 3, borderRadius: 2, background: '#e5e5e7', margin: '8px 0 12px', overflow: 'hidden' }}>
               <div style={{ height: '100%', borderRadius: 2, width: `${waterPct}%`, background: 'linear-gradient(90deg, #3a7bd5, #2dba8e)' }} />
             </div>
             <div style={{ display: 'flex', gap: 6 }}>
@@ -376,21 +376,21 @@ export default function Home({ openPicker }) {
         <div style={card}>
           <div style={{ padding: '16px 18px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
-              <span style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.65)' }}>Supplements</span>
+              <span style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 2, color: '#6b7280' }}>Supplements</span>
               <span style={{ fontSize: 12, fontWeight: 700, color: '#2dba8e' }}>{suppLogs.length}/{supplements.length}</span>
             </div>
             {supplements.map(sup => {
               const taken = suppLogs.find(l => l.supplementId === sup.id);
               return (
-                <div key={sup.id} onClick={() => toggleSupplement(sup)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 0', borderTop: '1px solid #1e2228', cursor: 'pointer' }}>
-                  <div style={{ width: 20, height: 20, borderRadius: 6, border: taken ? 'none' : '2px solid rgba(255,255,255,0.12)', background: taken ? '#2dba8e' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div key={sup.id} onClick={() => toggleSupplement(sup)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 0', borderTop: '1px solid #e5e5e7', cursor: 'pointer' }}>
+                  <div style={{ width: 20, height: 20, borderRadius: 6, border: taken ? 'none' : '2px solid #d1d5db', background: taken ? '#2dba8e' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     {taken && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 14, fontWeight: 500, color: taken ? 'rgba(255,255,255,0.35)' : '#ffffff', textDecoration: taken ? 'line-through' : 'none' }}>{sup.name}</div>
-                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 1 }}>{sup.activeDose}{sup.activeIngredient ? ` · ${sup.activeIngredient}` : ''}</div>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: taken ? '#9ca3af' : '#1a1a1a', textDecoration: taken ? 'line-through' : 'none' }}>{sup.name}</div>
+                    <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 1 }}>{sup.activeDose}{sup.activeIngredient ? ` · ${sup.activeIngredient}` : ''}</div>
                   </div>
-                  {taken && <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>{new Date(taken.takenAt).toLocaleTimeString('en-NZ', { hour: '2-digit', minute: '2-digit', hour12: true })}</span>}
+                  {taken && <span style={{ fontSize: 10, color: '#9ca3af' }}>{new Date(taken.takenAt).toLocaleTimeString('en-NZ', { hour: '2-digit', minute: '2-digit', hour12: true })}</span>}
                 </div>
               );
             })}
@@ -402,7 +402,7 @@ export default function Home({ openPicker }) {
       {daySymptoms.length > 0 && (
         <div style={card}>
           <div style={{ padding: '16px 18px' }}>
-            <div style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.65)', marginBottom: 12 }}>Symptoms Today</div>
+            <div style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 2, color: '#6b7280', marginBottom: 12 }}>Symptoms Today</div>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               {daySymptoms.map(s => {
                 const st = SYMPTOM_MAP[s.type];
@@ -421,8 +421,8 @@ export default function Home({ openPicker }) {
       <div style={card}>
         <div style={{ padding: '16px 18px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <span style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.65)' }}>Logging Streak</span>
-            <span style={{ fontSize: 11, fontWeight: 500, color: 'rgba(255,255,255,0.35)' }}>30 days</span>
+            <span style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 2, color: '#6b7280' }}>Logging Streak</span>
+            <span style={{ fontSize: 11, fontWeight: 500, color: '#9ca3af' }}>30 days</span>
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, justifyContent: 'flex-start' }}>
             {habitDots.map(dk => {
@@ -430,8 +430,8 @@ export default function Home({ openPicker }) {
               return (
                 <div key={dk} style={{
                   width: 14, height: 14, borderRadius: '50%',
-                  background: dk === dateKey() ? '#5b9ef0' : 'rgba(255,255,255,0.06)',
-                  border: dk === dateKey() ? 'none' : '1px solid rgba(255,255,255,0.06)',
+                  background: dk === dateKey() ? '#5b9ef0' : '#e5e5e7',
+                  border: dk === dateKey() ? 'none' : '1px solid #e5e5e7',
                 }} />
               );
             })}
