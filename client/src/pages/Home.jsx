@@ -86,14 +86,23 @@ export default function Home({ openPicker }) {
   Object.keys(tot).forEach(k => tot[k] = r1(tot[k]));
 
   const slotCal = sl => r1((diary[sl] || []).reduce((s, i) => s + (i.calories || 0), 0));
+  const slotProtein = sl => r1((diary[sl] || []).reduce((s, i) => s + (i.proteinG || 0), 0));
   const calPct = goals.calories > 0 ? Math.min(100, Math.round((tot.cal / goals.calories) * 100)) : 0;
   const protPct = goals.proteinG > 0 ? Math.min(100, Math.round((tot.protein / goals.proteinG) * 100)) : 0;
   const totalWater = waterLogs.reduce((s, w) => s + w.amountMl, 0);
   const waterPct = goals.waterMl > 0 ? Math.min(100, Math.round((totalWater / goals.waterMl) * 100)) : 0;
 
-  // Remaining per meal
+  // Per-meal targets (divide daily goal equally across 4 slots)
+  const perSlotCalTarget = goals.calories > 0 ? r1(goals.calories / 4) : 0;
+  const perSlotProtTarget = goals.proteinG > 0 ? r1(goals.proteinG / 4) : 0;
+
+  // Remaining per meal (auto-rebalance across unfilled slots)
   const mealsLeft = SLOTS.filter(sl => !(diary[sl]?.length > 0)).length;
   const perMealCal = mealsLeft > 0 ? r1(Math.max(0, goals.calories - tot.cal) / mealsLeft) : 0;
+
+  // Day tracking status
+  const calStatus = tot.cal >= goals.calories * 0.9 && tot.cal <= goals.calories * 1.1 ? 'on_track' : tot.cal < goals.calories * 0.9 ? 'under' : 'over';
+  const protStatus = tot.protein >= goals.proteinG * 0.9 ? 'on_track' : 'under';
 
   // Week dots
   const getWeekDots = () => {
@@ -300,8 +309,11 @@ export default function Home({ openPicker }) {
         {SLOTS.map((slot, i) => {
           const items = diary[slot] || [];
           const cal = slotCal(slot);
+          const prot = slotProtein(slot);
           const color = SLOT_COLORS[slot];
           const empty = items.length === 0;
+          // Per-meal status
+          const mealCalStatus = !empty ? (cal >= perSlotCalTarget * 0.85 && cal <= perSlotCalTarget * 1.15 ? 'on_track' : cal < perSlotCalTarget * 0.85 ? 'under' : 'over') : null;
 
           return (
             <div key={slot}>
@@ -310,8 +322,17 @@ export default function Home({ openPicker }) {
                   <span style={{ fontSize: 20, fontWeight: 700, color: empty ? `${color}50` : color, lineHeight: 1 }}>{empty ? '—' : cal}</span>
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 11, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 1.2, color: '#6b7280' }}>{slot}</div>
-                  {empty && isToday && tot.cal > 0 && <div style={{ fontSize: 11, color: '#2dba8e', fontWeight: 500, marginTop: 2 }}>Target: {perMealCal} cal</div>}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: 11, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 1.2, color: '#6b7280' }}>{slot}</span>
+                    {mealCalStatus && (
+                      <span style={{ fontSize: 9, fontWeight: 600, padding: '2px 6px', borderRadius: 4,
+                        background: mealCalStatus === 'on_track' ? 'rgba(45,186,142,0.1)' : mealCalStatus === 'under' ? 'rgba(59,130,246,0.1)' : 'rgba(239,68,68,0.1)',
+                        color: mealCalStatus === 'on_track' ? '#2dba8e' : mealCalStatus === 'under' ? '#3b82f6' : '#ef4444',
+                      }}>{mealCalStatus === 'on_track' ? 'On track' : mealCalStatus === 'under' ? `${r1(perSlotCalTarget - cal)} under` : `${r1(cal - perSlotCalTarget)} over`}</span>
+                    )}
+                  </div>
+                  {empty && isToday && <div style={{ fontSize: 11, color: '#2dba8e', fontWeight: 500, marginTop: 2 }}>Target: {perMealCal} cal · {r1(perSlotProtTarget)}g P</div>}
+                  {!empty && <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 2 }}>{prot}g P · {r1((diary[slot] || []).reduce((s, i) => s + (i.fatG || 0), 0))}g F · {r1((diary[slot] || []).reduce((s, i) => s + (i.carbsG || 0), 0))}g C</div>}
                 </div>
                 {!empty && <span style={{ color: '#9ca3af', fontSize: 16 }}>›</span>}
               </div>
@@ -438,6 +459,25 @@ export default function Home({ openPicker }) {
           </div>
         </div>
       </div>
+
+      {/* Day Status Bar */}
+      {tot.cal > 0 && (
+        <div style={{ margin: '8px 16px 0', padding: '12px 16px', background: '#ffffff', border: '1px solid #e5e5e7', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <span style={{ fontSize: 12, color: calStatus === 'on_track' ? '#2dba8e' : calStatus === 'under' ? '#3b82f6' : '#ef4444' }}>🔥</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: calStatus === 'on_track' ? '#2dba8e' : calStatus === 'under' ? '#3b82f6' : '#ef4444' }}>
+              {calStatus === 'on_track' ? 'On track' : calStatus === 'under' ? `${r1(goals.calories - tot.cal)} under` : `${r1(tot.cal - goals.calories)} over`}
+            </span>
+          </div>
+          <div style={{ width: 1, height: 16, background: '#e5e5e7' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: '#e0a526' }}>P</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: protStatus === 'on_track' ? '#2dba8e' : '#3b82f6' }}>
+              {protStatus === 'on_track' ? 'On track' : `${r1(goals.proteinG - tot.protein)}g left`}
+            </span>
+          </div>
+        </div>
+      )}
 
       <div style={{ height: 20 }} />
     </div>
