@@ -5,6 +5,7 @@ import WhoopScreen from '../pages/WhoopScreen';
 import RecipeEdit from '../pages/RecipeEdit';
 import FoodPicker from '../pages/FoodPicker';
 import VitalsChat from '../pages/VitalsChat';
+import Onboarding from '../pages/Onboarding';
 import { api } from '../api';
 
 function dateKey() {
@@ -31,9 +32,25 @@ export default function Shell() {
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showWeightInput, setShowWeightInput] = useState(false);
   const [weightVal, setWeightVal] = useState('');
+  const [needsOnboarding, setNeedsOnboarding] = useState(null); // null = loading, true/false
   const isDesktop = useIsDesktop();
 
+  // Check if user needs onboarding
+  useEffect(() => {
+    api.getProfile().then(p => {
+      setNeedsOnboarding(!p || !p.name);
+    }).catch(() => setNeedsOnboarding(false));
+  }, []);
+
   const refresh = () => setRefreshKey(k => k + 1);
+
+  if (needsOnboarding === null) {
+    return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f7' }}><div style={{ fontSize: 24, fontWeight: 700 }}>Vitals</div></div>;
+  }
+
+  if (needsOnboarding) {
+    return <Onboarding onComplete={() => { setNeedsOnboarding(false); refresh(); }} />;
+  }
 
   const openPicker = (slot, date) => {
     setPickerSlot(slot);

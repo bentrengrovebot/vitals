@@ -756,6 +756,33 @@ router.post('/chat', async (req, res) => {
   }
 });
 
+// POST /api/ai/estimate-targets — Calculate personalized nutrition targets
+router.post('/estimate-targets', authMiddleware, async (req, res) => {
+  try {
+    const { goal, sex, weight, height, age, bodyFat, targetWeight } = req.body;
+    const client = getClient();
+    const response = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 300,
+      system: 'You are a nutrition calculator. Given user stats and goal, calculate daily calorie and macro targets. Use Mifflin-St Jeor for BMR, apply activity multiplier (1.55 moderate), then adjust for goal. Respond ONLY with JSON: {"calories":number,"protein":number,"fat":number,"carbs":number,"tdee":number,"explanation":"brief 1-line reasoning"}',
+      messages: [{ role: 'user', content: `Goal: ${goal}, Sex: ${sex}, Weight: ${weight}kg, Height: ${height}cm, Age: ${age}, Body fat: ${bodyFat || 'unknown'}${targetWeight ? `, Target weight: ${targetWeight}kg` : ''}` }],
+    });
+    const text = (response.content[0]?.text || '').replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(text);
+    res.json(parsed);
+  } catch (err) {
+    console.error('Estimate targets error:', err);
+    // Fallback calculation
+    const w = parseFloat(req.body.weight) || 100;
+    const h = parseFloat(req.body.height) || 176;
+    const a = parseInt(req.body.age) || 30;
+    const bmr = req.body.sex === 'Male' ? 10 * w + 6.25 * h - 5 * a + 5 : 10 * w + 6.25 * h - 5 * a - 161;
+    const tdee = Math.round(bmr * 1.55);
+    const cal = req.body.goal === 'fat_loss' ? tdee - 500 : req.body.goal === 'muscle_gain' ? tdee + 300 : tdee;
+    res.json({ calories: Math.round(cal), protein: Math.round(w * 1.6), fat: Math.round(cal * 0.25 / 9), carbs: Math.round((cal - w * 1.6 * 4 - cal * 0.25) / 4), tdee });
+  }
+});
+
 // POST /api/ai/insight
 router.post('/insight', async (req, res) => {
   try {
