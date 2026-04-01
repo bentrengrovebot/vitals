@@ -24,3 +24,4 @@ EXPOSE 3000
 
 # Start
 CMD ["node", "server/index.js"]
+# trigger rebuild
