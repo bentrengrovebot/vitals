@@ -44,7 +44,6 @@ export default function Home({ openPicker }) {
   const [supplements, setSupplements] = useState([]);
   const [suppLogs, setSuppLogs] = useState([]);
   const [symptoms, setSymptoms] = useState([]);
-  const [whoop, setWhoop] = useState(null);
   const [weekEntries, setWeekEntries] = useState([]);
   const [habitDots, setHabitDots] = useState([]);
   const [del, setDel] = useState(null);
@@ -63,7 +62,6 @@ export default function Home({ openPicker }) {
         api.getWater(curDate), api.getSupplements(), api.getSupplementLogs(curDate),
       ]);
       setWaterLogs(w); setSupplements(s.filter(x => x.isActive)); setSuppLogs(sl);
-      api.getWhoopDaily(curDate).then(setWhoop).catch(() => setWhoop(null));
     }
     // Load week data for nutrition bars
     const dow = new Date().getDay();
@@ -142,27 +140,6 @@ export default function Home({ openPicker }) {
 
   const daySymptoms = symptoms.filter(s => s.timestamp?.split('T')[0] === curDate);
 
-  // Ring component
-  const Ring = ({ pct, color, value, unit, label }) => {
-    const circ = 2 * Math.PI * 44;
-    const dash = (pct / 100) * circ;
-    return (
-      <div style={{ textAlign: 'center', flex: 1, maxWidth: 130 }}>
-        <div style={{ position: 'relative', width: 110, height: 110, margin: '0 auto' }}>
-          <svg viewBox="0 0 120 120" width="110" height="110">
-            <circle cx="60" cy="60" r="44" fill="none" stroke="#e5e5e7" strokeWidth="6" />
-            <circle cx="60" cy="60" r="44" fill="none" stroke={color} strokeWidth="6" strokeDasharray={`${dash} ${circ}`} strokeLinecap="round" transform="rotate(-90 60 60)" />
-          </svg>
-          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ fontSize: 30, fontWeight: 600, lineHeight: 1, letterSpacing: -0.5, color }}>{value}</div>
-            {unit && <div style={{ fontSize: 9, fontWeight: 400, color: '#6b7280', marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>{unit}</div>}
-          </div>
-        </div>
-        <div style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 1.5, color: '#6b7280', marginTop: 8 }}>{label} <span style={{ color: '#9ca3af' }}>›</span></div>
-      </div>
-    );
-  };
-
   return (
     <div style={{ paddingBottom: 92 }}>
       {/* Delete modal */}
@@ -194,39 +171,6 @@ export default function Home({ openPicker }) {
         </div>
         <div style={{ width: 34 }} />
       </div>
-
-      {/* Brand */}
-      <div style={{ textAlign: 'center', padding: '8px 0 2px', fontSize: 15, fontWeight: 500, letterSpacing: 3, textTransform: 'uppercase', color: '#6b7280' }}>Vitals</div>
-
-      {/* Three Rings */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 6, padding: '16px 12px 4px' }}>
-        <Ring pct={calPct} color="#5b9ef0" value={`${calPct}%`} label="Calories" />
-        <Ring pct={protPct} color="#e0a526" value={`${protPct}%`} label="Protein" />
-        <Ring pct={waterPct} color="#2dba8e" value={r1(totalWater / 1000)} unit="litres" label="Water" />
-      </div>
-
-      {whoop && (
-        <div style={card}>
-          <div style={{ padding: '16px 18px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-              <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: 2, textTransform: 'uppercase', color: '#6b7280', border: '1px solid #e5e5e7', padding: '3px 8px', borderRadius: 6 }}>Whoop</span>
-              <span style={{ fontSize: 10, color: '#9ca3af', fontWeight: 500 }}>Synced</span>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-              {[
-                { label: 'Sleep', value: whoop.sleepPerformance ? `${Math.round(whoop.sleepPerformance)}%` : '—', color: '#5b9ef0' },
-                { label: 'Recovery', value: whoop.recoveryScore ? `${whoop.recoveryScore}%` : '—', color: '#e0a526' },
-                { label: 'Strain', value: whoop.strain ? whoop.strain.toFixed(1) : '—', color: '#2dba8e' },
-              ].map(m => (
-                <div key={m.label} style={{ textAlign: 'center', padding: '10px 4px', background: '#f5f5f7', borderRadius: 10, border: '1px solid #e5e5e7' }}>
-                  <div style={{ fontSize: 22, fontWeight: 700, lineHeight: 1, color: m.color }}>{m.value}</div>
-                  <div style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: '#9ca3af', marginTop: 4 }}>{m.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Weekly Nutrition */}
       {(() => {
