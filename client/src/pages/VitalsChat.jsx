@@ -50,14 +50,23 @@ export default function VitalsChat({ onBack, isPanel }) {
     if ((!msg && attachments.length === 0) || loading) return;
     setInput('');
 
-    // Build content array for Claude API (text + images)
+    // Build content array for Claude API (text + images + documents)
     const content = [];
     attachments.forEach(att => {
       if (att.type.startsWith('image/')) {
         content.push({ type: 'image', source: { type: 'base64', media_type: att.type, data: att.base64 } });
+      } else if (att.type === 'application/pdf') {
+        content.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: att.base64 } });
+      } else if (att.type.startsWith('text/') || att.type === 'application/json' || att.type === 'text/markdown' || att.name.endsWith('.md') || att.name.endsWith('.txt') || att.name.endsWith('.csv') || att.name.endsWith('.json')) {
+        // Decode base64 to text and send as text content
+        try {
+          const text = atob(att.base64);
+          content.push({ type: 'text', text: `=== Contents of ${att.name} ===\n${text}\n=== End of ${att.name} ===` });
+        } catch {
+          content.push({ type: 'text', text: `[Could not read file: ${att.name}]` });
+        }
       } else {
-        // For non-image files, include as text description
-        content.push({ type: 'text', text: `[Attached file: ${att.name} (${att.type})]` });
+        content.push({ type: 'text', text: `[Attached file: ${att.name} (${att.type}) — unsupported format, try image or PDF]` });
       }
     });
     if (msg) content.push({ type: 'text', text: msg });
@@ -197,7 +206,7 @@ export default function VitalsChat({ onBack, isPanel }) {
             <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
           </svg>
         </button>
-        <input type="file" ref={fileRef} onChange={handleFileSelect} accept="image/*,.pdf,.txt,.csv,.json" multiple style={{ display: 'none' }} />
+        <input type="file" ref={fileRef} onChange={handleFileSelect} accept="image/*,.pdf,.txt,.csv,.json,.md,.markdown,.doc,.docx" multiple style={{ display: 'none' }} />
 
         <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') sendMessage(); }}
           placeholder="Ask about your health..." style={{ flex: 1, padding: '12px 16px', borderRadius: 12, border: '1px solid #e5e5e7', background: '#ffffff', fontSize: 15, color: t1 }} />
