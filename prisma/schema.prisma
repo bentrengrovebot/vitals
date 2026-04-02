@@ -224,3 +224,13 @@ model UserContext {
   updatedAt DateTime @updatedAt
   createdAt DateTime @default(now())
 }
+
+model KnowledgeDoc {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  content   String   @db.Text
+  category  String   @default("general") // general, goals, training, diet, medical, notes
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

@@ -84,6 +84,12 @@ export const api = {
   extractBloodPdf: (content) => request('/bloods/extract', { method: 'POST', body: JSON.stringify({ content }) }),
   getMarkerHistory: (name) => request(`/bloods/marker/${name}`),
 
+  // Knowledge Base
+  getKnowledgeDocs: () => request('/knowledge'),
+  createKnowledgeDoc: (data) => request('/knowledge', { method: 'POST', body: JSON.stringify(data) }),
+  updateKnowledgeDoc: (id, data) => request(`/knowledge/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteKnowledgeDoc: (id) => request(`/knowledge/${id}`, { method: 'DELETE' }),
+
   // Weekly
   runWeeklyCheckin: () => request('/weekly/run', { method: 'POST' }),
   getLatestWeekly: () => request('/weekly/latest'),

@@ -30,14 +30,17 @@ export default function More({ goTo, onRefresh, openRecipeEdit }) {
   const [addingSupp, setAddingSupp] = useState(false);
   const [whoopStatus, setWhoopStatus] = useState(null);
   const [confirmClear, setConfirmClear] = useState(false);
+  const [knowledgeDocs, setKnowledgeDocs] = useState([]);
+  const [editDoc, setEditDoc] = useState(null); // {id, title, content, category} or null
+  const [docForm, setDocForm] = useState({ title: '', content: '', category: 'general' });
   const [saved, setSaved] = useState('');
 
   useEffect(() => {
-    Promise.all([api.getProfile(), api.getGoals(), api.getSupplements(), api.getRecipes(), api.getWeighIns(30), api.getWhoopStatus().catch(() => null)])
-      .then(([p, g, s, r, w, wh]) => {
+    Promise.all([api.getProfile(), api.getGoals(), api.getSupplements(), api.getRecipes(), api.getWeighIns(30), api.getWhoopStatus().catch(() => null), api.getKnowledgeDocs().catch(() => [])])
+      .then(([p, g, s, r, w, wh, kd]) => {
         if (p) setProfile({ name: p.name || '', dob: p.dob ? p.dob.split('T')[0] : '', sex: p.sex || 'Male', heightCm: p.heightCm || '', weightKg: p.weightKg || '', weightGoalKg: p.weightGoalKg || '' });
         if (g) setGoals({ calories: g.calories, proteinG: g.proteinG, fatG: g.fatG, carbsG: g.carbsG, waterMl: g.waterMl || 2500 });
-        setSupplements(s); setRecipes(r); setWeighIns(w); setWhoopStatus(wh);
+        setSupplements(s); setRecipes(r); setWeighIns(w); setWhoopStatus(wh); setKnowledgeDocs(kd || []);
       });
   }, []);
 
@@ -79,6 +82,7 @@ export default function More({ goTo, onRefresh, openRecipeEdit }) {
         {menuItem('Log Weight', weighIns.length > 0 ? `${weighIns[0].weightKg}kg` : 'No weigh-ins', () => setSection('weight'))}
         {menuItem('Whoop', whoopStatus?.connected ? 'Connected' : 'Not connected', () => setSection('whoop'))}
         {menuItem('Blood Work', 'Lab results & biomarkers', () => setSection('bloods'))}
+        {menuItem('Knowledge Base', 'Docs for your AI coach', () => setSection('knowledge'))}
       </div>
 
       <div style={{ ...card, marginTop: 8 }}>
@@ -92,7 +96,7 @@ export default function More({ goTo, onRefresh, openRecipeEdit }) {
     <div style={{ paddingBottom: 92 }}>
       <div style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', gap: 12 }}>
         {backBtn}
-        <div style={{ fontSize: 18, fontWeight: 800, color: t1, letterSpacing: -0.3, flex: 1 }}>{section === 'profile' ? 'Profile' : section === 'goals' ? 'Goals' : section === 'recipes' ? 'Recipes' : section === 'supps' ? 'Supplements' : section === 'weight' ? 'Log Weight' : section === 'whoop' ? 'Whoop' : section === 'bloods' ? 'Blood Work' : 'Data'}</div>
+        <div style={{ fontSize: 18, fontWeight: 800, color: t1, letterSpacing: -0.3, flex: 1 }}>{section === 'profile' ? 'Profile' : section === 'goals' ? 'Goals' : section === 'recipes' ? 'Recipes' : section === 'supps' ? 'Supplements' : section === 'weight' ? 'Log Weight' : section === 'whoop' ? 'Whoop' : section === 'bloods' ? 'Blood Work' : section === 'knowledge' ? 'Knowledge Base' : 'Data'}</div>
       </div>
 
       {saved && <div style={{ margin: '0 16px 12px', padding: '10px 16px', borderRadius: 12, background: 'rgba(45,186,142,0.12)', color: ac, fontSize: 14, fontWeight: 600 }}>{saved}</div>}
@@ -289,6 +293,71 @@ export default function More({ goTo, onRefresh, openRecipeEdit }) {
             <button onClick={() => { /* TODO: open blood test entry */ }}
               style={{ width: '100%', padding: 14, borderRadius: 12, border: '1px solid rgba(45,186,142,0.2)', background: 'rgba(45,186,142,0.06)', color: '#2dba8e', fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>+ Add Blood Test</button>
             <div style={{ color: '#9ca3af', fontSize: 14, padding: 20, textAlign: 'center' }}>Blood work management coming soon. View results in the Health tab.</div>
+          </div>
+        )}
+
+        {/* Knowledge Base */}
+        {section === 'knowledge' && (
+          <div>
+            <p style={{ fontSize: 13, color: t2, marginBottom: 16, lineHeight: 1.6 }}>Add documents that your AI coach can reference — meal plans, health notes, training programs, dietary preferences, medical info.</p>
+
+            {/* Edit/Create form */}
+            {editDoc !== null ? (
+              <div style={{ background: '#ffffff', border: '1px solid #e5e5e7', borderRadius: 14, padding: 18, marginBottom: 16 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: t1, marginBottom: 12 }}>{editDoc.id ? 'Edit Document' : 'New Document'}</div>
+                <input value={docForm.title} onChange={e => setDocForm(f => ({ ...f, title: e.target.value }))} placeholder="Title (e.g. My Meal Plan)" style={{ ...inp, marginBottom: 8 }} />
+                <select value={docForm.category} onChange={e => setDocForm(f => ({ ...f, category: e.target.value }))} style={{ ...inp, marginBottom: 8 }}>
+                  <option value="general">General</option>
+                  <option value="goals">Goals</option>
+                  <option value="training">Training</option>
+                  <option value="diet">Diet / Nutrition</option>
+                  <option value="medical">Medical</option>
+                  <option value="notes">Notes</option>
+                </select>
+                <textarea value={docForm.content} onChange={e => setDocForm(f => ({ ...f, content: e.target.value }))} placeholder="Paste or type your document content here..." rows={10}
+                  style={{ ...inp, resize: 'vertical', minHeight: 150, fontFamily: 'inherit', lineHeight: 1.6 }} />
+                <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                  <button onClick={() => { setEditDoc(null); setDocForm({ title: '', content: '', category: 'general' }); }}
+                    style={{ flex: 1, padding: 12, borderRadius: 12, border: '1px solid #e5e5e7', background: '#ffffff', color: t1, fontSize: 14, fontWeight: 500 }}>Cancel</button>
+                  <button onClick={async () => {
+                    if (!docForm.title || !docForm.content) return;
+                    if (editDoc.id) {
+                      await api.updateKnowledgeDoc(editDoc.id, docForm);
+                    } else {
+                      await api.createKnowledgeDoc(docForm);
+                    }
+                    setKnowledgeDocs(await api.getKnowledgeDocs());
+                    setEditDoc(null); setDocForm({ title: '', content: '', category: 'general' });
+                    flash(editDoc.id ? 'Document updated' : 'Document added');
+                  }} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: ac, color: '#fff', fontSize: 14, fontWeight: 600 }}>
+                    {editDoc.id ? 'Save' : 'Add'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button onClick={() => setEditDoc({ id: null })}
+                style={{ width: '100%', padding: 14, borderRadius: 12, border: '1px solid rgba(45,186,142,0.2)', background: 'rgba(45,186,142,0.06)', color: ac, fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>+ Add Document</button>
+            )}
+
+            {/* Document list */}
+            {knowledgeDocs.map(doc => (
+              <div key={doc.id} style={{ background: '#ffffff', border: '1px solid #e5e5e7', borderRadius: 14, padding: '14px 16px', marginBottom: 8 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: t1 }}>{doc.title}</div>
+                    <div style={{ fontSize: 11, color: t2, marginTop: 2 }}>{doc.category} · {doc.content.length} chars · {new Date(doc.updatedAt).toLocaleDateString('en-NZ')}</div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button onClick={() => { setEditDoc(doc); setDocForm({ title: doc.title, content: doc.content, category: doc.category }); }}
+                      style={{ background: 'none', border: 'none', color: ac, fontSize: 12, fontWeight: 600 }}>Edit</button>
+                    <button onClick={async () => { await api.deleteKnowledgeDoc(doc.id); setKnowledgeDocs(await api.getKnowledgeDocs()); }}
+                      style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: 12, fontWeight: 600 }}>Delete</button>
+                  </div>
+                </div>
+                <div style={{ fontSize: 12, color: t2, marginTop: 8, lineHeight: 1.5, maxHeight: 60, overflow: 'hidden' }}>{doc.content.substring(0, 200)}{doc.content.length > 200 ? '...' : ''}</div>
+              </div>
+            ))}
+            {!knowledgeDocs.length && editDoc === null && <div style={{ color: t3, fontSize: 13, textAlign: 'center', padding: 20 }}>No documents yet. Add meal plans, health notes, or anything you want the AI to know.</div>}
           </div>
         )}
 

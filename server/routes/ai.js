@@ -705,6 +705,19 @@ router.post('/chat', async (req, res) => {
       });
     }
 
+    // Load knowledge base documents
+    let knowledgeCtx = '';
+    try {
+      const docs = await req.prisma.knowledgeDoc.findMany({ where: { userId: req.userId }, orderBy: { updatedAt: 'desc' }, take: 10 });
+      if (docs.length) {
+        knowledgeCtx = '\n=== KNOWLEDGE BASE (user-provided reference documents) ===\n';
+        docs.forEach(doc => {
+          knowledgeCtx += `\n--- ${doc.title} (${doc.category}) ---\n${doc.content}\n`;
+        });
+        knowledgeCtx += '=== END KNOWLEDGE BASE ===\n';
+      }
+    } catch {}
+
     let apiMessages = messages.map(m => ({ role: m.role, content: m.content }));
     const actions = [];
 
@@ -714,7 +727,7 @@ router.post('/chat', async (req, res) => {
       const response = await client.messages.create({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 2000,
-        system: `${CHAT_SYSTEM}\n\n${context}\n${memoryCtx}`,
+        system: `${CHAT_SYSTEM}\n\n${context}\n${memoryCtx}\n${knowledgeCtx}`,
         messages: apiMessages,
         tools: TOOLS,
       });
