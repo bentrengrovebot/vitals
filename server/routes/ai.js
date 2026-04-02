@@ -45,7 +45,7 @@ async function buildContext(prisma, userId, days = 14) {
     prisma.waterLog.findMany({ where: { userId, timestamp: { gte: midDate } }, orderBy: { timestamp: 'asc' } }),
     prisma.supplement.findMany({ where: { userId, isActive: true } }),
     prisma.supplementLog.findMany({ where: { userId, date: today } }),
-    prisma.whoopDaily.findMany({ where: { userId, date: { gte: startDate } }, orderBy: { date: 'asc' } }),
+    prisma.whoopDaily.findMany({ where: { userId, date: { gte: new Date(today.getTime() - 30 * 86400000) } }, orderBy: { date: 'asc' } }),
     prisma.bloodTest.findFirst({ where: { userId }, orderBy: { date: 'desc' } }),
     prisma.weeklyCheckin.findFirst({ where: { userId }, orderBy: { weekEnd: 'desc' } }),
   ]);

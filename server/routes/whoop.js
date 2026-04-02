@@ -196,6 +196,8 @@ router.get('/callback', async (req, res) => {
       },
     });
 
+    console.log('Whoop connected. Access token:', data.access_token ? 'YES' : 'NO', 'Refresh token:', data.refresh_token ? 'YES' : 'NO', 'Expires in:', data.expires_in);
+
     // Redirect back to app
     res.redirect('/?whoop=connected');
   } catch (err) {
@@ -204,7 +206,7 @@ router.get('/callback', async (req, res) => {
   }
 });
 
-// POST /sync — Manual sync: pull last 7 days
+// POST /sync — Manual sync
 router.post('/sync', authMiddleware, async (req, res) => {
   try {
     const token = await req.prisma.whoopToken.findUnique({
@@ -212,12 +214,18 @@ router.post('/sync', authMiddleware, async (req, res) => {
     });
     if (!token) return res.status(400).json({ error: 'Whoop not connected' });
 
+    // Check if this is first sync (no existing data) — pull 90 days
+    const existingCount = await req.prisma.whoopDaily.count({ where: { userId: req.userId } });
+    const days = req.body?.days || (existingCount === 0 ? 90 : 7);
+
     const end = new Date();
     const start = new Date();
-    start.setDate(start.getDate() - 7);
+    start.setDate(start.getDate() - days);
 
     const startISO = start.toISOString();
     const endISO = end.toISOString();
+
+    console.log(`Whoop sync: ${days} days (existing records: ${existingCount})`);
 
     console.log('Whoop sync: fetching data from', startISO, 'to', endISO);
 
