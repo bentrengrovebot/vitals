@@ -110,11 +110,6 @@ router.get('/debug', authMiddleware, async (req, res) => {
       }
     }
     res.json(results);
-      } catch (err) {
-        results[endpoint] = { error: err.message };
-      }
-    }
-    res.json(results);
   } catch (err) {
     res.json({ error: err.message });
   }
