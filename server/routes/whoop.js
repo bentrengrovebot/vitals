@@ -81,12 +81,12 @@ router.get('/debug', authMiddleware, async (req, res) => {
 
     // Try multiple endpoint paths to find the right ones
     const tryEndpoints = [
-      { path: 'developer/v1/cycle', label: 'cycle-dev-v1' },
-      { path: 'developer/v1/recovery', label: 'recovery-dev-v1' },
-      { path: 'developer/v1/sleep', label: 'sleep-dev-v1' },
-      { path: 'developer/v1/activity/sleep', label: 'activity-sleep-dev-v1' },
-      { path: 'developer/v1/activity/workout', label: 'activity-workout-dev-v1' },
-      { path: 'developer/v1/workout', label: 'workout-dev-v1' },
+      { path: 'developer/v1/cycle', label: 'cycle' },
+      { path: 'developer/v1/recovery', label: 'recovery' },
+      { path: 'developer/v1/activity/sleep', label: 'sleep' },
+      { path: 'developer/v1/activity/workout', label: 'workout' },
+      { path: 'developer/v1/user/profile/basic', label: 'profile' },
+      { path: 'developer/v1/user/measurement/body', label: 'body' },
     ];
 
     const results = {};
