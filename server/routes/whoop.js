@@ -80,13 +80,27 @@ router.get('/debug', authMiddleware, async (req, res) => {
     const start = new Date(Date.now() - 2 * 86400000).toISOString();
 
     // Try multiple endpoint paths to find the right ones
+    // Get user ID first from profile
+    let whoopUserId = '';
+    try {
+      const profileRes = await fetch('https://api.prod.whoop.com/developer/v1/user/profile/basic', { headers: { Authorization: `Bearer ${token.accessToken}` } });
+      if (profileRes.ok) {
+        const profile = await profileRes.json();
+        whoopUserId = profile.user_id;
+      }
+    } catch {}
+
     const tryEndpoints = [
       { path: 'developer/v1/cycle', label: 'cycle' },
       { path: 'developer/v1/recovery', label: 'recovery' },
-      { path: 'developer/v1/activity/sleep', label: 'sleep' },
-      { path: 'developer/v1/activity/workout', label: 'workout' },
-      { path: 'developer/v1/user/profile/basic', label: 'profile' },
-      { path: 'developer/v1/user/measurement/body', label: 'body' },
+      { path: 'developer/v1/activity/sleep', label: 'activity-sleep' },
+      { path: 'developer/v1/activity/workout', label: 'activity-workout' },
+      { path: `developer/v1/user/${whoopUserId}/cycles`, label: 'user-cycles' },
+      { path: `developer/v1/user/${whoopUserId}/recovery`, label: 'user-recovery' },
+      { path: `developer/v1/user/${whoopUserId}/sleep`, label: 'user-sleep' },
+      { path: `developer/v1/user/${whoopUserId}/workout`, label: 'user-workout' },
+      { path: `developer/v1/user/${whoopUserId}/activity/sleep`, label: 'user-activity-sleep' },
+      { path: `developer/v1/user/${whoopUserId}/activity/workout`, label: 'user-activity-workout' },
     ];
 
     const results = {};
