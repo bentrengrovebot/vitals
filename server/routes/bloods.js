@@ -79,7 +79,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// POST /api/bloods/extract — Upload PDF content for AI extraction
+// POST /api/bloods/extract — Upload file for AI extraction
 router.post('/extract', async (req, res) => {
   try {
     const { content } = req.body;
@@ -88,25 +88,49 @@ router.post('/extract', async (req, res) => {
     }
 
     const client = getClient();
+
+    // Detect if content is base64 and build appropriate message
+    let userContent;
+    const isBase64 = /^[A-Za-z0-9+/=]{100,}$/.test(content.substring(0, 200));
+
+    if (isBase64) {
+      // Try to detect if it's a PDF or image from the base64 header
+      const isPdf = content.startsWith('JVBERi'); // %PDF in base64
+      if (isPdf) {
+        userContent = [
+          { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: content } },
+          { type: 'text', text: 'Extract all biomarkers from this blood test document.' },
+        ];
+      } else {
+        // Assume image
+        userContent = [
+          { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: content } },
+          { type: 'text', text: 'Extract all biomarkers from this blood test image.' },
+        ];
+      }
+    } else {
+      // Plain text content
+      userContent = content;
+    }
+
     const message = await client.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 4096,
-      system: `You are a medical lab result parser. Extract key biomarkers from this blood test document. Return ONLY JSON: {"date":"YYYY-MM-DD","markers":{"iron":{"value":12,"unit":"umol/L","range":"10-30","status":"normal"},...}}. Common markers to extract: iron, ferritin, B12, vitamin D, cholesterol (total, HDL, LDL), triglycerides, HbA1c, glucose, liver function (ALT, AST, GGT), kidney function (creatinine, eGFR), testosterone, TSH, full blood count (haemoglobin, white cells, platelets). If a marker is not present in the document, omit it. Use the reference ranges shown in the document.`,
-      messages: [{ role: 'user', content }],
+      system: `You are a medical lab result parser. Extract key biomarkers from this blood test document. Return ONLY JSON, no markdown: {"date":"YYYY-MM-DD","markers":{"iron":{"value":12,"unit":"umol/L","range":"10-30","status":"normal"},...}}. Common markers to extract: iron, ferritin, B12, vitamin D, cholesterol (total, HDL, LDL), triglycerides, HbA1c, glucose, liver function (ALT, AST, GGT), kidney function (creatinine, eGFR), testosterone, TSH, full blood count (haemoglobin, white cells, platelets). If a marker is not present, omit it. Use the reference ranges shown in the document. Determine status: value below range = "low", within range = "normal", above range = "high".`,
+      messages: [{ role: 'user', content: userContent }],
     });
 
     const text = message.content[0].text;
-    // Parse JSON from AI response (handle potential markdown wrapping)
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      return res.status(422).json({ error: 'Could not parse AI response' });
+      return res.status(422).json({ error: 'Could not parse AI response', raw: text.substring(0, 200) });
     }
 
     const extracted = JSON.parse(jsonMatch[0]);
     res.json(extracted);
   } catch (err) {
-    console.error('Blood PDF extraction error:', err);
-    res.status(500).json({ error: 'Failed to extract blood test data' });
+    console.error('Blood extraction error:', err);
+    res.status(500).json({ error: 'Failed to extract: ' + err.message });
   }
 });
 
