@@ -116,13 +116,18 @@ router.get('/debug', authMiddleware, async (req, res) => {
 });
 
 // GET /test — Debug endpoint
-router.get('/test', (req, res) => {
+router.get('/test', authMiddleware, async (req, res) => {
+  const token = await req.prisma.whoopToken.findUnique({ where: { userId: req.userId } });
   res.json({
     clientId: process.env.WHOOP_CLIENT_ID ? 'SET' : 'MISSING',
     clientSecret: process.env.WHOOP_CLIENT_SECRET ? 'SET' : 'MISSING',
     redirectUri: process.env.WHOOP_REDIRECT_URI || 'MISSING',
-    cookies: Object.keys(req.cookies || {}),
-    hasToken: !!req.cookies?.token,
+    scopesRequested: SCOPES,
+    scopesStored: token?.scopes || 'NO TOKEN',
+    hasRefreshToken: !!(token?.refreshToken),
+    refreshTokenValue: token?.refreshToken ? token.refreshToken.substring(0, 10) + '...' : 'NONE',
+    tokenExpiry: token?.expiresAt || 'NO TOKEN',
+    authUrl: `${WHOOP_AUTH_URL}?${new URLSearchParams({ response_type: 'code', client_id: process.env.WHOOP_CLIENT_ID || '', redirect_uri: process.env.WHOOP_REDIRECT_URI || '', scope: SCOPES, state: 'test' }).toString()}`,
   });
 });
 
