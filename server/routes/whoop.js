@@ -79,12 +79,37 @@ router.get('/debug', authMiddleware, async (req, res) => {
     const end = new Date().toISOString();
     const start = new Date(Date.now() - 2 * 86400000).toISOString();
 
+    // Try multiple endpoint paths to find the right ones
+    const tryEndpoints = [
+      'developer/v1/activity/sleep',
+      'developer/v1/recovery',
+      'developer/v1/cycle',
+      'developer/v1/activity/workout',
+      'v2/activity/sleep',
+      'v2/recovery',
+      'v2/cycle',
+      'v2/activity/workout',
+      'developer/v1/sleep',
+      'developer/v1/workout',
+    ];
+
     const results = {};
-    for (const endpoint of ['activity/sleep', 'recovery', 'cycle', 'activity/workout']) {
+    for (const ep of tryEndpoints) {
       try {
-        const url = `${WHOOP_API_BASE}/${endpoint}?start=${start}&end=${end}`;
-        const raw = await whoopFetch(req.prisma, token, url);
-        results[endpoint] = raw;
+        const url = `https://api.prod.whoop.com/${ep}?start=${start}&end=${end}`;
+        const r = await fetch(url, { headers: { Authorization: `Bearer ${token.accessToken}` } });
+        results[ep] = { status: r.status, ok: r.ok };
+        if (r.ok) {
+          const data = await r.json();
+          results[ep].hasRecords = !!(data.records?.length);
+          results[ep].recordCount = data.records?.length || 0;
+          results[ep].firstRecord = data.records?.[0] ? Object.keys(data.records[0]) : null;
+        }
+      } catch (err) {
+        results[ep] = { error: err.message };
+      }
+    }
+    res.json(results);
       } catch (err) {
         results[endpoint] = { error: err.message };
       }
