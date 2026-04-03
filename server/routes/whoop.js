@@ -446,4 +446,146 @@ router.post('/disconnect', authMiddleware, async (req, res) => {
   }
 });
 
+// POST /webhook — Receive Whoop webhook events
+// No auth middleware — Whoop sends these directly
+router.post('/webhook', async (req, res) => {
+  try {
+    const event = req.body;
+    console.log('Whoop webhook received:', JSON.stringify(event).substring(0, 500));
+
+    // Whoop sends events like:
+    // { "type": "recovery.updated", "user_id": "uuid", "id": "uuid", ... }
+    // { "type": "sleep.updated", "user_id": "uuid", "id": "uuid", ... }
+    // { "type": "workout.updated", "user_id": "uuid", "id": "uuid", ... }
+    // { "type": "cycle.updated", "user_id": "uuid", "id": "uuid", ... }
+
+    const type = event.type || '';
+    const whoopUserId = event.user_id;
+
+    if (!whoopUserId) {
+      console.log('Webhook: no user_id, ignoring');
+      return res.status(200).send('OK');
+    }
+
+    // Find our user by their Whoop user ID
+    // We need to look up which of our users this Whoop account belongs to
+    // The WhoopToken stores our userId, and the profile call gave us whoop user_id
+    // For now, try to find token and fetch the specific resource
+
+    const tokens = await req.prisma.whoopToken.findMany();
+
+    for (const token of tokens) {
+      try {
+        // Try to fetch the specific resource from the webhook
+        const headers = { Authorization: `Bearer ${token.accessToken}` };
+        const today = new Date();
+        const dateKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        const date = new Date(dateKey + 'T00:00:00.000Z');
+
+        if (type.includes('sleep') && event.id) {
+          const sleepRes = await fetch(`${WHOOP_API_BASE}/activity/sleep/${event.id}`, { headers });
+          if (sleepRes.ok) {
+            const sleep = await sleepRes.json();
+            const score = sleep.score || {};
+            const dk = sleep.end ? sleep.end.slice(0, 10) : dateKey;
+            await req.prisma.whoopDaily.upsert({
+              where: { userId_date: { userId: token.userId, date: new Date(dk + 'T00:00:00.000Z') } },
+              create: {
+                userId: token.userId, date: new Date(dk + 'T00:00:00.000Z'),
+                sleepDurationMins: score.stage_summary ? Math.round((score.stage_summary.total_in_bed_time_milli || 0) / 60000) : null,
+                sleepPerformance: score.sleep_performance_percentage ?? null,
+                sleepEfficiency: score.sleep_efficiency_percentage ?? null,
+              },
+              update: {
+                sleepDurationMins: score.stage_summary ? Math.round((score.stage_summary.total_in_bed_time_milli || 0) / 60000) : null,
+                sleepPerformance: score.sleep_performance_percentage ?? null,
+                sleepEfficiency: score.sleep_efficiency_percentage ?? null,
+              },
+            });
+            console.log(`Webhook: saved sleep data for ${dk}`);
+          }
+        }
+
+        if (type.includes('recovery') && event.id) {
+          const recRes = await fetch(`${WHOOP_API_BASE}/recovery/${event.id}`, { headers });
+          if (recRes.ok) {
+            const rec = await recRes.json();
+            const score = rec.score || {};
+            await req.prisma.whoopDaily.upsert({
+              where: { userId_date: { userId: token.userId, date } },
+              create: {
+                userId: token.userId, date,
+                recoveryScore: score.recovery_score ?? null,
+                hrv: score.hrv_rmssd_milli ?? null,
+                restingHr: score.resting_heart_rate ?? null,
+              },
+              update: {
+                recoveryScore: score.recovery_score ?? null,
+                hrv: score.hrv_rmssd_milli ?? null,
+                restingHr: score.resting_heart_rate ?? null,
+              },
+            });
+            console.log(`Webhook: saved recovery data`);
+          }
+        }
+
+        if (type.includes('workout') && event.id) {
+          const wRes = await fetch(`${WHOOP_API_BASE}/activity/workout/${event.id}`, { headers });
+          if (wRes.ok) {
+            const w = await wRes.json();
+            const score = w.score || {};
+            await req.prisma.whoopDaily.upsert({
+              where: { userId_date: { userId: token.userId, date } },
+              create: {
+                userId: token.userId, date,
+                sportName: w.sport_name ?? null,
+                workoutStrain: score.strain ?? null,
+                workoutCalories: score.kilojoule ? score.kilojoule * 0.239006 : null,
+                workoutDurationMins: w.end && w.start ? Math.round((new Date(w.end) - new Date(w.start)) / 60000) : null,
+              },
+              update: {
+                sportName: w.sport_name ?? null,
+                workoutStrain: score.strain ?? null,
+                workoutCalories: score.kilojoule ? score.kilojoule * 0.239006 : null,
+                workoutDurationMins: w.end && w.start ? Math.round((new Date(w.end) - new Date(w.start)) / 60000) : null,
+              },
+            });
+            console.log(`Webhook: saved workout data`);
+          }
+        }
+
+        if (type.includes('cycle') && event.id) {
+          const cRes = await fetch(`${WHOOP_API_BASE}/cycle/${event.id}`, { headers });
+          if (cRes.ok) {
+            const c = await cRes.json();
+            const score = c.score || {};
+            const dk = c.start ? c.start.slice(0, 10) : dateKey;
+            await req.prisma.whoopDaily.upsert({
+              where: { userId_date: { userId: token.userId, date: new Date(dk + 'T00:00:00.000Z') } },
+              create: {
+                userId: token.userId, date: new Date(dk + 'T00:00:00.000Z'),
+                strain: score.strain ?? null,
+                calories: score.kilojoule ? score.kilojoule * 0.239006 : null,
+              },
+              update: {
+                strain: score.strain ?? null,
+                calories: score.kilojoule ? score.kilojoule * 0.239006 : null,
+              },
+            });
+            console.log(`Webhook: saved cycle data for ${dk}`);
+          }
+        }
+      } catch (err) {
+        console.error('Webhook processing error:', err.message);
+      }
+    }
+
+    // Always return 200 to Whoop
+    res.status(200).send('OK');
+  } catch (err) {
+    console.error('Webhook error:', err);
+    res.status(200).send('OK'); // Still return 200 to prevent retries
+  }
+});
+
 export default router;
