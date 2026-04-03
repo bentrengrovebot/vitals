@@ -31,16 +31,17 @@ export default function More({ goTo, onRefresh, openRecipeEdit }) {
   const [whoopStatus, setWhoopStatus] = useState(null);
   const [confirmClear, setConfirmClear] = useState(false);
   const [knowledgeDocs, setKnowledgeDocs] = useState([]);
+  const [bloods, setBloods] = useState([]);
   const [editDoc, setEditDoc] = useState(null); // {id, title, content, category} or null
   const [docForm, setDocForm] = useState({ title: '', content: '', category: 'general' });
   const [saved, setSaved] = useState('');
 
   useEffect(() => {
-    Promise.all([api.getProfile(), api.getGoals(), api.getSupplements(), api.getRecipes(), api.getWeighIns(30), api.getWhoopStatus().catch(() => null), api.getKnowledgeDocs().catch(() => [])])
-      .then(([p, g, s, r, w, wh, kd]) => {
+    Promise.all([api.getProfile(), api.getGoals(), api.getSupplements(), api.getRecipes(), api.getWeighIns(30), api.getWhoopStatus().catch(() => null), api.getKnowledgeDocs().catch(() => []), api.getBloods().catch(() => [])])
+      .then(([p, g, s, r, w, wh, kd, bl]) => {
         if (p) setProfile({ name: p.name || '', dob: p.dob ? p.dob.split('T')[0] : '', sex: p.sex || 'Male', heightCm: p.heightCm || '', weightKg: p.weightKg || '', weightGoalKg: p.weightGoalKg || '' });
         if (g) setGoals({ calories: g.calories, proteinG: g.proteinG, fatG: g.fatG, carbsG: g.carbsG, waterMl: g.waterMl || 2500 });
-        setSupplements(s); setRecipes(r); setWeighIns(w); setWhoopStatus(wh); setKnowledgeDocs(kd || []);
+        setSupplements(s); setRecipes(r); setWeighIns(w); setWhoopStatus(wh); setKnowledgeDocs(kd || []); setBloods(bl || []);
       });
   }, []);
 
@@ -290,9 +291,107 @@ export default function More({ goTo, onRefresh, openRecipeEdit }) {
         {/* Blood Work */}
         {section === 'bloods' && (
           <div>
-            <button onClick={() => { /* TODO: open blood test entry */ }}
-              style={{ width: '100%', padding: 14, borderRadius: 12, border: '1px solid rgba(45,186,142,0.2)', background: 'rgba(45,186,142,0.06)', color: '#2dba8e', fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>+ Add Blood Test</button>
-            <div style={{ color: '#9ca3af', fontSize: 14, padding: 20, textAlign: 'center' }}>Blood work management coming soon. View results in the Health tab.</div>
+            {/* Upload area */}
+            <div
+              onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor = '#2dba8e'; }}
+              onDragLeave={e => { e.currentTarget.style.borderColor = '#e5e5e7'; }}
+              onDrop={async e => {
+                e.preventDefault();
+                e.currentTarget.style.borderColor = '#e5e5e7';
+                const files = Array.from(e.dataTransfer.files);
+                if (!files.length) return;
+                flash('Analysing blood test...');
+                for (const file of files) {
+                  const reader = new FileReader();
+                  reader.onload = async () => {
+                    const base64 = reader.result.split(',')[1];
+                    try {
+                      const result = await api.extractBloodPdf(base64);
+                      if (result.date && result.markers) {
+                        await api.createBloodTest({ date: result.date, markers: result.markers, source: 'pdf_upload' });
+                        setBloods(await api.getBloods());
+                        flash('Blood test saved!');
+                      } else {
+                        flash('Could not extract markers. Try a clearer image.');
+                      }
+                    } catch (err) {
+                      flash('Analysis failed: ' + err.message);
+                    }
+                  };
+                  reader.readAsDataURL(file);
+                }
+              }}
+              onClick={() => document.getElementById('blood-file-input')?.click()}
+              style={{
+                border: '2px dashed #e5e5e7', borderRadius: 14, padding: '32px 20px',
+                textAlign: 'center', cursor: 'pointer', marginBottom: 16,
+                background: '#ffffff', transition: 'border-color 0.2s',
+              }}
+            >
+              <div style={{ fontSize: 28, marginBottom: 8 }}>📄</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: '#1a1a1a', marginBottom: 4 }}>Upload blood test</div>
+              <div style={{ fontSize: 12, color: '#9ca3af', lineHeight: 1.5 }}>
+                Drag & drop a PDF, screenshot, or photo here<br/>
+                or tap to browse files
+              </div>
+              <input
+                id="blood-file-input"
+                type="file"
+                accept="image/*,.pdf"
+                multiple
+                style={{ display: 'none' }}
+                onChange={async e => {
+                  const files = Array.from(e.target.files || []);
+                  if (!files.length) return;
+                  flash('Analysing blood test...');
+                  for (const file of files) {
+                    const reader = new FileReader();
+                    reader.onload = async () => {
+                      const base64 = reader.result.split(',')[1];
+                      try {
+                        const result = await api.extractBloodPdf(base64);
+                        if (result.date && result.markers) {
+                          await api.createBloodTest({ date: result.date, markers: result.markers, source: file.type.includes('pdf') ? 'pdf_upload' : 'image_upload' });
+                          setBloods(await api.getBloods());
+                          flash('Blood test saved!');
+                        } else {
+                          flash('Could not extract markers. Try a clearer image.');
+                        }
+                      } catch (err) {
+                        flash('Analysis failed: ' + err.message);
+                      }
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                  e.target.value = '';
+                }}
+              />
+            </div>
+
+            {/* Existing blood tests */}
+            {bloods.length > 0 ? bloods.map(b => (
+              <div key={b.id} style={{ background: '#ffffff', border: '1px solid #e5e5e7', borderRadius: 14, padding: '14px 16px', marginBottom: 8 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: '#1a1a1a' }}>
+                    {new Date(b.date).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </span>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <span style={{ fontSize: 10, color: '#9ca3af', textTransform: 'uppercase' }}>{b.source}</span>
+                    <button onClick={async () => { await api.deleteBloodTest(b.id); setBloods(await api.getBloods()); }} style={{ background: 'none', border: 'none', color: '#d1d5db', fontSize: 14 }}>×</button>
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
+                  {Object.entries(b.markers || {}).slice(0, 9).map(([key, m]) => (
+                    <div key={key} style={{ padding: '6px 8px', borderRadius: 8, background: '#f5f5f7', textAlign: 'center' }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: m.status === 'normal' ? '#2dba8e' : m.status === 'low' ? '#e0a526' : '#ef4444' }}>{m.value}</div>
+                      <div style={{ fontSize: 9, color: '#9ca3af', textTransform: 'uppercase', marginTop: 2 }}>{key.replace(/_/g, ' ')}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )) : (
+              <div style={{ color: '#9ca3af', fontSize: 13, textAlign: 'center', padding: 16 }}>No blood tests yet. Upload a PDF or photo above.</div>
+            )}
           </div>
         )}
 
