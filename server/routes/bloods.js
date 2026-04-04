@@ -91,20 +91,26 @@ router.post('/extract', async (req, res) => {
 
     // Detect if content is base64 and build appropriate message
     let userContent;
-    const isBase64 = /^[A-Za-z0-9+/=]{100,}$/.test(content.substring(0, 200));
+    const cleanContent = content.replace(/\s/g, '');
+    const isBase64 = cleanContent.length > 100 && /^[A-Za-z0-9+/=]+$/.test(cleanContent.substring(0, 200));
 
     if (isBase64) {
       // Try to detect if it's a PDF or image from the base64 header
-      const isPdf = content.startsWith('JVBERi'); // %PDF in base64
+      const isPdf = cleanContent.startsWith('JVBERi'); // %PDF in base64
       if (isPdf) {
         userContent = [
-          { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: content } },
+          { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: cleanContent } },
           { type: 'text', text: 'Extract all biomarkers from this blood test document.' },
         ];
       } else {
-        // Assume image
+        // Assume image — try to detect format from header
+        let mediaType = 'image/jpeg';
+        if (cleanContent.startsWith('/9j/')) mediaType = 'image/jpeg';
+        else if (cleanContent.startsWith('iVBOR')) mediaType = 'image/png';
+        else if (cleanContent.startsWith('R0lGO')) mediaType = 'image/gif';
+        else if (cleanContent.startsWith('UklGR')) mediaType = 'image/webp';
         userContent = [
-          { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: content } },
+          { type: 'image', source: { type: 'base64', media_type: mediaType, data: cleanContent } },
           { type: 'text', text: 'Extract all biomarkers from this blood test image.' },
         ];
       }
