@@ -15,6 +15,7 @@ import waterRoutes from './routes/water.js';
 import supplementRoutes from './routes/supplements.js';
 import aiRoutes from './routes/ai.js';
 import dataRoutes from './routes/data.js';
+import trainingRoutes from './routes/training.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const prisma = new PrismaClient();
@@ -46,6 +47,7 @@ app.use('/api/water', waterRoutes);
 app.use('/api/supplements', supplementRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/data', dataRoutes);
+app.use('/api/training', trainingRoutes);
 
 // Serve frontend in production
 if (process.env.NODE_ENV === 'production') {
