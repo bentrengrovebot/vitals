@@ -74,6 +74,7 @@ export const api = {
 
   // Training
   searchExercises: (q, muscle) => request(`/training/exercises?q=${encodeURIComponent(q || '')}&muscle=${muscle || ''}`),
+  getExerciseHistory: (id) => request(`/training/exercises/${id}/last`),
   createExercise: (data) => request('/training/exercises', { method: 'POST', body: JSON.stringify(data) }),
   getTrainingSessions: (date) => request(`/training/sessions${date ? '?date=' + date : ''}`),
   getSessionById: (id) => request(`/training/sessions/${id}`),

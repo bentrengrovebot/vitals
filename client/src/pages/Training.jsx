@@ -21,6 +21,7 @@ export default function Training({ goTo }) {
   const [muscleFilter, setMuscleFilter] = useState('all');
   const [volume, setVolume] = useState({});
   const [editingSet, setEditingSet] = useState(null); // {exerciseId, setId?, reps, weightKg, rir}
+  const [exerciseHistory, setExerciseHistory] = useState({}); // exerciseId -> { sets, lastDate, suggested }
   const [timer, setTimer] = useState(0);
   const [timerRunning, setTimerRunning] = useState(false);
   const timerRef = useRef(null);
@@ -63,6 +64,7 @@ export default function Training({ goTo }) {
     if (todaySession) {
       setActiveSession(todaySession);
       setView('session');
+      fetchHistoryForExercises(todaySession.sets);
     }
   }
 
@@ -89,6 +91,9 @@ export default function Training({ goTo }) {
   async function addExercise(exercise) {
     if (!activeSession) return;
     setExerciseMap(prev => ({ ...prev, [exercise.id]: exercise }));
+    // Fetch history for this exercise
+    const hist = await api.getExerciseHistory(exercise.id).catch(() => null);
+    if (hist) setExerciseHistory(prev => ({ ...prev, [exercise.id]: hist }));
     await api.addSet(activeSession.id, {
       exerciseId: exercise.id,
       exerciseName: exercise.name,
@@ -98,6 +103,16 @@ export default function Training({ goTo }) {
     const updated = await api.getSessionById(activeSession.id);
     setActiveSession(updated);
     setView('session');
+  }
+
+  async function fetchHistoryForExercises(sets) {
+    const ids = [...new Set((sets || []).map(s => s.exerciseId))];
+    const missing = ids.filter(id => !exerciseHistory[id]);
+    if (missing.length === 0) return;
+    const results = await Promise.all(missing.map(id => api.getExerciseHistory(id).catch(() => null)));
+    const newHist = {};
+    missing.forEach((id, i) => { if (results[i]) newHist[id] = results[i]; });
+    if (Object.keys(newHist).length > 0) setExerciseHistory(prev => ({ ...prev, ...newHist }));
   }
 
   async function logSet(exerciseId, data) {
@@ -251,6 +266,21 @@ export default function Training({ goTo }) {
                   </div>
                 </div>
 
+                {/* Last time reference */}
+                {exerciseHistory[group.exerciseId]?.sets?.length > 0 && (() => {
+                  const hist = exerciseHistory[group.exerciseId];
+                  const lastSets = hist.sets;
+                  const dateStr = hist.lastDate ? new Date(hist.lastDate).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short' }) : '';
+                  return (
+                    <div style={{ padding: '4px 16px 6px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={t3} strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                      <span style={{ fontSize: 11, color: t3, fontWeight: 500 }}>
+                        Last{dateStr ? ` (${dateStr})` : ''}: {lastSets.map((s, i) => `${s.weightKg || 0}kg × ${s.reps || 0}${s.rir != null ? ` @${s.rir}RIR` : ''}`).join(' · ')}
+                      </span>
+                    </div>
+                  );
+                })()}
+
                 {/* Set table header */}
                 <div style={{ display: 'flex', padding: '6px 16px', gap: 4 }}>
                   <span style={{ width: 32, fontSize: 10, fontWeight: 700, color: t3, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Set</span>
@@ -293,7 +323,16 @@ export default function Training({ goTo }) {
                     </div>
                   </div>
                 ) : (
-                  <button onClick={() => setEditingSet({ exerciseId: group.exerciseId, weightKg: '', reps: '', rir: '' })}
+                  <button onClick={() => {
+                    const hist = exerciseHistory[group.exerciseId];
+                    const sug = hist?.suggested;
+                    setEditingSet({
+                      exerciseId: group.exerciseId,
+                      weightKg: sug?.weightKg != null ? String(sug.weightKg) : '',
+                      reps: sug?.reps != null ? String(sug.reps) : '',
+                      rir: sug?.rir != null ? String(sug.rir) : '',
+                    });
+                  }}
                     style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', padding: '12px 16px', background: 'none', border: 'none', borderTop: `1px solid ${brd}`, color: ac, fontSize: 14, fontWeight: 600 }}>
                     <span style={{ fontSize: 17 }}>+</span> Add Set
                   </button>

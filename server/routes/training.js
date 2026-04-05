@@ -219,6 +219,61 @@ router.delete('/sets/:id', async (req, res) => {
   }
 });
 
+// GET /exercises/:id/last — get last performance for an exercise (most recent completed sets)
+router.get('/exercises/:id/last', async (req, res) => {
+  try {
+    // Find the most recent session that has sets for this exercise
+    const lastSets = await req.prisma.workoutSessionSet.findMany({
+      where: {
+        exerciseId: req.params.id,
+        session: { userId: req.userId },
+        completed: true,
+        isWarmup: false,
+        reps: { not: null },
+      },
+      include: { session: { select: { id: true, date: true } } },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+    });
+
+    if (lastSets.length === 0) return res.json({ sets: [], suggested: null });
+
+    // Group by session, take most recent session's sets
+    const lastSessionId = lastSets[0].session.id;
+    const sessionSets = lastSets.filter(s => s.session.id === lastSessionId);
+    const lastDate = lastSets[0].session.date;
+
+    // Calculate suggestion for next set based on progressive overload
+    // Find the best working set (highest weight with good reps)
+    const workingSets = sessionSets.filter(s => s.weightKg && s.reps);
+    let suggested = null;
+    if (workingSets.length > 0) {
+      const best = workingSets.reduce((a, b) => (a.weightKg > b.weightKg ? a : b));
+      const avgRir = workingSets.filter(s => s.rir != null).reduce((sum, s, _, arr) => sum + s.rir / arr.length, 0);
+
+      // Progressive overload logic:
+      // If avg RIR >= 3: increase weight by 2.5kg, keep reps
+      // If avg RIR 1-2: keep weight, try +1 rep
+      // If avg RIR 0: keep everything (already at limit)
+      if (avgRir >= 3) {
+        suggested = { weightKg: Math.round((best.weightKg + 2.5) * 10) / 10, reps: best.reps, rir: best.rir };
+      } else if (avgRir >= 1) {
+        suggested = { weightKg: best.weightKg, reps: best.reps + 1, rir: best.rir };
+      } else {
+        suggested = { weightKg: best.weightKg, reps: best.reps, rir: 0 };
+      }
+    }
+
+    res.json({
+      sets: sessionSets.map(s => ({ weightKg: s.weightKg, reps: s.reps, rir: s.rir, setIndex: s.setIndex })),
+      lastDate,
+      suggested,
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // GET /volume?days=30 — sets per muscle group
 router.get('/volume', async (req, res) => {
   try {
