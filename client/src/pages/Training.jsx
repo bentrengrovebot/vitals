@@ -20,6 +20,7 @@ export default function Training({ goTo }) {
   const [searchQ, setSearchQ] = useState('');
   const [muscleFilter, setMuscleFilter] = useState('all');
   const [volume, setVolume] = useState({});
+  const [plan, setPlan] = useState(null); // active plan with days
   const [editingSet, setEditingSet] = useState(null); // {exerciseId, setId?, reps, weightKg, rir}
   const [exerciseHistory, setExerciseHistory] = useState({}); // exerciseId -> { sets, lastDate, suggested }
   const [timer, setTimer] = useState(0);
@@ -44,21 +45,21 @@ export default function Training({ goTo }) {
   }
 
   async function loadData() {
-    const [s, v] = await Promise.all([
+    const [s, v, plans] = await Promise.all([
       api.getTrainingSessions(),
       api.getTrainingVolume(7),
+      api.getPlans().catch(() => []),
     ]);
     setSessions(s);
     setVolume(v);
-    // Build exercise map
-    const ids = new Set();
-    s.forEach(sess => (sess.sets || []).forEach(set => ids.add(set.exerciseId)));
-    if (ids.size > 0) {
-      const exs = await api.searchExercises('', '');
-      const map = {};
-      exs.forEach(e => { map[e.id] = e; });
-      setExerciseMap(map);
-    }
+    // Set active plan
+    const activePlan = plans.find(p => p.isActive) || plans[0] || null;
+    setPlan(activePlan);
+    // Build exercise map from plan + sessions
+    const exs = await api.searchExercises('', '');
+    const map = {};
+    exs.forEach(e => { map[e.id] = e; });
+    setExerciseMap(map);
     // Resume today's active session
     const todaySession = s.find(sess => sess.date?.split('T')[0] === dateKey() && !sess.durationMins);
     if (todaySession) {
@@ -66,6 +67,23 @@ export default function Training({ goTo }) {
       setView('session');
       fetchHistoryForExercises(todaySession.sets);
     }
+  }
+
+  async function startFromPlan(day) {
+    const session = await api.startFromPlan(day.id, day.name, dateKey());
+    setActiveSession(session);
+    setSessions(prev => [session, ...prev]);
+    setView('session');
+    // Build exercise map for plan exercises
+    const ids = (session.sets || []).map(s => s.exerciseId);
+    const missing = ids.filter(id => !exerciseMap[id]);
+    if (missing.length > 0) {
+      const exs = await api.searchExercises('', '');
+      const map = { ...exerciseMap };
+      exs.forEach(e => { map[e.id] = e; });
+      setExerciseMap(map);
+    }
+    fetchHistoryForExercises(session.sets);
   }
 
   async function startWorkout(name) {
@@ -353,6 +371,7 @@ export default function Training({ goTo }) {
 
   // ============ HOME ============
   const totalSetsThisWeek = Object.values(volume).reduce((s, v) => s + v, 0);
+  const DAY_LABELS = ['Mon', 'Wed', 'Fri'];
 
   return (
     <div style={{ paddingBottom: 100 }}>
@@ -360,13 +379,55 @@ export default function Training({ goTo }) {
         <div style={{ fontSize: 20, fontWeight: 800 }}>Training</div>
       </div>
 
-      {/* Start workout CTA */}
-      <div style={{ padding: '12px 20px' }}>
-        <button onClick={() => startWorkout('Workout')}
-          style={{ width: '100%', padding: 18, borderRadius: 16, border: 'none', background: 'linear-gradient(135deg,#3b82f6 0%,#8b5cf6 100%)', color: '#fff', fontSize: 16, fontWeight: 800, boxShadow: '0 4px 12px rgba(59,130,246,0.3)' }}>
-          Start Workout
-        </button>
-      </div>
+      {/* Plan days */}
+      {plan ? (
+        <div style={{ padding: '12px 20px 4px' }}>
+          <div style={{ ...card, padding: 0 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px 6px' }}>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: t1 }}>{plan.name}</div>
+                <div style={{ fontSize: 11, color: t3, marginTop: 1 }}>{plan.description}</div>
+              </div>
+            </div>
+            {plan.days.map((day, i) => {
+              const dayExercises = day.exercises || [];
+              const totalSets = dayExercises.reduce((s, e) => s + e.targetSets, 0);
+              return (
+                <button key={day.id} onClick={() => startFromPlan(day)}
+                  style={{ display: 'flex', alignItems: 'center', width: '100%', padding: '14px 16px', background: 'none', border: 'none', borderTop: `1px solid ${brd}`, textAlign: 'left', gap: 12 }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 12, background: 'linear-gradient(135deg,#3b82f6 0%,#8b5cf6 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: '#fff' }}>{DAY_LABELS[i] || `D${i + 1}`}</span>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: t1 }}>{day.name}</div>
+                    <div style={{ fontSize: 11, color: t3, marginTop: 1 }}>
+                      {dayExercises.length} exercises · {totalSets} sets
+                    </div>
+                  </div>
+                  <span style={{ color: ac, fontSize: 13, fontWeight: 700 }}>Start</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        <div style={{ padding: '12px 20px' }}>
+          <button onClick={() => startWorkout('Workout')}
+            style={{ width: '100%', padding: 18, borderRadius: 16, border: 'none', background: 'linear-gradient(135deg,#3b82f6 0%,#8b5cf6 100%)', color: '#fff', fontSize: 16, fontWeight: 800, boxShadow: '0 4px 12px rgba(59,130,246,0.3)' }}>
+            Start Workout
+          </button>
+        </div>
+      )}
+
+      {/* Quick start (always show below plan) */}
+      {plan && (
+        <div style={{ padding: '0 20px 4px' }}>
+          <button onClick={() => startWorkout('Freestyle')}
+            style={{ width: '100%', padding: 14, borderRadius: 14, border: `1.5px solid ${brd}`, background: '#fff', color: t2, fontSize: 13, fontWeight: 600 }}>
+            Freestyle Workout
+          </button>
+        </div>
+      )}
 
       {/* Weekly volume card */}
       {Object.keys(volume).length > 0 && (

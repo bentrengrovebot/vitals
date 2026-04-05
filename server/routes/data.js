@@ -59,6 +59,8 @@ router.post('/seed-exercises', async (req, res) => {
       { name: 'Dumbbell Bench Press', muscleGroup: 'chest', equipment: 'dumbbell', isCompound: true },
       { name: 'Incline Dumbbell Press', muscleGroup: 'chest', equipment: 'dumbbell', isCompound: true },
       { name: 'Cable Fly', muscleGroup: 'chest', equipment: 'cable', isCompound: false },
+      { name: 'Machine Chest Fly', muscleGroup: 'chest', equipment: 'machine', isCompound: false },
+      { name: 'Dumbbell Press', muscleGroup: 'chest', equipment: 'dumbbell', isCompound: true },
       // Back
       { name: 'Barbell Row', muscleGroup: 'back', equipment: 'barbell', isCompound: true },
       { name: 'Deadlift', muscleGroup: 'back', equipment: 'barbell', isCompound: true },
@@ -72,6 +74,8 @@ router.post('/seed-exercises', async (req, res) => {
       { name: 'Lateral Raise', muscleGroup: 'shoulders', equipment: 'dumbbell', isCompound: false },
       { name: 'Face Pull', muscleGroup: 'shoulders', equipment: 'cable', isCompound: false },
       { name: 'Reverse Fly', muscleGroup: 'shoulders', equipment: 'dumbbell', isCompound: false },
+      { name: 'Cable Lateral Raise', muscleGroup: 'shoulders', equipment: 'cable', isCompound: false },
+      { name: 'Reverse Pec Deck', muscleGroup: 'shoulders', equipment: 'machine', isCompound: false },
       // Quads
       { name: 'Barbell Squat', muscleGroup: 'quads', equipment: 'barbell', isCompound: true },
       { name: 'Front Squat', muscleGroup: 'quads', equipment: 'barbell', isCompound: true },
@@ -83,6 +87,7 @@ router.post('/seed-exercises', async (req, res) => {
       { name: 'Lying Leg Curl', muscleGroup: 'hamstrings', equipment: 'machine', isCompound: false },
       { name: 'Seated Leg Curl', muscleGroup: 'hamstrings', equipment: 'machine', isCompound: false },
       { name: 'Stiff-Leg Deadlift', muscleGroup: 'hamstrings', equipment: 'barbell', isCompound: true },
+      { name: 'Hip Hinge Machine', muscleGroup: 'hamstrings', equipment: 'machine', isCompound: true },
       // Glutes
       { name: 'Hip Thrust', muscleGroup: 'glutes', equipment: 'barbell', isCompound: true },
       { name: 'Cable Kickback', muscleGroup: 'glutes', equipment: 'cable', isCompound: false },
@@ -94,7 +99,9 @@ router.post('/seed-exercises', async (req, res) => {
       { name: 'Hammer Curl', muscleGroup: 'biceps', equipment: 'dumbbell', isCompound: false },
       { name: 'Incline Dumbbell Curl', muscleGroup: 'biceps', equipment: 'dumbbell', isCompound: false },
       { name: 'Cable Curl', muscleGroup: 'biceps', equipment: 'cable', isCompound: false },
+      { name: 'Dumbbell Angle Curl', muscleGroup: 'biceps', equipment: 'dumbbell', isCompound: false },
       // Triceps
+      { name: 'Cable Tricep Pushdown', muscleGroup: 'triceps', equipment: 'cable', isCompound: false },
       { name: 'Tricep Pushdown', muscleGroup: 'triceps', equipment: 'cable', isCompound: false },
       { name: 'Overhead Tricep Extension', muscleGroup: 'triceps', equipment: 'cable', isCompound: false },
       { name: 'Close-Grip Bench Press', muscleGroup: 'triceps', equipment: 'barbell', isCompound: true },

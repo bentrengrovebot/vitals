@@ -75,6 +75,10 @@ export const api = {
   // Training
   searchExercises: (q, muscle) => request(`/training/exercises?q=${encodeURIComponent(q || '')}&muscle=${muscle || ''}`),
   getExerciseHistory: (id) => request(`/training/exercises/${id}/last`),
+  getPlans: () => request('/training/plans'),
+  getPlan: (id) => request(`/training/plans/${id}`),
+  seedPlan: () => request('/training/plans/seed', { method: 'POST' }),
+  startFromPlan: (planDayId, name, date) => request('/training/sessions/from-plan', { method: 'POST', body: JSON.stringify({ planDayId, name, date }) }),
   createExercise: (data) => request('/training/exercises', { method: 'POST', body: JSON.stringify(data) }),
   getTrainingSessions: (date) => request(`/training/sessions${date ? '?date=' + date : ''}`),
   getSessionById: (id) => request(`/training/sessions/${id}`),

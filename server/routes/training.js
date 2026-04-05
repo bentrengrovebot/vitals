@@ -48,6 +48,190 @@ router.post('/exercises', async (req, res) => {
   }
 });
 
+// GET /plans — get user's workout plans
+router.get('/plans', async (req, res) => {
+  try {
+    const plans = await req.prisma.workoutPlan.findMany({
+      where: { userId: req.userId },
+      include: {
+        days: {
+          orderBy: { dayIndex: 'asc' },
+          include: { exercises: { orderBy: { orderIndex: 'asc' } } },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json(plans);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET /plans/:id — get single plan
+router.get('/plans/:id', async (req, res) => {
+  try {
+    const plan = await req.prisma.workoutPlan.findFirst({
+      where: { id: req.params.id, userId: req.userId },
+      include: {
+        days: {
+          orderBy: { dayIndex: 'asc' },
+          include: { exercises: { orderBy: { orderIndex: 'asc' } } },
+        },
+      },
+    });
+    if (!plan) return res.status(404).json({ error: 'Plan not found' });
+    res.json(plan);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST /plans/seed — seed the 3-day full body plan
+router.post('/plans/seed', async (req, res) => {
+  try {
+    // Check if plan already exists
+    const existing = await req.prisma.workoutPlan.findFirst({
+      where: { userId: req.userId, name: '3-Day Full Body' },
+    });
+    if (existing) return res.json({ message: 'Plan already exists', id: existing.id });
+
+    // Helper: find exercise by name (case-insensitive)
+    async function findEx(name) {
+      const ex = await req.prisma.exercise.findFirst({
+        where: { name: { equals: name, mode: 'insensitive' }, OR: [{ userId: null }, { userId: req.userId }] },
+      });
+      if (!ex) {
+        // Create if missing
+        return await req.prisma.exercise.create({ data: { name, muscleGroup: 'other', equipment: 'other' } });
+      }
+      return ex;
+    }
+
+    const plan = await req.prisma.workoutPlan.create({
+      data: {
+        userId: req.userId,
+        name: '3-Day Full Body',
+        description: 'Mon/Wed/Fri · ~45 min · Double progression · 1-2 RIR',
+        createdBy: 'coach',
+        isActive: true,
+      },
+    });
+
+    // Day 1: Press / Row / Quads (Mon)
+    const day1 = await req.prisma.workoutDay.create({
+      data: { planId: plan.id, dayIndex: 0, name: 'Press / Row / Quads' },
+    });
+    const d1Exercises = [
+      { name: 'Barbell Bench Press', sets: 3, reps: '6-8' },
+      { name: 'Seated Cable Row', sets: 3, reps: '8-12' },
+      { name: 'Leg Press', sets: 3, reps: '10-12' },
+      { name: 'Cable Lateral Raise', sets: 2, reps: '12-20' },
+      { name: 'Cable Tricep Pushdown', sets: 2, reps: '10-15' },
+      { name: 'Leg Extension', sets: 2, reps: '12-15' },
+    ];
+    for (let i = 0; i < d1Exercises.length; i++) {
+      const ex = await findEx(d1Exercises[i].name);
+      await req.prisma.workoutDayExercise.create({
+        data: { dayId: day1.id, exerciseId: ex.id, orderIndex: i, targetSets: d1Exercises[i].sets, targetReps: d1Exercises[i].reps, targetRir: 2 },
+      });
+    }
+
+    // Day 2: Upper Shape / Posterior Chain (Wed)
+    const day2 = await req.prisma.workoutDay.create({
+      data: { planId: plan.id, dayIndex: 1, name: 'Upper Shape / Posterior Chain' },
+    });
+    const d2Exercises = [
+      { name: 'Dumbbell Press', sets: 3, reps: '8-12' },
+      { name: 'Lat Pulldown', sets: 3, reps: '8-12' },
+      { name: 'Hip Hinge Machine', sets: 3, reps: '8-12' },
+      { name: 'Reverse Pec Deck', sets: 2, reps: '12-20' },
+      { name: 'Dumbbell Angle Curl', sets: 2, reps: '10-15' },
+      { name: 'Leg Press', sets: 2, reps: '10-15' },
+    ];
+    for (let i = 0; i < d2Exercises.length; i++) {
+      const ex = await findEx(d2Exercises[i].name);
+      await req.prisma.workoutDayExercise.create({
+        data: { dayId: day2.id, exerciseId: ex.id, orderIndex: i, targetSets: d2Exercises[i].sets, targetReps: d2Exercises[i].reps, targetRir: 2 },
+      });
+    }
+
+    // Day 3: Shoulders / Back / Legs (Fri)
+    const day3 = await req.prisma.workoutDay.create({
+      data: { planId: plan.id, dayIndex: 2, name: 'Shoulders / Back / Legs' },
+    });
+    const d3Exercises = [
+      { name: 'Dumbbell Shoulder Press', sets: 3, reps: '8-12' },
+      { name: 'Machine Chest Fly', sets: 2, reps: '10-15' },
+      { name: 'Seated Cable Row', sets: 3, reps: '8-12' },
+      { name: 'Leg Press', sets: 3, reps: '10-12' },
+      { name: 'Cable Lateral Raise', sets: 2, reps: '12-20' },
+      { name: 'Reverse Pec Deck', sets: 2, reps: '12-15' },
+    ];
+    for (let i = 0; i < d3Exercises.length; i++) {
+      const ex = await findEx(d3Exercises[i].name);
+      await req.prisma.workoutDayExercise.create({
+        data: { dayId: day3.id, exerciseId: ex.id, orderIndex: i, targetSets: d3Exercises[i].sets, targetReps: d3Exercises[i].reps, targetRir: 2 },
+      });
+    }
+
+    // Return full plan
+    const full = await req.prisma.workoutPlan.findUnique({
+      where: { id: plan.id },
+      include: { days: { orderBy: { dayIndex: 'asc' }, include: { exercises: { orderBy: { orderIndex: 'asc' } } } } },
+    });
+    res.json(full);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error: ' + err.message });
+  }
+});
+
+// POST /sessions/from-plan — start a session pre-loaded with exercises from a plan day
+router.post('/sessions/from-plan', async (req, res) => {
+  try {
+    const { planDayId, name, date } = req.body;
+    const day = await req.prisma.workoutDay.findUnique({
+      where: { id: planDayId },
+      include: { exercises: { orderBy: { orderIndex: 'asc' } } },
+    });
+    if (!day) return res.status(404).json({ error: 'Plan day not found' });
+
+    // Create session
+    const session = await req.prisma.workoutSession.create({
+      data: {
+        userId: req.userId,
+        date: new Date(date || new Date()),
+        planDayId,
+        name: name || day.name,
+      },
+    });
+
+    // Pre-create placeholder sets for each exercise (one empty set per target set)
+    for (const ex of day.exercises) {
+      for (let s = 0; s < ex.targetSets; s++) {
+        await req.prisma.workoutSessionSet.create({
+          data: {
+            sessionId: session.id,
+            exerciseId: ex.exerciseId,
+            setIndex: s,
+            reps: null,
+            weightKg: null,
+            rir: null,
+            completed: false,
+          },
+        });
+      }
+    }
+
+    const full = await req.prisma.workoutSession.findUnique({
+      where: { id: session.id },
+      include: { sets: { orderBy: [{ exerciseId: 'asc' }, { setIndex: 'asc' }] } },
+    });
+    res.json(full);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // GET /sessions?date= — list sessions (recent 20 or by date)
 router.get('/sessions', async (req, res) => {
   try {
