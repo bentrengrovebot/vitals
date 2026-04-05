@@ -198,7 +198,79 @@ router.post('/demo', async (req, res) => {
       },
     });
 
-    res.json({ success: true, message: 'Demo data seeded: 14 days food, 14 weigh-ins, 5 recipes, 4 supplements, 9 symptoms, 1 blood test' });
+    // 10. Seed exercises (global, userId null)
+    const exerciseCount = await req.prisma.exercise.count({ where: { userId: null } });
+    if (exerciseCount === 0) {
+      const exercises = [
+        // Chest
+        { name: 'Barbell Bench Press', muscleGroup: 'chest', equipment: 'barbell', isCompound: true },
+        { name: 'Dumbbell Bench Press', muscleGroup: 'chest', equipment: 'dumbbell', isCompound: true },
+        { name: 'Incline Barbell Press', muscleGroup: 'chest', equipment: 'barbell', isCompound: true },
+        { name: 'Incline Dumbbell Press', muscleGroup: 'chest', equipment: 'dumbbell', isCompound: true },
+        { name: 'Cable Fly', muscleGroup: 'chest', equipment: 'cable', isCompound: false },
+        { name: 'Dips', muscleGroup: 'chest', equipment: 'bodyweight', isCompound: true },
+        { name: 'Push-ups', muscleGroup: 'chest', equipment: 'bodyweight', isCompound: true },
+        // Back
+        { name: 'Barbell Row', muscleGroup: 'back', equipment: 'barbell', isCompound: true },
+        { name: 'Pull-up', muscleGroup: 'back', equipment: 'bodyweight', isCompound: true },
+        { name: 'Lat Pulldown', muscleGroup: 'back', equipment: 'cable', isCompound: true },
+        { name: 'Cable Row', muscleGroup: 'back', equipment: 'cable', isCompound: true },
+        { name: 'Dumbbell Row', muscleGroup: 'back', equipment: 'dumbbell', isCompound: true },
+        { name: 'Face Pull', muscleGroup: 'back', equipment: 'cable', isCompound: false },
+        { name: 'Deadlift', muscleGroup: 'back', equipment: 'barbell', isCompound: true },
+        // Shoulders
+        { name: 'Overhead Press', muscleGroup: 'shoulders', equipment: 'barbell', isCompound: true },
+        { name: 'Dumbbell Shoulder Press', muscleGroup: 'shoulders', equipment: 'dumbbell', isCompound: true },
+        { name: 'Lateral Raise', muscleGroup: 'shoulders', equipment: 'dumbbell', isCompound: false },
+        { name: 'Rear Delt Fly', muscleGroup: 'shoulders', equipment: 'dumbbell', isCompound: false },
+        { name: 'Cable Lateral Raise', muscleGroup: 'shoulders', equipment: 'cable', isCompound: false },
+        // Quads
+        { name: 'Barbell Squat', muscleGroup: 'quads', equipment: 'barbell', isCompound: true },
+        { name: 'Leg Press', muscleGroup: 'quads', equipment: 'machine', isCompound: true },
+        { name: 'Leg Extension', muscleGroup: 'quads', equipment: 'machine', isCompound: false },
+        { name: 'Walking Lunge', muscleGroup: 'quads', equipment: 'dumbbell', isCompound: true },
+        { name: 'Front Squat', muscleGroup: 'quads', equipment: 'barbell', isCompound: true },
+        { name: 'Hack Squat', muscleGroup: 'quads', equipment: 'machine', isCompound: true },
+        // Hamstrings
+        { name: 'Romanian Deadlift', muscleGroup: 'hamstrings', equipment: 'barbell', isCompound: true },
+        { name: 'Leg Curl', muscleGroup: 'hamstrings', equipment: 'machine', isCompound: false },
+        { name: 'Good Morning', muscleGroup: 'hamstrings', equipment: 'barbell', isCompound: true },
+        { name: 'Nordic Curl', muscleGroup: 'hamstrings', equipment: 'bodyweight', isCompound: false },
+        // Glutes
+        { name: 'Hip Thrust', muscleGroup: 'glutes', equipment: 'barbell', isCompound: true },
+        { name: 'Bulgarian Split Squat', muscleGroup: 'glutes', equipment: 'dumbbell', isCompound: true },
+        { name: 'Glute Bridge', muscleGroup: 'glutes', equipment: 'bodyweight', isCompound: false },
+        { name: 'Cable Kickback', muscleGroup: 'glutes', equipment: 'cable', isCompound: false },
+        // Biceps
+        { name: 'Barbell Curl', muscleGroup: 'biceps', equipment: 'barbell', isCompound: false },
+        { name: 'Dumbbell Curl', muscleGroup: 'biceps', equipment: 'dumbbell', isCompound: false },
+        { name: 'Hammer Curl', muscleGroup: 'biceps', equipment: 'dumbbell', isCompound: false },
+        { name: 'Incline Dumbbell Curl', muscleGroup: 'biceps', equipment: 'dumbbell', isCompound: false },
+        { name: 'Cable Curl', muscleGroup: 'biceps', equipment: 'cable', isCompound: false },
+        // Triceps
+        { name: 'Tricep Pushdown', muscleGroup: 'triceps', equipment: 'cable', isCompound: false },
+        { name: 'Overhead Tricep Extension', muscleGroup: 'triceps', equipment: 'cable', isCompound: false },
+        { name: 'Close-grip Bench Press', muscleGroup: 'triceps', equipment: 'barbell', isCompound: true },
+        { name: 'Skull Crusher', muscleGroup: 'triceps', equipment: 'barbell', isCompound: false },
+        // Abs
+        { name: 'Cable Crunch', muscleGroup: 'abs', equipment: 'cable', isCompound: false },
+        { name: 'Hanging Leg Raise', muscleGroup: 'abs', equipment: 'bodyweight', isCompound: false },
+        { name: 'Plank', muscleGroup: 'abs', equipment: 'bodyweight', isCompound: false },
+        { name: 'Ab Wheel Rollout', muscleGroup: 'abs', equipment: 'bodyweight', isCompound: false },
+        // Calves
+        { name: 'Standing Calf Raise', muscleGroup: 'calves', equipment: 'machine', isCompound: false },
+        { name: 'Seated Calf Raise', muscleGroup: 'calves', equipment: 'machine', isCompound: false },
+        // Cardio
+        { name: 'Running', muscleGroup: 'cardio', equipment: 'bodyweight', isCompound: false },
+        { name: 'Cycling', muscleGroup: 'cardio', equipment: 'machine', isCompound: false },
+        { name: 'Rowing', muscleGroup: 'cardio', equipment: 'machine', isCompound: true },
+      ];
+      for (const ex of exercises) {
+        await req.prisma.exercise.create({ data: ex });
+      }
+    }
+
+    res.json({ success: true, message: 'Demo data seeded: 14 days food, 14 weigh-ins, 5 recipes, 4 supplements, 9 symptoms, 1 blood test, 51 exercises' });
   } catch (err) {
     console.error('Seed error:', err);
     res.status(500).json({ error: err.message });

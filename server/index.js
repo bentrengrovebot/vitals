@@ -23,6 +23,7 @@ import whoopRoutes from './routes/whoop.js';
 import seedRoutes from './routes/seed.js';
 import foodsRoutes from './routes/foods.js';
 import knowledgeRoutes from './routes/knowledge.js';
+import trainingRoutes from './routes/training.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -71,6 +72,7 @@ app.use('/api/cron', cronRoutes);
 app.use('/api/whoop', whoopRoutes);
 app.use('/api/foods', foodsRoutes);
 app.use('/api/knowledge', knowledgeRoutes);
+app.use('/api/training', trainingRoutes);
 
 // Serve prototype and static files from root
 app.use(express.static(path.join(__dirname, '..')));

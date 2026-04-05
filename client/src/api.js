@@ -109,4 +109,17 @@ export const api = {
   syncWhoop: () => request('/whoop/sync', { method: 'POST' }),
   getWhoopDaily: (date) => request(`/whoop/daily/${date}`),
   disconnectWhoop: () => request('/whoop/disconnect', { method: 'POST' }),
+
+  // Training
+  searchExercises: (q, muscle) => request(`/training/exercises?q=${encodeURIComponent(q || '')}&muscle=${muscle || ''}`),
+  createExercise: (data) => request('/training/exercises', { method: 'POST', body: JSON.stringify(data) }),
+  getTrainingSessions: (date) => request(`/training/sessions${date ? '?date=' + date : ''}`),
+  getSessionById: (id) => request(`/training/sessions/${id}`),
+  createSession: (data) => request('/training/sessions', { method: 'POST', body: JSON.stringify(data) }),
+  updateSession: (id, data) => request(`/training/sessions/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteSession: (id) => request(`/training/sessions/${id}`, { method: 'DELETE' }),
+  addSet: (sessionId, data) => request(`/training/sessions/${sessionId}/sets`, { method: 'POST', body: JSON.stringify(data) }),
+  updateSet: (id, data) => request(`/training/sets/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteSet: (id) => request(`/training/sets/${id}`, { method: 'DELETE' }),
+  getTrainingVolume: (days) => request(`/training/volume?days=${days || 30}`),
 };

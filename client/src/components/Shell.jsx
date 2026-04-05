@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Home from '../pages/Home';
+import Training from '../pages/Training';
 import More from '../pages/More';
 import WhoopScreen from '../pages/WhoopScreen';
 import RecipeEdit from '../pages/RecipeEdit';
@@ -84,7 +85,7 @@ export default function Shell() {
   // NAV ITEMS
   const navItems = [
     { id: 'home', label: 'Home', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> },
-    { id: 'whoop', label: 'Whoop', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 16l3-10 4 14 4-18 4 14 3-10"/></svg> },
+    { id: 'training', label: 'Training', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6.5 6.5h11M6.5 17.5h11M4 10h1.5M4 14h1.5M18.5 10H20M18.5 14H20M7.5 10v4M16.5 10v4M9.5 8v8M14.5 8v8"/></svg> },
     { id: 'more', label: 'More', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg> },
   ];
 
@@ -167,6 +168,7 @@ export default function Shell() {
   return (
     <div style={{ minHeight: '100vh', maxWidth: 430, margin: '0 auto', position: 'relative', zIndex: 1, background: '#f5f5f7' }}>
       {screen === 'home' && <Home key={refreshKey} openPicker={openPicker} goTo={setScreen} />}
+      {screen === 'training' && <Training />}
       {screen === 'whoop' && <WhoopScreen />}
       {screen === 'more' && <More goTo={setScreen} onRefresh={refresh} openRecipeEdit={openRecipeEdit} />}
       {screen === 'recipe_edit' && <RecipeEdit recipe={editRecipe} onBack={() => { setScreen('more'); refresh(); }} />}

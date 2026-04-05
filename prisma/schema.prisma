@@ -234,3 +234,77 @@ model KnowledgeDoc {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model Exercise {
+  id          String   @id @default(cuid())
+  userId      String?
+  name        String
+  muscleGroup String
+  equipment   String   @default("barbell")
+  description String?
+  isCompound  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model WorkoutPlan {
+  id          String       @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  createdBy   String       @default("user")
+  isActive    Boolean      @default(true)
+  days        WorkoutDay[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model WorkoutDay {
+  id        String             @id @default(cuid())
+  planId    String
+  plan      WorkoutPlan        @relation(fields: [planId], references: [id], onDelete: Cascade)
+  dayIndex  Int
+  name      String
+  exercises WorkoutDayExercise[]
+  createdAt DateTime           @default(now())
+}
+
+model WorkoutDayExercise {
+  id         String     @id @default(cuid())
+  dayId      String
+  day        WorkoutDay @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  exerciseId String
+  orderIndex Int
+  targetSets Int        @default(3)
+  targetReps String     @default("8-12")
+  targetRir  Int?
+  notes      String?
+  createdAt  DateTime   @default(now())
+}
+
+model WorkoutSession {
+  id           String              @id @default(cuid())
+  userId       String
+  date         DateTime            @db.Date
+  planDayId    String?
+  name         String
+  durationMins Int?
+  notes        String?
+  sets         WorkoutSessionSet[]
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+}
+
+model WorkoutSessionSet {
+  id         String         @id @default(cuid())
+  sessionId  String
+  session    WorkoutSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  exerciseId String
+  setIndex   Int
+  reps       Int?
+  weightKg   Float?
+  rir        Int?
+  rpe        Float?
+  isWarmup   Boolean        @default(false)
+  completed  Boolean        @default(true)
+  createdAt  DateTime       @default(now())
+}
