@@ -1,7 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { z } from 'zod';
-import crypto from 'crypto';
 
 function dateKey(d = new Date()) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -9,12 +8,16 @@ function dateKey(d = new Date()) {
 
 const r1 = n => Math.round(n * 10) / 10;
 
-function registerTools(server, prisma) {
+function createMcpServer(prisma) {
+  const server = new McpServer({ name: 'vitals', version: '1.0.0' });
+
   async function getUserId() {
     const user = await prisma.user.findFirst();
     if (!user) throw new Error('No user found. Sign up in the app first.');
     return user.id;
   }
+
+  // ====== NUTRITION ======
 
   server.tool('get_diary', 'Get food diary entries for a date with calories and macros.', { date: z.string().optional().describe('YYYY-MM-DD. Defaults to today.') }, async ({ date }) => {
     const userId = await getUserId();
@@ -60,6 +63,8 @@ function registerTools(server, prisma) {
     for (const e of entries) { await prisma.diaryEntry.create({ data: { userId, date: new Date(toDate), slot, name: e.name, portion: e.portion, calories: e.calories, proteinG: e.proteinG, fatG: e.fatG, carbsG: e.carbsG } }); }
     return { content: [{ type: 'text', text: `Copied ${entries.length} items from ${slot} ${fromDate} to ${toDate}` }] };
   });
+
+  // ====== TRAINING ======
 
   server.tool('get_training_sessions', 'Get recent workouts with exercises and sets.', { date: z.string().optional() }, async ({ date }) => {
     const userId = await getUserId();
@@ -138,6 +143,8 @@ function registerTools(server, prisma) {
     return { content: [{ type: 'text', text: JSON.stringify(exercises.map(e => ({ name: e.name, muscleGroup: e.muscleGroup, equipment: e.equipment })), null, 2) }] };
   });
 
+  // ====== BODY ======
+
   server.tool('log_weight', 'Log a body weight measurement.', { weightKg: z.number() }, async ({ weightKg }) => {
     const userId = await getUserId();
     await prisma.weighIn.create({ data: { userId, date: new Date(dateKey()), weightKg } });
@@ -157,64 +164,38 @@ function registerTools(server, prisma) {
     const loggedIds = new Set(logs.map(l => l.supplementId));
     return { content: [{ type: 'text', text: JSON.stringify(supps.map(s => ({ name: s.name, dose: s.activeDose, takenToday: loggedIds.has(s.id) })), null, 2) }] };
   });
+
+  return server;
 }
 
 /**
- * SSE-based remote MCP endpoint for claude.ai
- * GET /sse — establishes SSE connection
- * POST /messages?sessionId=xxx — sends messages to the server
+ * Stateless Streamable HTTP MCP endpoint for claude.ai custom connectors.
+ * No auth — leave OAuth fields empty when adding connector in claude.ai.
  */
 export function setupMCP(app, prisma) {
-  const MCP_TOKEN = process.env.MCP_TOKEN;
-
-  function mcpAuth(req, res, next) {
-    if (!MCP_TOKEN) {
-      console.warn('MCP_TOKEN not set — MCP endpoint disabled');
-      return res.status(503).json({ error: 'MCP not configured' });
-    }
-    const auth = req.headers.authorization;
-    if (!auth || auth !== `Bearer ${MCP_TOKEN}`) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
+  // CORS headers required for claude.ai
+  app.use('/mcp', (req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS, HEAD');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization, Mcp-Session-Id');
+    res.setHeader('Access-Control-Expose-Headers', 'Mcp-Session-Id');
+    if (req.method === 'OPTIONS') return res.status(204).end();
     next();
-  }
+  });
 
-  const transports = new Map();
-
-  // SSE endpoint — client connects here first
-  app.get('/sse', mcpAuth, async (req, res) => {
+  // Single endpoint — stateless, new server per request
+  app.all('/mcp', async (req, res) => {
     try {
-      const mcpServer = new McpServer({ name: 'vitals', version: '1.0.0' });
-      registerTools(mcpServer, prisma);
-
-      const transport = new SSEServerTransport('/messages', res);
-      transports.set(transport.sessionId, { transport, server: mcpServer });
-
-      transport.onclose = () => {
-        transports.delete(transport.sessionId);
-      };
-
-      await mcpServer.connect(transport);
+      const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+      const server = createMcpServer(prisma);
+      await server.connect(transport);
+      await transport.handleRequest(req, res, req.body);
+      await server.close();
     } catch (err) {
-      console.error('MCP SSE error:', err);
-      if (!res.headersSent) res.status(500).end();
+      console.error('MCP error:', err);
+      if (!res.headersSent) res.status(500).json({ error: 'MCP error' });
     }
   });
 
-  // Message endpoint — client sends JSON-RPC messages here
-  app.post('/messages', mcpAuth, async (req, res) => {
-    try {
-      const sessionId = req.query.sessionId;
-      if (!sessionId || !transports.has(sessionId)) {
-        return res.status(404).json({ error: 'Session not found' });
-      }
-      const { transport } = transports.get(sessionId);
-      await transport.handlePostMessage(req, res, req.body);
-    } catch (err) {
-      console.error('MCP message error:', err);
-      if (!res.headersSent) res.status(500).json({ error: 'Internal error' });
-    }
-  });
-
-  console.log('MCP remote endpoint mounted at /sse');
+  console.log('MCP remote endpoint mounted at /mcp');
 }
