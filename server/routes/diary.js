@@ -64,6 +64,39 @@ router.post('/', async (req, res) => {
   }
 });
 
+// POST /api/diary/copy
+router.post('/copy', async (req, res) => {
+  try {
+    const { fromDate, toDate, slot } = req.body;
+    const entries = await req.prisma.diaryEntry.findMany({
+      where: { userId: req.userId, date: new Date(fromDate), slot },
+      orderBy: { createdAt: 'asc' },
+    });
+    if (entries.length === 0) return res.json([]);
+    const created = [];
+    for (const e of entries) {
+      const copy = await req.prisma.diaryEntry.create({
+        data: {
+          userId: req.userId,
+          date: new Date(toDate),
+          slot,
+          name: e.name,
+          portion: e.portion,
+          calories: e.calories,
+          proteinG: e.proteinG,
+          fatG: e.fatG,
+          carbsG: e.carbsG,
+          recipeId: e.recipeId,
+        },
+      });
+      created.push(copy);
+    }
+    res.json(created);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // DELETE /api/diary/:id
 router.delete('/:id', async (req, res) => {
   try {

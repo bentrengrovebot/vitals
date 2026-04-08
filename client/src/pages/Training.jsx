@@ -1,60 +1,103 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
 
 const r1 = n => Math.round(n * 10) / 10;
-const t1 = '#1a1a1a', t2 = '#6b7280', t3 = '#9ca3af', ac = '#2dba8e';
-const card = { background: '#ffffff', border: '1px solid #e5e5e7', borderRadius: 14, margin: '0 16px 8px', overflow: 'hidden' };
-const inp = { width: '100%', padding: '14px 16px', borderRadius: 12, border: '1px solid #e5e5e7', background: '#ffffff', fontSize: 15, boxSizing: 'border-box', color: t1 };
-const MUSCLE_GROUPS = ['all', 'chest', 'back', 'shoulders', 'quads', 'hamstrings', 'glutes', 'biceps', 'triceps', 'abs', 'calves', 'cardio'];
+const t1 = '#111827', t2 = '#6b7280', t3 = '#9ca3af', ac = '#3b82f6', gn = '#22c55e', or = '#f59e0b', rd = '#ef4444', brd = '#eaeaef';
+const card = { background: '#fff', borderRadius: 16, boxShadow: '0 1px 4px rgba(0,0,0,0.05)', overflow: 'hidden' };
+const MUSCLE_GROUPS = ['chest', 'back', 'shoulders', 'quads', 'hamstrings', 'glutes', 'biceps', 'triceps', 'abs', 'calves', 'cardio'];
+const MUSCLE_COLORS = { chest: '#3b82f6', back: '#8b5cf6', shoulders: '#f59e0b', quads: '#ef4444', hamstrings: '#ec4899', glutes: '#f97316', biceps: '#06b6d4', triceps: '#14b8a6', abs: '#84cc16', calves: '#a855f7', cardio: '#22c55e' };
 
 function dateKey(d = new Date()) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-export default function Training() {
+export default function Training({ goTo }) {
+  const [view, setView] = useState('home'); // home, session, picker
   const [sessions, setSessions] = useState([]);
   const [activeSession, setActiveSession] = useState(null);
-  const [showExercisePicker, setShowExercisePicker] = useState(false);
   const [exercises, setExercises] = useState([]);
-  const [exerciseMap, setExerciseMap] = useState({}); // id -> exercise
+  const [exerciseMap, setExerciseMap] = useState({});
   const [searchQ, setSearchQ] = useState('');
   const [muscleFilter, setMuscleFilter] = useState('all');
   const [volume, setVolume] = useState({});
-  const [addingSet, setAddingSet] = useState(null);
-  const [setForm, setSetForm] = useState({ reps: '', weightKg: '', rir: '' });
+  const [plan, setPlan] = useState(null); // active plan with days
+  const [editingSet, setEditingSet] = useState(null); // {exerciseId, setId?, reps, weightKg, rir}
+  const [exerciseHistory, setExerciseHistory] = useState({}); // exerciseId -> { sets, lastDate, suggested }
+  const [timer, setTimer] = useState(0);
+  const [timerRunning, setTimerRunning] = useState(false);
+  const timerRef = useRef(null);
 
   useEffect(() => { loadData(); }, []);
 
+  // Rest timer
+  useEffect(() => {
+    if (timerRunning && timer > 0) {
+      timerRef.current = setTimeout(() => setTimer(t => t - 1), 1000);
+    } else if (timer === 0 && timerRunning) {
+      setTimerRunning(false);
+    }
+    return () => clearTimeout(timerRef.current);
+  }, [timer, timerRunning]);
+
+  function startTimer(secs = 120) {
+    setTimer(secs);
+    setTimerRunning(true);
+  }
+
   async function loadData() {
-    const [s, v] = await Promise.all([
+    const [s, v, plans] = await Promise.all([
       api.getTrainingSessions(),
       api.getTrainingVolume(7),
+      api.getPlans().catch(() => []),
     ]);
     setSessions(s);
     setVolume(v);
-    // Build exercise map from all session sets
-    const ids = new Set();
-    s.forEach(sess => (sess.sets || []).forEach(set => ids.add(set.exerciseId)));
-    if (ids.size > 0) {
+    // Set active plan
+    const activePlan = plans.find(p => p.isActive) || plans[0] || null;
+    setPlan(activePlan);
+    // Build exercise map from plan + sessions
+    const exs = await api.searchExercises('', '');
+    const map = {};
+    exs.forEach(e => { map[e.id] = e; });
+    setExerciseMap(map);
+    // Resume today's active session
+    const todaySession = s.find(sess => sess.date?.split('T')[0] === dateKey() && !sess.durationMins);
+    if (todaySession) {
+      setActiveSession(todaySession);
+      setView('session');
+      fetchHistoryForExercises(todaySession.sets);
+    }
+  }
+
+  async function startFromPlan(day) {
+    const session = await api.startFromPlan(day.id, day.name, dateKey());
+    setActiveSession(session);
+    setSessions(prev => [session, ...prev]);
+    setView('session');
+    // Build exercise map for plan exercises
+    const ids = (session.sets || []).map(s => s.exerciseId);
+    const missing = ids.filter(id => !exerciseMap[id]);
+    if (missing.length > 0) {
       const exs = await api.searchExercises('', '');
-      const map = {};
+      const map = { ...exerciseMap };
       exs.forEach(e => { map[e.id] = e; });
       setExerciseMap(map);
     }
-    // Resume today's session if exists
-    const todaySession = s.find(sess => sess.date?.split('T')[0] === dateKey());
-    if (todaySession) setActiveSession(todaySession);
+    fetchHistoryForExercises(session.sets);
   }
 
   async function startWorkout(name) {
     const session = await api.createSession({ date: dateKey(), name: name || 'Workout' });
     setActiveSession(session);
     setSessions(prev => [session, ...prev]);
+    setView('session');
   }
 
-  async function openExercisePicker() {
-    setShowExercisePicker(true);
-    const exs = await api.searchExercises('', muscleFilter === 'all' ? '' : muscleFilter);
+  async function openPicker() {
+    setView('picker');
+    setSearchQ('');
+    setMuscleFilter('all');
+    const exs = await api.searchExercises('', '');
     setExercises(exs);
   }
 
@@ -63,35 +106,45 @@ export default function Training() {
     setExercises(exs);
   }
 
-  async function addExerciseToSession(exercise) {
+  async function addExercise(exercise) {
     if (!activeSession) return;
     setExerciseMap(prev => ({ ...prev, [exercise.id]: exercise }));
+    // Fetch history for this exercise
+    const hist = await api.getExerciseHistory(exercise.id).catch(() => null);
+    if (hist) setExerciseHistory(prev => ({ ...prev, [exercise.id]: hist }));
     await api.addSet(activeSession.id, {
       exerciseId: exercise.id,
       exerciseName: exercise.name,
       muscleGroup: exercise.muscleGroup,
-      reps: null,
-      weightKg: null,
+      reps: null, weightKg: null,
     });
     const updated = await api.getSessionById(activeSession.id);
     setActiveSession(updated);
-    setShowExercisePicker(false);
-    setSearchQ('');
+    setView('session');
   }
 
-  async function addSetToExercise(exerciseId) {
+  async function fetchHistoryForExercises(sets) {
+    const ids = [...new Set((sets || []).map(s => s.exerciseId))];
+    const missing = ids.filter(id => !exerciseHistory[id]);
+    if (missing.length === 0) return;
+    const results = await Promise.all(missing.map(id => api.getExerciseHistory(id).catch(() => null)));
+    const newHist = {};
+    missing.forEach((id, i) => { if (results[i]) newHist[id] = results[i]; });
+    if (Object.keys(newHist).length > 0) setExerciseHistory(prev => ({ ...prev, ...newHist }));
+  }
+
+  async function logSet(exerciseId, data) {
     if (!activeSession) return;
-    const f = setForm;
     await api.addSet(activeSession.id, {
       exerciseId,
-      reps: f.reps ? parseInt(f.reps) : null,
-      weightKg: f.weightKg ? parseFloat(f.weightKg) : null,
-      rir: f.rir ? parseInt(f.rir) : null,
+      reps: data.reps ? parseInt(data.reps) : null,
+      weightKg: data.weightKg ? parseFloat(data.weightKg) : null,
+      rir: data.rir !== '' && data.rir != null ? parseInt(data.rir) : null,
     });
     const updated = await api.getSessionById(activeSession.id);
     setActiveSession(updated);
-    setSetForm({ reps: '', weightKg: '', rir: '' });
-    setAddingSet(null);
+    setEditingSet(null);
+    startTimer(120);
   }
 
   async function deleteSet(setId) {
@@ -106,209 +159,337 @@ export default function Training() {
     const mins = Math.round((Date.now() - start.getTime()) / 60000);
     await api.updateSession(activeSession.id, { durationMins: mins });
     setActiveSession(null);
+    setView('home');
+    setTimerRunning(false);
+    setTimer(0);
     loadData();
   }
 
-  // Group sets by exercise
-  function groupSetsByExercise(sets) {
+  function groupSets(sets) {
     const groups = {};
     const order = [];
     (sets || []).forEach(s => {
       if (!groups[s.exerciseId]) {
-        groups[s.exerciseId] = { exerciseId: s.exerciseId, sets: [] };
+        groups[s.exerciseId] = [];
         order.push(s.exerciseId);
       }
-      groups[s.exerciseId].sets.push(s);
+      groups[s.exerciseId].push(s);
     });
-    return order.map(id => groups[id]);
+    return order.map(id => ({ exerciseId: id, sets: groups[id] }));
   }
 
-  const backBtn = (
-    <button onClick={() => setShowExercisePicker(false)} style={{ background: 'none', border: 'none', color: t2, fontSize: 22, padding: '0 4px' }}>←</button>
-  );
+  const fmtTimer = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
-  // Exercise picker overlay
-  if (showExercisePicker) {
+  // ============ EXERCISE PICKER ============
+  if (view === 'picker') {
     return (
-      <div style={{ paddingBottom: 92 }}>
+      <div style={{ paddingBottom: 100 }}>
         <div style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', gap: 12 }}>
-          {backBtn}
-          <div style={{ fontSize: 18, fontWeight: 800, color: t1, letterSpacing: -0.3, flex: 1 }}>Add Exercise</div>
+          <button onClick={() => setView('session')} style={{ background: 'none', border: 'none', color: t2, fontSize: 22 }}>←</button>
+          <div style={{ fontSize: 18, fontWeight: 800, flex: 1 }}>Add Exercise</div>
         </div>
-        <div style={{ padding: '0 16px' }}>
+        <div style={{ padding: '0 20px 8px' }}>
           <input value={searchQ} onChange={e => { setSearchQ(e.target.value); searchExercises(e.target.value, muscleFilter); }}
-            placeholder="Search exercises..." style={{ ...inp, marginBottom: 10 }} autoFocus />
-          <div style={{ display: 'flex', gap: 4, overflowX: 'auto', paddingBottom: 10, marginBottom: 4 }}>
-            {MUSCLE_GROUPS.map(mg => (
-              <button key={mg} onClick={() => { setMuscleFilter(mg); searchExercises(searchQ, mg); }}
-                style={{ padding: '6px 12px', borderRadius: 20, fontSize: 11, fontWeight: 500, flexShrink: 0,
-                  border: muscleFilter === mg ? `1px solid ${ac}` : '1px solid #e5e5e7',
-                  background: muscleFilter === mg ? 'rgba(45,186,142,0.08)' : '#fff',
-                  color: muscleFilter === mg ? ac : t2,
-                }}>{mg === 'all' ? 'All' : mg.charAt(0).toUpperCase() + mg.slice(1)}</button>
+            placeholder="Search exercises..."
+            style={{ width: '100%', padding: '14px 16px', borderRadius: 12, border: `1.5px solid ${brd}`, background: '#fff', fontSize: 15, boxSizing: 'border-box' }}
+            autoFocus />
+        </div>
+        {/* Muscle group filters */}
+        <div style={{ display: 'flex', gap: 4, padding: '0 20px 12px', overflowX: 'auto' }}>
+          {['all', ...MUSCLE_GROUPS].map(mg => (
+            <button key={mg} onClick={() => { setMuscleFilter(mg); searchExercises(searchQ, mg); }}
+              style={{
+                padding: '7px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, flexShrink: 0,
+                border: muscleFilter === mg ? 'none' : `1.5px solid ${brd}`,
+                background: muscleFilter === mg ? ac : '#fff',
+                color: muscleFilter === mg ? '#fff' : t2,
+              }}>{mg === 'all' ? 'All' : mg.charAt(0).toUpperCase() + mg.slice(1)}</button>
+          ))}
+        </div>
+        {/* Exercise list */}
+        <div style={{ padding: '0 20px' }}>
+          <div style={card}>
+            {exercises.length === 0 && (
+              <div style={{ padding: '30px 20px', textAlign: 'center', color: t3, fontSize: 13 }}>No exercises found</div>
+            )}
+            {exercises.map((ex, i) => (
+              <button key={ex.id} onClick={() => addExercise(ex)}
+                style={{
+                  display: 'flex', alignItems: 'center', width: '100%', padding: '14px 16px',
+                  background: 'none', border: 'none', borderTop: i > 0 ? `1px solid ${brd}` : 'none', textAlign: 'left', gap: 12,
+                }}>
+                <div style={{ width: 8, height: 8, borderRadius: 4, background: MUSCLE_COLORS[ex.muscleGroup] || t3, flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: t1 }}>{ex.name}</div>
+                  <div style={{ fontSize: 11, color: t3, marginTop: 1 }}>{ex.muscleGroup} · {ex.equipment}{ex.isCompound ? ' · compound' : ''}</div>
+                </div>
+                <span style={{ color: ac, fontSize: 20, fontWeight: 300 }}>+</span>
+              </button>
             ))}
           </div>
         </div>
-        <div style={{ ...card, marginTop: 4 }}>
-          {exercises.map((ex, i) => (
-            <button key={ex.id} onClick={() => addExerciseToSession(ex)}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '16px 18px',
-                background: 'none', border: 'none', borderTop: i > 0 ? '1px solid #e5e5e7' : 'none', textAlign: 'left', color: t1 }}>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8 }}>{ex.name}</div>
-                <div style={{ fontSize: 11, color: t2, marginTop: 2, fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>
-                  {ex.muscleGroup} · {ex.equipment}{ex.isCompound ? ' · compound' : ''}
-                </div>
-              </div>
-              <span style={{ color: t3, fontSize: 16 }}>+</span>
+      </div>
+    );
+  }
+
+  // ============ ACTIVE SESSION ============
+  if (view === 'session' && activeSession) {
+    const groups = groupSets(activeSession.sets);
+    const elapsed = Math.round((Date.now() - new Date(activeSession.createdAt).getTime()) / 60000);
+    const totalSets = (activeSession.sets || []).filter(s => s.reps).length;
+
+    return (
+      <div style={{ paddingBottom: 100 }}>
+        {/* Session header */}
+        <div style={{ background: 'linear-gradient(135deg,#3b82f6 0%,#8b5cf6 100%)', color: '#fff', padding: '20px 20px 16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.5px' }}>{activeSession.name}</div>
+              <div style={{ fontSize: 12, opacity: 0.7, marginTop: 4, fontWeight: 500 }}>{elapsed} min · {totalSets} sets logged</div>
+            </div>
+            <button onClick={finishWorkout}
+              style={{ padding: '10px 18px', borderRadius: 12, background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)', color: '#fff', fontSize: 13, fontWeight: 700 }}>
+              Finish
             </button>
-          ))}
-          {exercises.length === 0 && (
-            <div style={{ padding: '30px 20px', textAlign: 'center', color: t3, fontSize: 13 }}>No exercises found</div>
+          </div>
+
+          {/* Rest timer */}
+          {timerRunning && timer > 0 && (
+            <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(0,0,0,0.15)', borderRadius: 12, padding: '10px 14px' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>
+              <span style={{ fontSize: 20, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>{fmtTimer(timer)}</span>
+              <span style={{ fontSize: 11, opacity: 0.7, fontWeight: 500 }}>rest</span>
+              <div style={{ flex: 1 }} />
+              <button onClick={() => { setTimerRunning(false); setTimer(0); }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.7)', fontSize: 12, fontWeight: 600 }}>Skip</button>
+            </div>
           )}
         </div>
+
+        {/* Exercise groups */}
+        <div style={{ padding: '8px 20px 0' }}>
+          {groups.map(group => {
+            const ex = exerciseMap[group.exerciseId];
+            const name = ex?.name || 'Exercise';
+            const muscle = ex?.muscleGroup || '';
+            const mc = MUSCLE_COLORS[muscle] || t3;
+
+            return (
+              <div key={group.exerciseId} style={{ ...card, marginBottom: 10 }}>
+                {/* Exercise header */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px 8px' }}>
+                  <div style={{ width: 10, height: 10, borderRadius: 5, background: mc }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: t1 }}>{name}</div>
+                    {muscle && <div style={{ fontSize: 11, color: t3, marginTop: 1, textTransform: 'capitalize' }}>{muscle}</div>}
+                  </div>
+                </div>
+
+                {/* Last time reference */}
+                {exerciseHistory[group.exerciseId]?.sets?.length > 0 && (() => {
+                  const hist = exerciseHistory[group.exerciseId];
+                  const lastSets = hist.sets;
+                  const dateStr = hist.lastDate ? new Date(hist.lastDate).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short' }) : '';
+                  return (
+                    <div style={{ padding: '4px 16px 6px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={t3} strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                      <span style={{ fontSize: 11, color: t3, fontWeight: 500 }}>
+                        Last{dateStr ? ` (${dateStr})` : ''}: {lastSets.map((s, i) => `${s.weightKg || 0}kg × ${s.reps || 0}${s.rir != null ? ` @${s.rir}RIR` : ''}`).join(' · ')}
+                      </span>
+                    </div>
+                  );
+                })()}
+
+                {/* Set table header */}
+                <div style={{ display: 'flex', padding: '6px 16px', gap: 4 }}>
+                  <span style={{ width: 32, fontSize: 10, fontWeight: 700, color: t3, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Set</span>
+                  <span style={{ flex: 1, fontSize: 10, fontWeight: 700, color: t3, textTransform: 'uppercase', letterSpacing: '0.5px' }}>kg</span>
+                  <span style={{ flex: 1, fontSize: 10, fontWeight: 700, color: t3, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Reps</span>
+                  <span style={{ width: 44, fontSize: 10, fontWeight: 700, color: t3, textTransform: 'uppercase', letterSpacing: '0.5px' }}>RIR</span>
+                  <span style={{ width: 28 }} />
+                </div>
+
+                {/* Set rows */}
+                {group.sets.map((set, idx) => (
+                  <div key={set.id} style={{ display: 'flex', alignItems: 'center', padding: '10px 16px', gap: 4, borderTop: `1px solid ${brd}` }}>
+                    <span style={{ width: 32, fontSize: 14, fontWeight: 700, color: set.reps ? ac : t3 }}>{idx + 1}</span>
+                    <span style={{ flex: 1, fontSize: 15, fontWeight: 600, color: set.weightKg != null ? t1 : t3 }}>{set.weightKg != null ? set.weightKg : '—'}</span>
+                    <span style={{ flex: 1, fontSize: 15, fontWeight: 600, color: set.reps ? t1 : t3 }}>{set.reps || '—'}</span>
+                    <span style={{ width: 44, fontSize: 15, fontWeight: 500, color: set.rir != null ? t2 : t3 }}>{set.rir != null ? set.rir : '—'}</span>
+                    <button onClick={() => deleteSet(set.id)} style={{ width: 28, background: 'none', border: 'none', color: '#d1d5db', fontSize: 16, padding: 0 }}>×</button>
+                  </div>
+                ))}
+
+                {/* Add set row */}
+                {editingSet?.exerciseId === group.exerciseId ? (
+                  <div style={{ padding: '10px 16px 14px', borderTop: `1px solid ${brd}` }}>
+                    <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+                      <input type="number" placeholder="kg" value={editingSet.weightKg}
+                        onChange={e => setEditingSet(s => ({ ...s, weightKg: e.target.value }))}
+                        style={{ flex: 1, padding: '12px 10px', borderRadius: 10, border: `1.5px solid ${brd}`, background: '#fff', fontSize: 15, textAlign: 'center', boxSizing: 'border-box' }} autoFocus />
+                      <input type="number" placeholder="reps" value={editingSet.reps}
+                        onChange={e => setEditingSet(s => ({ ...s, reps: e.target.value }))}
+                        style={{ flex: 1, padding: '12px 10px', borderRadius: 10, border: `1.5px solid ${brd}`, background: '#fff', fontSize: 15, textAlign: 'center', boxSizing: 'border-box' }} />
+                      <input type="number" placeholder="RIR" value={editingSet.rir}
+                        onChange={e => setEditingSet(s => ({ ...s, rir: e.target.value }))}
+                        style={{ width: 60, padding: '12px 10px', borderRadius: 10, border: `1.5px solid ${brd}`, background: '#fff', fontSize: 15, textAlign: 'center', boxSizing: 'border-box' }} />
+                    </div>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button onClick={() => setEditingSet(null)}
+                        style={{ flex: 1, padding: 12, borderRadius: 12, border: `1.5px solid ${brd}`, background: '#fff', color: t2, fontSize: 14, fontWeight: 600 }}>Cancel</button>
+                      <button onClick={() => logSet(group.exerciseId, editingSet)}
+                        style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: ac, color: '#fff', fontSize: 14, fontWeight: 700 }}>Log Set</button>
+                    </div>
+                  </div>
+                ) : (
+                  <button onClick={() => {
+                    const hist = exerciseHistory[group.exerciseId];
+                    const sug = hist?.suggested;
+                    setEditingSet({
+                      exerciseId: group.exerciseId,
+                      weightKg: sug?.weightKg != null ? String(sug.weightKg) : '',
+                      reps: sug?.reps != null ? String(sug.reps) : '',
+                      rir: sug?.rir != null ? String(sug.rir) : '',
+                    });
+                  }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', padding: '12px 16px', background: 'none', border: 'none', borderTop: `1px solid ${brd}`, color: ac, fontSize: 14, fontWeight: 600 }}>
+                    <span style={{ fontSize: 17 }}>+</span> Add Set
+                  </button>
+                )}
+              </div>
+            );
+          })}
+
+          {/* Add exercise button */}
+          <button onClick={openPicker}
+            style={{ width: '100%', padding: 16, borderRadius: 16, border: `2px dashed ${brd}`, background: '#fff', color: t2, fontSize: 14, fontWeight: 700, marginBottom: 8 }}>
+            + Add Exercise
+          </button>
+        </div>
       </div>
     );
   }
 
-  // Active workout session
-  if (activeSession) {
-    const exerciseGroups = groupSetsByExercise(activeSession.sets);
+  // ============ HOME ============
+  const totalSetsThisWeek = Object.values(volume).reduce((s, v) => s + v, 0);
+  const DAY_LABELS = ['Mon', 'Wed', 'Fri'];
 
-    return (
-      <div style={{ paddingBottom: 92 }}>
-        {/* Header */}
-        <div style={{ background: '#ffffff', borderBottom: '1px solid #e5e5e7' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px' }}>
-            <div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: t1, letterSpacing: -0.3 }}>{activeSession.name}</div>
-              <div style={{ fontSize: 11, color: t3, marginTop: 2 }}>
-                {Math.round((Date.now() - new Date(activeSession.createdAt).getTime()) / 60000)} min elapsed
-              </div>
-            </div>
-            <button onClick={finishWorkout} style={{ padding: '10px 20px', borderRadius: 12, background: ac, border: 'none', color: '#fff', fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>Finish</button>
-          </div>
-        </div>
-
-        {/* Exercise cards */}
-        {exerciseGroups.map(group => {
-          const ex = exerciseMap[group.exerciseId];
-          const exName = ex?.name || 'Unknown Exercise';
-          const exMeta = ex ? `${ex.muscleGroup}` : '';
-          return (
-            <div key={group.exerciseId} style={{ ...card, marginTop: 8 }}>
-              <div style={{ padding: '14px 18px 8px' }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: t1, textTransform: 'uppercase', letterSpacing: 0.8 }}>{exName}</div>
-                {exMeta && <div style={{ fontSize: 11, color: t3, marginTop: 2 }}>{exMeta}</div>}
-              </div>
-
-              {/* Set rows header */}
-              <div style={{ display: 'flex', padding: '6px 18px', gap: 8 }}>
-                <span style={{ width: 30, fontSize: 10, fontWeight: 500, color: t3, textTransform: 'uppercase', letterSpacing: 1.5 }}>Set</span>
-                <span style={{ flex: 1, fontSize: 10, fontWeight: 500, color: t3, textTransform: 'uppercase', letterSpacing: 1.5 }}>kg</span>
-                <span style={{ flex: 1, fontSize: 10, fontWeight: 500, color: t3, textTransform: 'uppercase', letterSpacing: 1.5 }}>Reps</span>
-                <span style={{ width: 40, fontSize: 10, fontWeight: 500, color: t3, textTransform: 'uppercase', letterSpacing: 1.5 }}>RIR</span>
-                <span style={{ width: 24 }}></span>
-              </div>
-
-              {/* Set rows */}
-              {group.sets.map((set, idx) => (
-                <div key={set.id} style={{ display: 'flex', alignItems: 'center', padding: '8px 18px', gap: 8, borderTop: '1px solid #e5e5e7' }}>
-                  <span style={{ width: 30, fontSize: 13, fontWeight: 600, color: t2 }}>{idx + 1}</span>
-                  <span style={{ flex: 1, fontSize: 15, fontWeight: 600, color: t1 }}>{set.weightKg != null ? set.weightKg : '—'}</span>
-                  <span style={{ flex: 1, fontSize: 15, fontWeight: 600, color: t1 }}>{set.reps || '—'}</span>
-                  <span style={{ width: 40, fontSize: 15, color: t3 }}>{set.rir != null ? set.rir : '—'}</span>
-                  <button onClick={() => deleteSet(set.id)} style={{ width: 24, background: 'none', border: 'none', color: '#d1d5db', fontSize: 14, padding: 0 }}>×</button>
-                </div>
-              ))}
-
-              {/* Add set form */}
-              {addingSet === group.exerciseId ? (
-                <div style={{ display: 'flex', alignItems: 'center', padding: '10px 18px 14px', gap: 6 }}>
-                  <input type="number" placeholder="kg" value={setForm.weightKg} onChange={e => setSetForm(f => ({ ...f, weightKg: e.target.value }))}
-                    style={{ ...inp, flex: 1, padding: '10px 12px', fontSize: 14 }} />
-                  <input type="number" placeholder="reps" value={setForm.reps} onChange={e => setSetForm(f => ({ ...f, reps: e.target.value }))}
-                    style={{ ...inp, flex: 1, padding: '10px 12px', fontSize: 14 }} />
-                  <input type="number" placeholder="RIR" value={setForm.rir} onChange={e => setSetForm(f => ({ ...f, rir: e.target.value }))}
-                    style={{ ...inp, width: 60, padding: '10px 12px', fontSize: 14 }} />
-                  <button onClick={() => addSetToExercise(group.exerciseId)}
-                    style={{ padding: '10px 14px', borderRadius: 12, background: ac, border: 'none', color: '#fff', fontSize: 13, fontWeight: 700 }}>+</button>
-                </div>
-              ) : (
-                <button onClick={() => { setAddingSet(group.exerciseId); setSetForm({ reps: '', weightKg: '', rir: '' }); }}
-                  style={{ width: '100%', padding: '12px 18px', background: 'none', border: 'none', borderTop: '1px solid #e5e5e7', color: ac, fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>+ Add Set</button>
-              )}
-            </div>
-          );
-        })}
-
-        {/* Add exercise button */}
-        <div style={{ padding: '4px 16px 0' }}>
-          <button onClick={openExercisePicker} style={{
-            width: '100%', padding: 16, borderRadius: 14, border: '1px dashed #d1d5db',
-            background: '#fff', color: t2, fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1,
-          }}>+ Add Exercise</button>
-        </div>
-      </div>
-    );
-  }
-
-  // Main training screen (no active session)
   return (
-    <div style={{ paddingBottom: 92 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 20px 8px' }}>
-        <div style={{ fontSize: 22, fontWeight: 800, color: t1, letterSpacing: -0.3 }}>Training</div>
+    <div style={{ paddingBottom: 100 }}>
+      <div style={{ padding: '20px 20px 0' }}>
+        <div style={{ fontSize: 20, fontWeight: 800 }}>Training</div>
       </div>
 
-      {/* Start workout */}
-      <div style={{ padding: '4px 16px 12px' }}>
-        <button onClick={() => startWorkout('Workout')} style={{
-          width: '100%', padding: 16, borderRadius: 14, border: 'none',
-          background: ac, color: '#fff', fontSize: 15, fontWeight: 700,
-        }}>Start Workout</button>
-      </div>
-
-      {/* Weekly volume */}
-      {Object.keys(volume).length > 0 && (
-        <div style={card}>
-          <div style={{ padding: '14px 18px' }}>
-            <div style={{ fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 1.5, color: t2, marginBottom: 12 }}>Weekly Volume (sets)</div>
-            {Object.entries(volume).sort((a, b) => b[1] - a[1]).map(([muscle, sets]) => (
-              <div key={muscle} style={{ display: 'flex', alignItems: 'center', marginBottom: 8, gap: 10 }}>
-                <span style={{ width: 80, fontSize: 11, color: t2, textTransform: 'capitalize', fontWeight: 500 }}>{muscle}</span>
-                <div style={{ flex: 1, height: 6, borderRadius: 3, background: '#f0f0f2', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', borderRadius: 3, background: sets >= 10 ? ac : sets >= 5 ? '#e0a526' : '#3b82f6', width: `${Math.min(100, (sets / 20) * 100)}%`, transition: 'width 0.3s ease' }} />
-                </div>
-                <span style={{ fontSize: 13, fontWeight: 600, color: t1, width: 24, textAlign: 'right' }}>{sets}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Recent sessions */}
-      <div style={{ padding: '12px 20px 6px', fontSize: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: 1.5, color: t2 }}>Recent Workouts</div>
-      {sessions.length > 0 ? (
-        <div style={card}>
-          {sessions.slice(0, 10).map((s, i) => (
-            <button key={s.id} onClick={() => setActiveSession(s)}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '16px 18px',
-                background: 'none', border: 'none', borderTop: i > 0 ? '1px solid #e5e5e7' : 'none', color: t1, textAlign: 'left' }}>
+      {/* Plan days */}
+      {plan ? (
+        <div style={{ padding: '12px 20px 4px' }}>
+          <div style={{ ...card, padding: 0 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px 6px' }}>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8 }}>{s.name}</div>
-                <div style={{ fontSize: 11, color: t2, marginTop: 2, fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>
-                  {new Date(s.date).toLocaleDateString('en-NZ', { weekday: 'short', day: 'numeric', month: 'short' })}
-                  {s.durationMins ? ` · ${s.durationMins} min` : ''}
-                  {s.sets?.length ? ` · ${s.sets.length} sets` : ''}
-                </div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: t1 }}>{plan.name}</div>
+                <div style={{ fontSize: 11, color: t3, marginTop: 1 }}>{plan.description}</div>
               </div>
-              <span style={{ color: t3, fontSize: 16 }}>›</span>
-            </button>
-          ))}
+            </div>
+            {plan.days.map((day, i) => {
+              const dayExercises = day.exercises || [];
+              const totalSets = dayExercises.reduce((s, e) => s + e.targetSets, 0);
+              return (
+                <button key={day.id} onClick={() => startFromPlan(day)}
+                  style={{ display: 'flex', alignItems: 'center', width: '100%', padding: '14px 16px', background: 'none', border: 'none', borderTop: `1px solid ${brd}`, textAlign: 'left', gap: 12 }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 12, background: 'linear-gradient(135deg,#3b82f6 0%,#8b5cf6 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: '#fff' }}>{DAY_LABELS[i] || `D${i + 1}`}</span>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: t1 }}>{day.name}</div>
+                    <div style={{ fontSize: 11, color: t3, marginTop: 1 }}>
+                      {dayExercises.length} exercises · {totalSets} sets
+                    </div>
+                  </div>
+                  <span style={{ color: ac, fontSize: 13, fontWeight: 700 }}>Start</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       ) : (
-        <div style={{ padding: '30px 20px', textAlign: 'center', color: t3, fontSize: 13 }}>No workouts yet. Start your first one!</div>
+        <div style={{ padding: '12px 20px' }}>
+          <button onClick={() => startWorkout('Workout')}
+            style={{ width: '100%', padding: 18, borderRadius: 16, border: 'none', background: 'linear-gradient(135deg,#3b82f6 0%,#8b5cf6 100%)', color: '#fff', fontSize: 16, fontWeight: 800, boxShadow: '0 4px 12px rgba(59,130,246,0.3)' }}>
+            Start Workout
+          </button>
+        </div>
       )}
+
+      {/* Quick start (always show below plan) */}
+      {plan && (
+        <div style={{ padding: '0 20px 4px' }}>
+          <button onClick={() => startWorkout('Freestyle')}
+            style={{ width: '100%', padding: 14, borderRadius: 14, border: `1.5px solid ${brd}`, background: '#fff', color: t2, fontSize: 13, fontWeight: 600 }}>
+            Freestyle Workout
+          </button>
+        </div>
+      )}
+
+      {/* Weekly volume card */}
+      {Object.keys(volume).length > 0 && (
+        <div style={{ padding: '0 20px 8px' }}>
+          <div style={{ ...card, padding: '16px 16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: t3, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Weekly Volume</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: ac }}>{totalSetsThisWeek} sets</div>
+            </div>
+            {Object.entries(volume).sort((a, b) => b[1] - a[1]).map(([muscle, sets]) => {
+              const mc = MUSCLE_COLORS[muscle] || t3;
+              return (
+                <div key={muscle} style={{ display: 'flex', alignItems: 'center', marginBottom: 6, gap: 8 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: 4, background: mc, flexShrink: 0 }} />
+                  <span style={{ width: 72, fontSize: 12, color: t2, fontWeight: 500, textTransform: 'capitalize' }}>{muscle}</span>
+                  <div style={{ flex: 1, height: 6, borderRadius: 3, background: brd, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', borderRadius: 3, background: mc, width: `${Math.min(100, (sets / 20) * 100)}%`, transition: 'width 0.3s' }} />
+                  </div>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: t1, width: 24, textAlign: 'right' }}>{sets}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Recent workouts */}
+      <div style={{ padding: '8px 20px 6px', fontSize: 11, fontWeight: 700, color: t3, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Recent Workouts</div>
+      <div style={{ padding: '0 20px' }}>
+        {sessions.length > 0 ? (
+          <div style={card}>
+            {sessions.slice(0, 10).map((s, i) => {
+              const setCount = (s.sets || []).length;
+              return (
+                <button key={s.id} onClick={() => { setActiveSession(s); setView('session'); }}
+                  style={{
+                    display: 'flex', alignItems: 'center', width: '100%', padding: '14px 16px',
+                    background: 'none', border: 'none', borderTop: i > 0 ? `1px solid ${brd}` : 'none', textAlign: 'left', gap: 12,
+                  }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 12, background: ac + '10', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={ac} strokeWidth="2.5" strokeLinecap="round"><path d="M6.5 6.5h11M6.5 17.5h11M4 10h1.5M4 14h1.5M18.5 10H20M18.5 14H20M7.5 10v4M16.5 10v4M9.5 8v8M14.5 8v8"/></svg>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: t1 }}>{s.name}</div>
+                    <div style={{ fontSize: 12, color: t3, marginTop: 1 }}>
+                      {new Date(s.date).toLocaleDateString('en-NZ', { weekday: 'short', day: 'numeric', month: 'short' })}
+                      {s.durationMins ? ` · ${s.durationMins} min` : ''}
+                      {setCount > 0 ? ` · ${setCount} sets` : ''}
+                    </div>
+                  </div>
+                  <span style={{ color: t3, fontSize: 16 }}>›</span>
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <div style={{ ...card, padding: '30px 20px', textAlign: 'center' }}>
+            <div style={{ fontSize: 32, marginBottom: 8 }}>🏋️</div>
+            <div style={{ fontSize: 14, color: t2, lineHeight: 1.5 }}>No workouts yet.<br />Start your first one!</div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
