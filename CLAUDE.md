@@ -63,7 +63,100 @@ When sources conflict, flag clearly and explain both positions. Ben decides.
 
 ## Current Health Status
 
-### Gut Health (Active Issues)
+### Latest Labs — 26 March 2026 (i-screen, fasting, age 36)
+
+#### RED FLAGS (Require Action)
+| Marker | Result | Reference | Status | vs 2023 |
+|--------|--------|-----------|--------|---------|
+| **ApoB** | 1.51 g/L | 0.66-1.44 | >95th percentile | First test |
+| **Lp(a)** | 112 nmol/L | <75 low risk | Moderate ASCVD risk | First test — genetically fixed |
+| **Fasting insulin** | 126 pmol/L | 10-80 | ~1.6x upper limit | First test |
+| **ALT** | 152 U/L | <45 | >3x upper limit | Was 37 — massive increase |
+| **AST** | 123 U/L | <45 | >3x upper limit | Was 21 — massive increase |
+| **Testosterone** | 9.4 nmol/L | 8.7-29 | Bottom of range | Was 14.0 — 33% drop |
+| **Free testosterone** | 229 pmol/L | 218-681 | Barely above lower limit | First test |
+
+#### CONCERNING BUT IMPROVING
+| Marker | Result | Reference | vs 2023 |
+|--------|--------|-----------|---------|
+| Triglycerides | 3.0 mmol/L | <2.0 | Was 5.1 — improved |
+| HDL | 0.95 mmol/L | >1.0 | Was 0.89 — slight improvement |
+| LDL | 4.3 mmol/L | <3.4 | Was 3.2 (unreliable due to high trigs) |
+| Total cholesterol | 6.6 mmol/L | <5.0 | Was 6.2 |
+| Chol/HDL ratio | 6.9 | <4.5 | Was 7.0 — marginal improvement |
+| Non-HDL cholesterol | 5.6 mmol/L | <4.2 | First calculation |
+| ApoB/ApoA1 ratio | 1.25 | <0.9 | First test |
+| Ferritin | 305 ug/L | 20-500 | Was 155 — nearly doubled (metabolic stress marker) |
+| Urate | 0.49 mmol/L | 0.23-0.42 | Elevated — insulin impairs renal excretion |
+| eGFR | 84 mL/min/1.73m2 | >90 | Mildly reduced (may be unreliable at 104kg) |
+| SHBG | 22 nmol/L | 13-49 | Low — IR suppresses SHBG |
+
+#### NORMAL / GOOD
+| Marker | Result | Status |
+|--------|--------|--------|
+| TSH | 2.6 mIU/L | Normal — euthyroid |
+| Free T4 | 17.3 pmol/L | Normal |
+| Free T3 | 6.0 pmol/L | Top of range — good conversion |
+| hs-CRP | 0.8 mg/L | Low CV inflammatory risk |
+| Fasting glucose | 5.2 mmol/L | Normal (improved from 5.4) |
+| Vitamin D | 99 nmol/L | Good |
+| ApoA1 | 1.20 g/L | Normal (low end) |
+| FSH | 8.8 U/L | Normal |
+| LH | 6.4 U/L | Normal |
+| Full blood count | All normal | Haemoglobin 166, RBC 5.56, WBC 7.0, platelets 258 |
+| Iron | 13 umol/L | Normal |
+| Transferrin sat | 18% | Low-normal |
+| Bilirubin, ALP, GGT | Normal | Only ALT/AST elevated |
+| CRP | 0.8 mg/L | Normal |
+| Sodium, urea, creatinine | Normal | Potassium 5.3 mildly elevated (likely artefact) |
+
+#### MISSING — Add to Next Draw
+- **HbA1c** — essential given insulin resistance, can be non-fasting
+
+### Key Interpretation (Attia Framework)
+**Insulin resistance is the central driver** connecting virtually every abnormal finding:
+- High insulin → high trigs, low HDL (atherogenic dyslipidaemia)
+- High insulin → suppresses SHBG → less available testosterone
+- High insulin → impairs renal urate excretion → elevated urate
+- High insulin → hepatic fat deposition → elevated ALT/AST (likely NAFLD)
+- High insulin → elevated ferritin (metabolic stress)
+- ApoB 1.51 confirms high atherogenic particle count
+- Lp(a) 112 adds independent genetic CV risk (cannot be modified)
+- Fasting glucose 5.2 looks fine but pancreas is compensating — insulin tells the real story
+- ALT/AST elevation most likely NAFLD/MASLD from IR. **Liver ultrasound is urgent.**
+
+### Confirmed Conditions (2026)
+- Insulin resistance (fasting insulin 126 pmol/L)
+- Elevated Lp(a) (112 nmol/L — genetic, permanent)
+- Suspected NAFLD (pending ultrasound)
+- Atherogenic dyslipidaemia (high apoB, high trigs, low HDL)
+
+### Pending Actions
+1. GP appointment with full results
+2. Liver ultrasound referral (urgent)
+3. CAC score (coronary artery calcium — determines plaque presence)
+4. HbA1c (add to next draw)
+5. Ezetimibe discussion with GP (first-line pharmacology)
+6. Colchicine — flagged as anti-inflammatory add-on
+7. PCSK9 inhibitor access in NZ (funding criteria given Lp(a))
+
+### Agreed Pharmacological Hierarchy
+1. Ezetimibe first (low risk, addresses apoB, no metabolic cost)
+2. CAC score (determines if plaque present)
+3. Liver ultrasound (rules in/out NAFLD before hepatotoxic drugs)
+4. 6-month lifestyle trial then retest
+5. If apoB hasn't moved: low-dose rosuvastatin 5mg (NOT atorvastatin) + CoQ10
+6. PCSK9 inhibitors (ideal but NZ cost/access is constraint)
+
+### Prior Labs — April/May 2023 (age 33, baseline)
+- Total cholesterol: 6.2, Triglycerides: 5.1, HDL: 0.89, LDL: 3.2
+- Fasting glucose: 5.4, Testosterone: 14.0, Ferritin: 155
+- Vitamin D: 102, Homocysteine: 9.2
+- Liver: ALT 37, AST 21, GGT 14, ALP 66 (all normal)
+- Organic acids: low B6, elevated glucaric acid, elevated hippurate, cortisol 434 (upper normal)
+- Microbiome: elevated Methanobacteriaceae, elevated zonulin, elevated beta-glucuronidase, low sIgA, low-normal elastase 147, elevated ETEC
+
+### Gut Health (From 2023 Microbiome — Active Issues)
 - Low pancreatic enzyme output (elastase 147, threshold 200)
 - Elevated methane-producing bacteria (Methanobacteriaceae 9.4, threshold 5.0) — primary driver of bloating
 - Elevated zonulin 109 ng/g (intestinal permeability)
@@ -117,15 +210,36 @@ Active (Thorne/USANA, NZ-available):
 ### Lab-Recommended (Not Yet Started)
 B6 150mg, B complex, Magnesium 600mg, CoQ10 300mg, Acetyl-L-Carnitine 600mg, Calcium-D-glucarate 1000mg, Probiotics multistrain 20B CFU
 
-## Nutrition
-- Meal plan v6: 3-week calorie step-down (~2,400 → 2,200 → 2,000 kcal)
-- Protein fixed at 180g/day
-- Fat is the primary reduction lever
-- Two-stage morning: small protein hit early (cottage cheese + carrot sticks), larger first meal later
-- USANA Nutrimeal shake at breakfast = compliance compromise, not endorsement
-- Limited veg variety (broccoli, carrot, air-fried potato) = acknowledged micronutrient gap
-- Every sauce, oil, cooking fat = explicit line item, not estimate
-- Family meals: portion awareness over elimination
+## Nutrition — Meal Plan v8 (Insulin Resistance Protocol, 8 April 2026)
+Full plan in `/Meal_Plan_v8_Insulin_Protocol.md`
+
+### Structure
+- **Protein: 200g/day** (non-negotiable floor, up from 180g)
+- **Carbs: 75g/day** (no starchy carbs before lunch, only post-training + dinner)
+- **Fat: the only lever** — steps down across weeks
+- Step-down: ~2,000 cal (wk 1-2) → ~1,900 (wk 3-4) → ~1,800 (wk 5+)
+- USANA shake permanently dropped (maltodextrin = direct insulin spike)
+
+### 5-Meal Schedule
+- M1 6:30am: cottage cheese 200g + carrots 80g + almonds (early protein hit)
+- M2 10:00am: whey isolate 40g + almonds (at work, pre-positioned)
+- M3 1:30pm: chicken 220g + rice 100g + broccoli + olive oil (post-training carb window, take enzyme)
+- M4 5:30pm: family dinner — plate rule (weigh protein 200-250g, palm starch, fill veg, 1 tbsp sauce max, no seconds)
+- M5 8:00pm: buffer meal (whey/yoghurt/cottage cheese — closes protein gap)
+
+### Key Rules
+- Fat per meal: stay at or below 20g (enzyme capacity)
+- Kitchen closed after M5 — 500ml water + 20min wait if cravings
+- No ultra-processed food enters the house (purchasing rule)
+- Weigh: meat/chicken, cottage cheese, rice, potato, almonds
+- Non-training days: halve lunch rice
+- Every sauce, oil, cooking fat = explicit line item
+
+### 12-Week Target (Retest Early July 2026)
+- Fat loss: 6-10kg (0.5-0.8kg/week)
+- Fasting insulin should drop significantly
+- ALT/AST should normalise if NAFLD
+- Testosterone should recover as IR improves
 
 ## Emotional Eating
 - Long-standing pattern — treat as addiction, NOT poor willpower
