@@ -358,6 +358,7 @@ export function setupMCP(app, prisma) {
 
   // Single endpoint — stateless, new server per request
   app.all('/mcp', async (req, res) => {
+    console.log(`MCP ${req.method} from ${req.ip}`, req.method === 'POST' ? JSON.stringify(req.body).substring(0, 200) : '');
     try {
       const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
       const server = createMcpServer(prisma);
@@ -365,8 +366,8 @@ export function setupMCP(app, prisma) {
       await transport.handleRequest(req, res, req.body);
       await server.close();
     } catch (err) {
-      console.error('MCP error:', err);
-      if (!res.headersSent) res.status(500).json({ error: 'MCP error' });
+      console.error('MCP error:', err.message);
+      if (!res.headersSent) res.status(500).json({ jsonrpc: '2.0', error: { code: -32603, message: err.message } });
     }
   });
 
