@@ -59,6 +59,10 @@ try {
   console.error('Failed to setup MCP:', err);
 }
 
+// Block OAuth discovery — return 404 so claude.ai skips OAuth
+app.all('/.well-known/*', (req, res) => res.status(404).json({ error: 'Not found' }));
+app.all('/register', (req, res) => res.status(404).json({ error: 'Not found' }));
+
 // Serve frontend in production
 if (process.env.NODE_ENV === 'production') {
   const clientDist = path.join(__dirname, '..', 'client', 'dist');
