@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { z } from 'zod';
+import crypto from 'crypto';
 
 function dateKey(d = new Date()) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -358,6 +359,10 @@ export function setupMCP(app, prisma) {
 
   // Single endpoint — stateless, new server per request
   app.all('/mcp', async (req, res) => {
+    // Fix: ensure Accept includes application/json (stateless mode rejects pure text/event-stream with 406)
+    if (req.headers.accept && !req.headers.accept.includes('application/json')) {
+      req.headers.accept = 'application/json, ' + req.headers.accept;
+    }
     console.log(`MCP ${req.method} from ${req.ip}`, req.method === 'POST' ? JSON.stringify(req.body).substring(0, 200) : '');
     try {
       const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
