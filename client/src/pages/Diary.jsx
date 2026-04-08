@@ -35,6 +35,7 @@ export default function Diary({ openPicker, goTo }) {
   const [suppLogs, setSuppLogs] = useState([]);
   const [symptoms, setSymptoms] = useState([]);
   const [weekData, setWeekData] = useState(null);
+  const [yesterdayDiary, setYesterdayDiary] = useState({ Breakfast: [], Lunch: [], Dinner: [], Snacks: [] });
   const [mp, setMp] = useState(0);
   const [waterExpanded, setWaterExpanded] = useState(false);
   const [del, setDel] = useState(null);
@@ -44,16 +45,19 @@ export default function Diary({ openPicker, goTo }) {
   useEffect(() => { loadData(); }, [curDate]);
 
   async function loadData() {
-    const [d, p, g, symp] = await Promise.all([
+    const yesterdayDate = shiftDate(curDate, -1);
+    const [d, p, g, symp, yd] = await Promise.all([
       api.getDiary(curDate),
       api.getProfile(),
       api.getGoals(),
       api.getSymptoms(20),
+      api.getDiary(yesterdayDate),
     ]);
     setDiary(d);
     if (p) setProfile(p);
     if (g) setGoals(g);
     setSymptoms(symp);
+    setYesterdayDiary(yd);
 
     if (isToday) {
       const [w, s, sl] = await Promise.all([
@@ -351,6 +355,12 @@ export default function Diary({ openPicker, goTo }) {
                   </div>
                   {isLight && <div style={{ fontSize: 10, color: rd, marginTop: 4, fontWeight: 500 }}>Light meal needed — you've used {pctUsed}% of your daily budget</div>}
                 </div>
+              )}
+              {empty && (yesterdayDiary[slot] || []).length > 0 && (
+                <button onClick={async () => { await api.copyMeal(shiftDate(curDate, -1), curDate, slot); const d = await api.getDiary(curDate); setDiary(d); loadWeekData(goals); }} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '8px 16px', background: 'none', border: 'none', borderTop: `1px solid ${brd}`, color: ac, fontSize: 11, fontWeight: 600, width: '100%', cursor: 'pointer' }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={ac} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
+                  Copy from yesterday ({(yesterdayDiary[slot] || []).length} item{(yesterdayDiary[slot] || []).length !== 1 ? 's' : ''})
+                </button>
               )}
               {items.map(item => (
                 <div key={item.id} style={{ display: 'flex', alignItems: 'center', padding: '10px 16px', borderTop: `1px solid ${brd}` }}>

@@ -13,7 +13,6 @@ import weighinRoutes from './routes/weighins.js';
 import symptomRoutes from './routes/symptoms.js';
 import waterRoutes from './routes/water.js';
 import supplementRoutes from './routes/supplements.js';
-import aiRoutes from './routes/ai.js';
 import dataRoutes from './routes/data.js';
 import trainingRoutes from './routes/training.js';
 
@@ -45,7 +44,6 @@ app.use('/api/weighins', weighinRoutes);
 app.use('/api/symptoms', symptomRoutes);
 app.use('/api/water', waterRoutes);
 app.use('/api/supplements', supplementRoutes);
-app.use('/api/ai', aiRoutes);
 app.use('/api/data', dataRoutes);
 app.use('/api/training', trainingRoutes);
 

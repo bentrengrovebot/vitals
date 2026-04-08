@@ -41,6 +41,7 @@ export const api = {
   addDiaryEntry: (data) => request('/diary', { method: 'POST', body: JSON.stringify(data) }),
   deleteDiaryEntry: (id) => request(`/diary/${id}`, { method: 'DELETE' }),
   getDiaryRange: (start, end) => request(`/diary/range/query?start=${start}&end=${end}`),
+  copyMeal: (fromDate, toDate, slot) => request('/diary/copy', { method: 'POST', body: JSON.stringify({ fromDate, toDate, slot }) }),
 
   // Weigh-ins
   getWeighIns: (limit = 14) => request(`/weighins?limit=${limit}`),
@@ -65,12 +66,6 @@ export const api = {
   getSupplementLogs: (date) => request(`/supplements/log/${date}`),
   logSupplement: (supplementId) => request('/supplements/log', { method: 'POST', body: JSON.stringify({ supplementId }) }),
   deleteSupplementLog: (id) => request(`/supplements/log/${id}`, { method: 'DELETE' }),
-
-  // AI
-  chat: (messages) => request('/ai/chat', { method: 'POST', body: JSON.stringify({ messages }) }),
-  insight: (days) => request('/ai/insight', { method: 'POST', body: JSON.stringify({ days }) }),
-  estimate: (name, grams) => request('/ai/estimate', { method: 'POST', body: JSON.stringify({ name, grams }) }),
-  getInsights: () => request('/ai/insights'),
 
   // Training
   searchExercises: (q, muscle) => request(`/training/exercises?q=${encodeURIComponent(q || '')}&muscle=${muscle || ''}`),
