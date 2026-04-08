@@ -47,13 +47,17 @@ app.use('/api/supplements', supplementRoutes);
 app.use('/api/data', dataRoutes);
 app.use('/api/training', trainingRoutes);
 
-// Remote MCP endpoint for claude.ai
-setupMCP(app, prisma);
-
-// MCP health check
-app.get('/mcp/health', (req, res) => {
-  res.json({ status: 'ok', mcp: true });
+// Health check (before any catch-all)
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', time: new Date().toISOString() });
 });
+
+// Remote MCP endpoint for claude.ai
+try {
+  setupMCP(app, prisma);
+} catch (err) {
+  console.error('Failed to setup MCP:', err);
+}
 
 // Serve frontend in production
 if (process.env.NODE_ENV === 'production') {
