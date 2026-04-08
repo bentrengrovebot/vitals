@@ -162,7 +162,180 @@ function createMcpServer(prisma) {
     const supps = await prisma.supplement.findMany({ where: { userId, isActive: true } });
     const logs = await prisma.supplementLog.findMany({ where: { userId, date: new Date(dateKey()) } });
     const loggedIds = new Set(logs.map(l => l.supplementId));
-    return { content: [{ type: 'text', text: JSON.stringify(supps.map(s => ({ name: s.name, dose: s.activeDose, takenToday: loggedIds.has(s.id) })), null, 2) }] };
+    return { content: [{ type: 'text', text: JSON.stringify(supps.map(s => ({ id: s.id, name: s.name, dose: s.activeDose, ingredient: s.activeIngredient, takenToday: loggedIds.has(s.id) })), null, 2) }] };
+  });
+
+  // ====== SUPPLEMENTS WRITE ======
+
+  server.tool('create_supplement', 'Add a new supplement to the stack.', {
+    name: z.string(), activeDose: z.string(), activeIngredient: z.string().optional(), brand: z.string().optional(),
+  }, async ({ name, activeDose, activeIngredient, brand }) => {
+    const userId = await getUserId();
+    const sup = await prisma.supplement.create({ data: { userId, name, activeDose, activeIngredient, brand, source: 'mcp' } });
+    return { content: [{ type: 'text', text: `Created supplement: ${name} (${activeDose})` }] };
+  });
+
+  server.tool('update_supplement', 'Update a supplement (name, dose, active status).', {
+    id: z.string().describe('Supplement ID'), name: z.string().optional(), activeDose: z.string().optional(),
+    activeIngredient: z.string().optional(), isActive: z.boolean().optional(),
+  }, async ({ id, ...data }) => {
+    const clean = Object.fromEntries(Object.entries(data).filter(([_, v]) => v !== undefined));
+    await prisma.supplement.update({ where: { id }, data: clean });
+    return { content: [{ type: 'text', text: `Updated supplement ${id}` }] };
+  });
+
+  server.tool('toggle_supplement', 'Mark a supplement as taken/untaken today.', {
+    supplementId: z.string().describe('Supplement ID'),
+  }, async ({ supplementId }) => {
+    const userId = await getUserId();
+    const existing = await prisma.supplementLog.findFirst({ where: { userId, supplementId, date: new Date(dateKey()) } });
+    if (existing) {
+      await prisma.supplementLog.delete({ where: { id: existing.id } });
+      return { content: [{ type: 'text', text: 'Marked as not taken today.' }] };
+    }
+    await prisma.supplementLog.create({ data: { userId, supplementId, date: new Date(dateKey()), takenAt: new Date() } });
+    return { content: [{ type: 'text', text: 'Marked as taken today.' }] };
+  });
+
+  // ====== PROFILE & GOALS ======
+
+  server.tool('update_profile', 'Update user profile info.', {
+    name: z.string().optional(), heightCm: z.number().optional(), weightKg: z.number().optional(),
+    weightGoalKg: z.number().optional(), sex: z.string().optional(), dob: z.string().optional(),
+  }, async (data) => {
+    const userId = await getUserId();
+    const clean = Object.fromEntries(Object.entries(data).filter(([_, v]) => v !== undefined));
+    if (clean.dob) clean.dob = new Date(clean.dob);
+    await prisma.profile.upsert({ where: { userId }, create: { userId, ...clean }, update: clean });
+    return { content: [{ type: 'text', text: `Profile updated: ${Object.keys(clean).join(', ')}` }] };
+  });
+
+  server.tool('update_goals', 'Update daily nutrition goals.', {
+    calories: z.number().optional(), proteinG: z.number().optional(), fatG: z.number().optional(),
+    carbsG: z.number().optional(), waterMl: z.number().optional(),
+  }, async (data) => {
+    const userId = await getUserId();
+    const clean = Object.fromEntries(Object.entries(data).filter(([_, v]) => v !== undefined));
+    await prisma.goals.create({ data: { userId, ...{ calories: 2300, proteinG: 150, fatG: 80, carbsG: 250, waterMl: 2500, effectiveFrom: new Date() }, ...clean } });
+    return { content: [{ type: 'text', text: `Goals updated: ${Object.entries(clean).map(([k, v]) => `${k}=${v}`).join(', ')}` }] };
+  });
+
+  // ====== DIARY DELETE ======
+
+  server.tool('delete_diary_entry', 'Delete a food diary entry by ID.', { id: z.string() }, async ({ id }) => {
+    await prisma.diaryEntry.delete({ where: { id } });
+    return { content: [{ type: 'text', text: `Deleted diary entry ${id}` }] };
+  });
+
+  // ====== RECIPES ======
+
+  server.tool('get_recipes', 'Get all recipes with ingredients and nutrition.', {}, async () => {
+    const userId = await getUserId();
+    const recipes = await prisma.recipe.findMany({ where: { userId }, include: { ingredients: true } });
+    return { content: [{ type: 'text', text: JSON.stringify(recipes.map(r => ({
+      id: r.id, name: r.name, servings: r.servings,
+      ingredients: r.ingredients.map(i => ({ name: i.name, grams: i.grams, calories: i.calories, proteinG: i.proteinG, fatG: i.fatG, carbsG: i.carbsG })),
+    })), null, 2) }] };
+  });
+
+  server.tool('create_recipe', 'Create a new recipe with ingredients.', {
+    name: z.string(), servings: z.number().optional(),
+    ingredients: z.array(z.object({ name: z.string(), grams: z.number().optional(), calories: z.number(), proteinG: z.number().optional(), fatG: z.number().optional(), carbsG: z.number().optional() })),
+  }, async ({ name, servings, ingredients }) => {
+    const userId = await getUserId();
+    const recipe = await prisma.recipe.create({
+      data: { userId, name, servings: servings || 1, ingredients: { create: ingredients.map(i => ({ ...i, proteinG: i.proteinG || 0, fatG: i.fatG || 0, carbsG: i.carbsG || 0, source: 'mcp' })) } },
+    });
+    return { content: [{ type: 'text', text: `Created recipe "${name}" with ${ingredients.length} ingredients` }] };
+  });
+
+  server.tool('delete_recipe', 'Delete a recipe.', { id: z.string() }, async ({ id }) => {
+    await prisma.recipeIngredient.deleteMany({ where: { recipeId: id } });
+    await prisma.recipe.delete({ where: { id } });
+    return { content: [{ type: 'text', text: `Deleted recipe ${id}` }] };
+  });
+
+  // ====== SYMPTOMS ======
+
+  server.tool('log_symptom', 'Log a symptom (reflux, bloating, energy_high, energy_low, headache, mood_good, mood_bad, gut_good).', {
+    type: z.string().describe('Symptom type'), severity: z.number().optional().describe('1-5, default 3'), notes: z.string().optional(),
+  }, async ({ type, severity, notes }) => {
+    const userId = await getUserId();
+    await prisma.symptomLog.create({ data: { userId, type, severity: severity || 3, notes, timestamp: new Date() } });
+    return { content: [{ type: 'text', text: `Logged symptom: ${type} (severity ${severity || 3})` }] };
+  });
+
+  server.tool('get_symptoms', 'Get recent symptom logs.', { limit: z.number().optional() }, async ({ limit }) => {
+    const userId = await getUserId();
+    const symptoms = await prisma.symptomLog.findMany({ where: { userId }, orderBy: { timestamp: 'desc' }, take: limit || 20 });
+    return { content: [{ type: 'text', text: JSON.stringify(symptoms.map(s => ({ type: s.type, severity: s.severity, notes: s.notes, date: s.timestamp })), null, 2) }] };
+  });
+
+  // ====== BLOODS ======
+
+  server.tool('get_blood_tests', 'Get all blood test results.', {}, async () => {
+    const userId = await getUserId();
+    const tests = await prisma.bloodTest.findMany({ where: { userId }, orderBy: { date: 'desc' } });
+    return { content: [{ type: 'text', text: JSON.stringify(tests.map(t => ({ id: t.id, date: t.date, markers: t.markers, source: t.source })), null, 2) }] };
+  });
+
+  server.tool('create_blood_test', 'Log blood test results with biomarkers.', {
+    date: z.string().describe('Test date YYYY-MM-DD'),
+    markers: z.record(z.number()).describe('Object of marker name to value, e.g. {"testosterone": 25.5, "vitaminD": 89}'),
+  }, async ({ date, markers }) => {
+    const userId = await getUserId();
+    await prisma.bloodTest.create({ data: { userId, date: new Date(date), markers, source: 'mcp' } });
+    return { content: [{ type: 'text', text: `Logged blood test (${date}) with ${Object.keys(markers).length} markers` }] };
+  });
+
+  server.tool('get_blood_marker_history', 'Get history for a specific blood marker over time.', {
+    marker: z.string().describe('Marker name, e.g. "testosterone"'),
+  }, async ({ marker }) => {
+    const userId = await getUserId();
+    const tests = await prisma.bloodTest.findMany({ where: { userId }, orderBy: { date: 'asc' } });
+    const history = tests.filter(t => t.markers && t.markers[marker] !== undefined).map(t => ({ date: t.date, value: t.markers[marker] }));
+    return { content: [{ type: 'text', text: JSON.stringify({ marker, history }, null, 2) }] };
+  });
+
+  // ====== KNOWLEDGE BASE ======
+
+  server.tool('get_knowledge_docs', 'Get all knowledge base documents (coaching context).', {}, async () => {
+    const userId = await getUserId();
+    const docs = await prisma.knowledgeDoc.findMany({ where: { userId }, orderBy: { updatedAt: 'desc' } });
+    return { content: [{ type: 'text', text: JSON.stringify(docs.map(d => ({ id: d.id, title: d.title, category: d.category, content: d.content })), null, 2) }] };
+  });
+
+  server.tool('save_knowledge_doc', 'Save or update a knowledge base document.', {
+    title: z.string(), content: z.string(), category: z.string().optional(),
+    id: z.string().optional().describe('Pass ID to update existing doc'),
+  }, async ({ title, content, category, id }) => {
+    const userId = await getUserId();
+    if (id) {
+      await prisma.knowledgeDoc.update({ where: { id }, data: { title, content, category } });
+      return { content: [{ type: 'text', text: `Updated doc: "${title}"` }] };
+    }
+    await prisma.knowledgeDoc.create({ data: { userId, title, content, category: category || 'general' } });
+    return { content: [{ type: 'text', text: `Created doc: "${title}"` }] };
+  });
+
+  // ====== TRAINING EXTRA ======
+
+  server.tool('finish_workout', 'Finish/end the current workout session.', {
+    sessionId: z.string().optional().describe('Session ID. If omitted, finishes today\'s active session.'),
+    durationMins: z.number().optional().describe('Duration in minutes. Auto-calculated if omitted.'),
+  }, async ({ sessionId, durationMins }) => {
+    const userId = await getUserId();
+    let session = sessionId ? await prisma.workoutSession.findFirst({ where: { id: sessionId, userId } }) : await prisma.workoutSession.findFirst({ where: { userId, date: new Date(dateKey()), durationMins: null }, orderBy: { createdAt: 'desc' } });
+    if (!session) return { content: [{ type: 'text', text: 'No active session found.' }] };
+    const mins = durationMins || Math.round((Date.now() - new Date(session.createdAt).getTime()) / 60000);
+    await prisma.workoutSession.update({ where: { id: session.id }, data: { durationMins: mins } });
+    return { content: [{ type: 'text', text: `Finished workout (${mins} min)` }] };
+  });
+
+  server.tool('delete_workout', 'Delete a workout session and all its sets.', { sessionId: z.string() }, async ({ sessionId }) => {
+    await prisma.workoutSessionSet.deleteMany({ where: { sessionId } });
+    await prisma.workoutSession.delete({ where: { id: sessionId } });
+    return { content: [{ type: 'text', text: `Deleted workout session` }] };
   });
 
   return server;
