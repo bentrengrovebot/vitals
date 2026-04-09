@@ -296,7 +296,18 @@ export default function Diary({ openPicker, goTo }) {
                 } else {
                   setEditFood(f => ({ ...f, portion: newP }));
                 }
-              }} placeholder="Portion (e.g. 200g)" style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: `1.5px solid ${brd}`, background: '#fff', fontSize: 15, marginBottom: 8, boxSizing: 'border-box', color: t1 }} />
+              }} placeholder="Portion (e.g. 200g)" style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: `1.5px solid ${brd}`, background: '#fff', fontSize: 15, marginBottom: 4, boxSizing: 'border-box', color: t1 }} />
+              <div style={{ display: 'flex', gap: 4, marginBottom: 10 }}>
+                {[0.5, 0.75, 1, 1.25, 1.5, 2].map(m => (
+                  <button key={m} onClick={() => {
+                    if (origGrams) {
+                      const newG = r1(origGrams * m);
+                      const unit = String(editFood._origPortion || '').replace(/[\d.]/g, '').trim() || 'g';
+                      setEditFood(f => ({ ...f, portion: `${newG}${unit}`, calories: r1(f._origCal * m), proteinG: r1(f._origP * m), fatG: r1(f._origF * m), carbsG: r1(f._origC * m) }));
+                    }
+                  }} style={{ flex: 1, padding: '6px 0', borderRadius: 8, border: `1px solid ${brd}`, background: '#f5f5f5', color: t2, fontSize: 11, fontWeight: 600 }}>{m}×</button>
+                ))}
+              </div>
               <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 10, fontWeight: 700, color: CAL, marginBottom: 4 }}>CAL</div>
