@@ -372,8 +372,12 @@ export default function Diary({ openPicker, goTo }) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={{ fontSize: 15, fontWeight: 700, color: empty ? t3 : t1 }}>{slot}</span>
                   {!empty && (
-                    <button onClick={() => toggleLock(slot)} style={{ background: 'none', border: 'none', padding: 2, color: lockedMeals.has(slot) ? ac : t3, fontSize: 14 }}>
-                      {lockedMeals.has(slot) ? '🔒' : '🔓'}
+                    <button onClick={() => toggleLock(slot)} style={{
+                      background: locked ? '#E8F5E9' : 'none', border: locked ? '1px solid #C8E6C9' : '1px solid ' + brd,
+                      borderRadius: 8, padding: '2px 8px', fontSize: 11, fontWeight: 700,
+                      color: locked ? '#43A047' : t3, display: 'flex', alignItems: 'center', gap: 3,
+                    }}>
+                      {locked ? '✓ Locked' : '🔓'}
                     </button>
                   )}
                 </div>
