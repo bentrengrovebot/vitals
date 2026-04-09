@@ -43,7 +43,7 @@ export default function Diary({ openPicker, goTo }) {
 
   const isToday = curDate === dateKey();
 
-  useEffect(() => { loadData(); }, [curDate]);
+  useEffect(() => { loadData(); setLockedMeals(new Set()); }, [curDate]);
 
   async function loadData() {
     const yesterdayDate = shiftDate(curDate, -1);
