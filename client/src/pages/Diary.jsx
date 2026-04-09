@@ -118,17 +118,6 @@ export default function Diary({ openPicker, goTo }) {
 
   const pct = goals.calories > 0 ? Math.min(100, Math.round((tot.cal / goals.calories) * 100)) : 0;
 
-  // Locked meal totals (consumed in locked meals)
-  const lockedTot = { cal: 0, protein: 0, fat: 0, carbs: 0 };
-  SLOTS.forEach(sl => {
-    if (lockedMeals.has(sl)) {
-      (diary[sl] || []).forEach(i => {
-        lockedTot.cal += i.calories || 0; lockedTot.protein += i.proteinG || 0;
-        lockedTot.fat += i.fatG || 0; lockedTot.carbs += i.carbsG || 0;
-      });
-    }
-  });
-
   // Remaining = goal minus everything eaten
   const remaining = {
     cal: r1(Math.max(0, goals.calories - tot.cal)),
@@ -137,13 +126,32 @@ export default function Diary({ openPicker, goTo }) {
     carbs: r1(Math.max(0, goals.carbsG - tot.carbs)),
   };
 
-  // Unlocked empty meals get the remaining budget split between them
-  const unlockedEmpty = SLOTS.filter(sl => !lockedMeals.has(sl) && !(diary[sl]?.length > 0));
+  // Base per-meal target (equal split)
+  const basePM = {
+    cal: r1(goals.calories / SLOTS.length),
+    protein: r1(goals.proteinG / SLOTS.length),
+    fat: r1(goals.fatG / SLOTS.length),
+    carbs: r1(goals.carbsG / SLOTS.length),
+  };
+
+  // When meals are locked, calculate shortfall and redistribute
+  const shortfall = { cal: 0, protein: 0, fat: 0, carbs: 0 };
+  SLOTS.forEach(sl => {
+    if (lockedMeals.has(sl)) {
+      const sm = slotMacros(sl);
+      shortfall.cal += basePM.cal - sm.cal;
+      shortfall.protein += basePM.protein - sm.protein;
+      shortfall.fat += basePM.fat - sm.fat;
+      shortfall.carbs += basePM.carbs - sm.carbs;
+    }
+  });
+
+  const unlockedMeals = SLOTS.filter(sl => !lockedMeals.has(sl));
   const perMeal = {
-    cal: r1(remaining.cal / Math.max(1, unlockedEmpty.length)),
-    protein: r1(remaining.protein / Math.max(1, unlockedEmpty.length)),
-    fat: r1(remaining.fat / Math.max(1, unlockedEmpty.length)),
-    carbs: r1(remaining.carbs / Math.max(1, unlockedEmpty.length)),
+    cal: r1(basePM.cal + (shortfall.cal / Math.max(1, unlockedMeals.length))),
+    protein: r1(basePM.protein + (shortfall.protein / Math.max(1, unlockedMeals.length))),
+    fat: r1(basePM.fat + (shortfall.fat / Math.max(1, unlockedMeals.length))),
+    carbs: r1(basePM.carbs + (shortfall.carbs / Math.max(1, unlockedMeals.length))),
   };
 
   function toggleLock(slot) {
