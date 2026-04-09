@@ -44,6 +44,7 @@ export const api = {
   getDiary: (date) => request(`/diary/${date}`),
   addDiaryEntry: (data) => request('/diary', { method: 'POST', body: JSON.stringify(data) }),
   deleteDiaryEntry: (id) => request(`/diary/${id}`, { method: 'DELETE' }),
+  updateDiaryEntry: (id, data) => request(`/diary/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   getDiaryRange: (start, end) => request(`/diary/range/query?start=${start}&end=${end}`),
   copyMeal: (fromDate, toDate, slot) => request('/diary/copy', { method: 'POST', body: JSON.stringify({ fromDate, toDate, slot }) }),
 

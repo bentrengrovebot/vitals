@@ -97,6 +97,20 @@ router.post('/copy', async (req, res) => {
   }
 });
 
+// PUT /api/diary/:id
+router.put('/:id', async (req, res) => {
+  try {
+    const { name, portion, calories, proteinG, fatG, carbsG } = req.body;
+    const entry = await req.prisma.diaryEntry.update({
+      where: { id: req.params.id },
+      data: { name, portion, calories, proteinG, fatG, carbsG },
+    });
+    res.json(entry);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // DELETE /api/diary/:id
 router.delete('/:id', async (req, res) => {
   try {

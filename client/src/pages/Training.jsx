@@ -71,12 +71,10 @@ export default function Training({ goTo }) {
       const np = newPlans.find(p => p.isActive) || newPlans[0] || null;
       if (np) setPlan(np);
     }
-    // Resume today's active session
+    // Don't auto-resume — just note if there's an active session
     const todaySession = s.find(sess => sess.date?.split('T')[0] === dateKey() && !sess.durationMins);
     if (todaySession) {
       setActiveSession(todaySession);
-      setView('session');
-      fetchHistoryForExercises(todaySession.sets);
     }
   }
 
@@ -389,6 +387,16 @@ export default function Training({ goTo }) {
       <div style={{ padding: '20px 20px 0' }}>
         <div style={{ fontSize: 20, fontWeight: 800 }}>Training</div>
       </div>
+
+      {/* Resume active session */}
+      {activeSession && !activeSession.durationMins && view === 'home' && (
+        <div style={{ padding: '12px 20px 4px' }}>
+          <button onClick={() => { setView('session'); fetchHistoryForExercises(activeSession.sets); }}
+            style={{ width: '100%', padding: 16, borderRadius: 16, border: 'none', background: 'linear-gradient(135deg,#FFA726 0%,#E53935 100%)', color: '#fff', fontSize: 15, fontWeight: 800, boxShadow: '0 4px 12px rgba(229,57,53,0.3)' }}>
+            Resume Workout — {activeSession.name}
+          </button>
+        </div>
+      )}
 
       {/* Plan days */}
       {plan ? (
