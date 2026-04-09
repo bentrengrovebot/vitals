@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { api } from '../api';
 
 const SLOTS = ['Breakfast', 'Lunch', 'Dinner', 'Snacks'];
-const MEAL_TIMES = { Breakfast: '6:30 AM', Lunch: '1:30 PM', Dinner: '5:30 PM', Snacks: '8:00 PM' };
 const r1 = n => Math.round(n * 10) / 10;
 
 function dateKey(d = new Date()) {
@@ -278,7 +277,7 @@ export default function Diary({ openPicker, goTo }) {
               {/* Meal header */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px 8px' }}>
                 <span style={{ fontSize: 15, fontWeight: 700, color: empty ? t3 : t1 }}>{slot}</span>
-                <span style={{ fontSize: 12, color: t2, fontWeight: 500 }}>{MEAL_TIMES[slot]}</span>
+                {!empty && <span style={{ fontSize: 12, color: t2, fontWeight: 500 }}>{sm.cal} cal</span>}
               </div>
 
               {/* Macro pills */}
@@ -392,7 +391,7 @@ export default function Diary({ openPicker, goTo }) {
 
       {/* Status bar */}
       {tot.cal > 0 && (
-        <div style={{ position: 'fixed', bottom: 80, left: '50%', transform: 'translateX(-50%)', width: 'calc(100% - 32px)', maxWidth: 398, background: '#fff', borderRadius: 12, boxShadow: '0 2px 12px rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, padding: '10px 16px', zIndex: 90 }}>
+        <div style={{ position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)', width: 'calc(100% - 32px)', maxWidth: 398, background: '#fff', borderRadius: 12, boxShadow: '0 2px 12px rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, padding: '10px 16px', zIndex: 90 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <div style={{ width: 8, height: 8, borderRadius: 4, background: CAL }} />
             <span style={{ fontSize: 12, fontWeight: 600, color: t1 }}>{remaining.cal} left</span>

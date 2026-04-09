@@ -18,8 +18,8 @@ export default function Recipes({ onEdit, goTo }) {
 
   useEffect(() => { api.getRecipes().then(setRecipes); }, []);
 
-  const card = { background: 'rgba(255,255,255,0.05)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.08)' };
-  const t2 = '#8b949e', ac = '#2dba8e';
+  const card = { background: '#fff', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.04)' };
+  const t1 = '#212121', t2 = '#757575', t3 = '#BDBDBD', ac = '#E53935', brd = '#EEEEEE';
 
   return (
     <div style={{ paddingBottom: 100 }}>

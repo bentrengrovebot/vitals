@@ -88,12 +88,12 @@ export default function FoodPicker({ slot, date, onBack }) {
 
   const pill = (active) => ({
     padding: '7px 16px', borderRadius: 16, fontSize: 12, fontWeight: 500,
-    border: active ? '1px solid #2dba8e' : '1px solid #e5e5e7',
+    border: active ? '1px solid #E53935' : '1px solid #e5e5e7',
     background: active ? 'rgba(45,186,142,0.1)' : '#f0f0f2',
-    color: active ? '#2dba8e' : '#6b7280',
+    color: active ? '#E53935' : '#6b7280',
   });
   const inp = { width: '100%', padding: '14px 16px', borderRadius: 12, border: '1px solid #e5e5e7', background: '#ffffff', fontSize: 15, boxSizing: 'border-box', color: '#1a1a1a' };
-  const t2 = '#6b7280', t3 = '#9ca3af', ac = '#2dba8e', brd = '#e5e5e7';
+  const t2 = '#6b7280', t3 = '#9ca3af', ac = '#E53935', brd = '#e5e5e7';
 
   return (
     <div style={{ paddingBottom: 20, background: '#f5f5f7', minHeight: '100vh' }}>
@@ -136,7 +136,7 @@ export default function FoodPicker({ slot, date, onBack }) {
                 <div style={{ background: '#f0f0f2', borderRadius: 10, padding: '10px 14px', marginBottom: 12, display: 'flex', justifyContent: 'space-around' }}>
                   <div style={{ textAlign: 'center' }}><div style={{ fontSize: 18, fontWeight: 700, color: '#1a1a1a' }}>{r1(selectedFood.per100g.calories * mult)}</div><div style={{ fontSize: 9, color: t2, textTransform: 'uppercase', letterSpacing: 0.5 }}>cal</div></div>
                   <div style={{ textAlign: 'center' }}><div style={{ fontSize: 18, fontWeight: 700, color: '#e0a526' }}>{r1(selectedFood.per100g.protein * mult)}</div><div style={{ fontSize: 9, color: t2, textTransform: 'uppercase', letterSpacing: 0.5 }}>protein</div></div>
-                  <div style={{ textAlign: 'center' }}><div style={{ fontSize: 18, fontWeight: 700, color: '#2dba8e' }}>{r1(selectedFood.per100g.fat * mult)}</div><div style={{ fontSize: 9, color: t2, textTransform: 'uppercase', letterSpacing: 0.5 }}>fat</div></div>
+                  <div style={{ textAlign: 'center' }}><div style={{ fontSize: 18, fontWeight: 700, color: '#E53935' }}>{r1(selectedFood.per100g.fat * mult)}</div><div style={{ fontSize: 9, color: t2, textTransform: 'uppercase', letterSpacing: 0.5 }}>fat</div></div>
                   <div style={{ textAlign: 'center' }}><div style={{ fontSize: 18, fontWeight: 700, color: '#8b5ef6' }}>{r1(selectedFood.per100g.carbs * mult)}</div><div style={{ fontSize: 9, color: t2, textTransform: 'uppercase', letterSpacing: 0.5 }}>carbs</div></div>
                 </div>
               );
@@ -165,7 +165,7 @@ export default function FoodPicker({ slot, date, onBack }) {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
                     <span style={{ fontSize: 11, fontWeight: 600, color: '#5b9ef0' }}>{p.per100g.calories}🔥</span>
                     <span style={{ fontSize: 11, fontWeight: 500, color: '#e0a526' }}>{p.per100g.protein}P</span>
-                    <span style={{ fontSize: 11, fontWeight: 500, color: '#2dba8e' }}>{p.per100g.fat}F</span>
+                    <span style={{ fontSize: 11, fontWeight: 500, color: '#E53935' }}>{p.per100g.fat}F</span>
                     <span style={{ fontSize: 11, fontWeight: 500, color: '#8b5ef6' }}>{p.per100g.carbs}C</span>
                     {p.brand && <span style={{ fontSize: 10, color: t3 }}>· {p.brand}</span>}
                     <span style={{ fontSize: 10, color: t3 }}>/ 100{p.servingUnit || 'g'}</span>

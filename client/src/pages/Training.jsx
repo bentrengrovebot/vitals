@@ -55,11 +55,22 @@ export default function Training({ goTo }) {
     // Set active plan
     const activePlan = plans.find(p => p.isActive) || plans[0] || null;
     setPlan(activePlan);
-    // Build exercise map from plan + sessions
-    const exs = await api.searchExercises('', '');
+    // Build exercise map — auto-seed if empty
+    let exs = await api.searchExercises('', '');
+    if (exs.length === 0) {
+      await fetch('/api/data/seed-exercises', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' } }).catch(() => {});
+      exs = await api.searchExercises('', '');
+    }
     const map = {};
     exs.forEach(e => { map[e.id] = e; });
     setExerciseMap(map);
+    // Auto-seed plan if none exists
+    if (!activePlan) {
+      await api.seedPlan().catch(() => {});
+      const newPlans = await api.getPlans().catch(() => []);
+      const np = newPlans.find(p => p.isActive) || newPlans[0] || null;
+      if (np) setPlan(np);
+    }
     // Resume today's active session
     const todaySession = s.find(sess => sess.date?.split('T')[0] === dateKey() && !sess.durationMins);
     if (todaySession) {

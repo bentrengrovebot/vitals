@@ -15,6 +15,7 @@ import waterRoutes from './routes/water.js';
 import supplementRoutes from './routes/supplements.js';
 import dataRoutes from './routes/data.js';
 import trainingRoutes from './routes/training.js';
+import foodRoutes from './routes/foods.js';
 import { setupMCP } from './mcp.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -46,6 +47,7 @@ app.use('/api/water', waterRoutes);
 app.use('/api/supplements', supplementRoutes);
 app.use('/api/data', dataRoutes);
 app.use('/api/training', trainingRoutes);
+app.use('/api/foods', foodRoutes);
 
 // Health check (before any catch-all)
 app.get('/api/health', (req, res) => {

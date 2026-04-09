@@ -45,9 +45,9 @@ export default function Settings({ goTo, onRefresh }) {
 
   function flash(msg) { setSaved(msg); setTimeout(() => setSaved(''), 2000); }
 
-  const card = { background: 'rgba(255,255,255,0.05)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.08)' };
-  const inp = { width: '100%', padding: '14px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: '#161b22', fontSize: 15, boxSizing: 'border-box', color: '#e6edf3' };
-  const ac = '#2dba8e', gn = '#2dba8e', or = '#e0a526', rd = '#f85149', t1 = '#e6edf3', t2 = '#8b949e', t3 = '#484f58', bl = '#58a6ff', brd = 'rgba(255,255,255,0.08)';
+  const card = { background: '#fff', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.04)' };
+  const inp = { width: '100%', padding: '14px 16px', borderRadius: 12, border: '1.5px solid #EEEEEE', background: '#fff', fontSize: 15, boxSizing: 'border-box', color: '#212121' };
+  const ac = '#E53935', gn = '#66BB6A', or = '#FFA726', rd = '#E53935', t1 = '#212121', t2 = '#757575', t3 = '#BDBDBD', bl = '#42A5F5', brd = '#EEEEEE';
 
   const pill = (active) => ({
     padding: '7px 16px', borderRadius: 20, fontSize: 13, fontWeight: 600,
