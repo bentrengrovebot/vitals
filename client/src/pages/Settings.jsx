@@ -177,7 +177,12 @@ export default function Settings({ goTo, onRefresh }) {
                   <select value={foodForm.unit} onChange={e => setFoodForm(f => ({ ...f, unit: e.target.value }))} style={{ ...inp, flex: 0.6 }}>
                     <option value="g">g</option>
                     <option value="ml">ml</option>
+                    <option value="piece">piece</option>
                     <option value="serve">serve</option>
+                    <option value="scoop">scoop</option>
+                    <option value="tbsp">tbsp</option>
+                    <option value="cup">cup</option>
+                    <option value="slice">slice</option>
                   </select>
                 </div>
                 <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>

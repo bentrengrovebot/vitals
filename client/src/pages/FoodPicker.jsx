@@ -23,6 +23,8 @@ export default function FoodPicker({ slot, date, onBack }) {
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [selectedFood, setSelectedFood] = useState(null);
+  const [selectedMyFood, setSelectedMyFood] = useState(null);
+  const [myFoodServings, setMyFoodServings] = useState('1');
   const [grams, setGrams] = useState('100');
   const searchTimer = useRef(null);
 
@@ -183,14 +185,49 @@ export default function FoodPicker({ slot, date, onBack }) {
         {/* My Foods */}
         {tab === 'myfoods' && (
           <>
+            {/* My Food portion picker */}
+            {selectedMyFood && (() => {
+              const s = parseFloat(myFoodServings) || 1;
+              const cal = r1(selectedMyFood.calories * s);
+              const pro = r1(selectedMyFood.proteinG * s);
+              const fat = r1(selectedMyFood.fatG * s);
+              const carb = r1(selectedMyFood.carbsG * s);
+              return (
+                <div style={{ background: '#fff', border: `1px solid ${brd}`, borderRadius: 14, padding: 18, marginBottom: 16 }}>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: '#212121', marginBottom: 4 }}>{selectedMyFood.name}</div>
+                  <div style={{ fontSize: 11, color: t2, marginBottom: 12 }}>Per {selectedMyFood.servingSize}{selectedMyFood.unit}: {selectedMyFood.calories} cal · {selectedMyFood.proteinG}P · {selectedMyFood.fatG}F · {selectedMyFood.carbsG}C</div>
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ fontSize: 10, fontWeight: 600, color: t2, textTransform: 'uppercase' }}>Servings</label>
+                      <input type="number" value={myFoodServings} onChange={e => setMyFoodServings(e.target.value)} step="0.5" style={{ ...inp, marginTop: 4 }} />
+                    </div>
+                    <div style={{ flex: 1, display: 'flex', flexWrap: 'wrap', gap: 4, alignContent: 'flex-end' }}>
+                      {[0.5, 1, 1.5, 2].map(v => (
+                        <button key={v} onClick={() => setMyFoodServings(String(v))} style={{ padding: '8px 12px', borderRadius: 8, border: `1px solid ${brd}`, background: myFoodServings === String(v) ? ac + '14' : '#f5f5f5', color: myFoodServings === String(v) ? ac : t2, fontSize: 11, fontWeight: 600 }}>{v}×</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{ background: '#f5f5f5', borderRadius: 10, padding: '10px 14px', marginBottom: 12, display: 'flex', justifyContent: 'space-around' }}>
+                    <div style={{ textAlign: 'center' }}><div style={{ fontSize: 18, fontWeight: 700, color: '#42A5F5' }}>{cal}</div><div style={{ fontSize: 9, color: t2, textTransform: 'uppercase' }}>cal</div></div>
+                    <div style={{ textAlign: 'center' }}><div style={{ fontSize: 18, fontWeight: 700, color: '#E53935' }}>{pro}</div><div style={{ fontSize: 9, color: t2, textTransform: 'uppercase' }}>P</div></div>
+                    <div style={{ textAlign: 'center' }}><div style={{ fontSize: 18, fontWeight: 700, color: '#FFA726' }}>{fat}</div><div style={{ fontSize: 9, color: t2, textTransform: 'uppercase' }}>F</div></div>
+                    <div style={{ textAlign: 'center' }}><div style={{ fontSize: 18, fontWeight: 700, color: '#66BB6A' }}>{carb}</div><div style={{ fontSize: 9, color: t2, textTransform: 'uppercase' }}>C</div></div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={() => setSelectedMyFood(null)} style={{ flex: 1, padding: 12, borderRadius: 12, border: `1px solid ${brd}`, background: '#fff', color: '#212121', fontSize: 14, fontWeight: 500 }}>Cancel</button>
+                    <button onClick={() => { addItem({ name: selectedMyFood.name, cal, protein: pro, fat, carbs: carb, portion: `${r1(selectedMyFood.servingSize * s)}${selectedMyFood.unit}` }); setSelectedMyFood(null); setMyFoodServings('1'); }}
+                      style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: ac, color: '#fff', fontSize: 14, fontWeight: 600 }}>Add</button>
+                  </div>
+                </div>
+              );
+            })()}
             {myFoods.filter(f => !search || f.name.toLowerCase().includes(search.toLowerCase())).map(f => (
-              <div key={f.id} style={{ display: 'flex', alignItems: 'center', padding: '14px 0', borderBottom: `1px solid ${brd}` }}>
+              <div key={f.id} onClick={() => { setSelectedMyFood(f); setMyFoodServings('1'); }} style={{ display: 'flex', alignItems: 'center', padding: '14px 0', borderBottom: `1px solid ${brd}`, cursor: 'pointer' }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 14, fontWeight: 500, color: '#212121' }}>{f.name}</div>
                   <div style={{ fontSize: 11, color: t2, marginTop: 2 }}>{f.servingSize}{f.unit} · {f.calories} cal · {f.proteinG}g P · {f.fatG}g F · {f.carbsG}g C</div>
                 </div>
-                <button onClick={() => addItem({ name: f.name, cal: f.calories, protein: f.proteinG, fat: f.fatG, carbs: f.carbsG, portion: `${f.servingSize}${f.unit}` })}
-                  style={{ width: 36, height: 36, borderRadius: 12, background: 'rgba(229,57,53,0.12)', border: 'none', color: ac, fontSize: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+                <span style={{ color: ac, fontSize: 18 }}>›</span>
               </div>
             ))}
             {!myFoods.length && <div style={{ color: t3, fontSize: 13, padding: 24, textAlign: 'center' }}>No custom foods yet. Create them in Settings.</div>}
