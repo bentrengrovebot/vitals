@@ -342,7 +342,7 @@ export default function Training({ goTo }) {
                         style={{ flex: 1, padding: '12px 10px', borderRadius: 10, border: `1.5px solid ${brd}`, background: '#fff', fontSize: 15, textAlign: 'center', boxSizing: 'border-box' }} />
                       <input type="number" placeholder="RIR" value={editingSet.rir}
                         onChange={e => setEditingSet(s => ({ ...s, rir: e.target.value }))}
-                        style={{ width: 60, padding: '12px 10px', borderRadius: 10, border: `1.5px solid ${brd}`, background: '#fff', fontSize: 15, textAlign: 'center', boxSizing: 'border-box' }} />
+                        style={{ flex: 0.6, padding: '12px 10px', borderRadius: 10, border: `1.5px solid ${brd}`, background: '#fff', fontSize: 15, textAlign: 'center', boxSizing: 'border-box', minWidth: 0 }} />
                     </div>
                     <div style={{ display: 'flex', gap: 6 }}>
                       <button onClick={() => setEditingSet(null)}

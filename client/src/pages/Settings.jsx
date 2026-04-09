@@ -51,9 +51,9 @@ export default function Settings({ goTo, onRefresh }) {
 
   const pill = (active) => ({
     padding: '7px 16px', borderRadius: 20, fontSize: 13, fontWeight: 600,
-    border: active ? '1px solid #2dba8e' : '1px solid rgba(255,255,255,0.1)',
-    background: active ? 'rgba(45,186,142,0.15)' : 'rgba(255,255,255,0.05)',
-    color: active ? '#2dba8e' : '#8b949e',
+    border: active ? '1px solid #E53935' : '1px solid #EEEEEE',
+    background: active ? 'rgba(229,57,53,0.08)' : '#fff',
+    color: active ? '#E53935' : '#757575',
   });
 
   // Weight chart
@@ -80,13 +80,13 @@ export default function Settings({ goTo, onRefresh }) {
       <div style={{ ...card, padding: 18, marginBottom: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
           <div style={{ fontSize: 15, fontWeight: 700, color: t1 }}>Weight Trend</div>
-          {wkCh !== null && <div style={{ fontSize: 13, fontWeight: 700, padding: '4px 10px', borderRadius: 8, background: wkCh < 0 ? 'rgba(45,186,142,0.15)' : wkCh > 0 ? 'rgba(248,81,73,0.15)' : brd, color: wkCh < 0 ? ac : wkCh > 0 ? rd : t2 }}>{wkCh > 0 ? '+' : ''}{wkCh} kg/wk</div>}
+          {wkCh !== null && <div style={{ fontSize: 13, fontWeight: 700, padding: '4px 10px', borderRadius: 8, background: wkCh < 0 ? 'rgba(229,57,53,0.08)' : wkCh > 0 ? 'rgba(248,81,73,0.15)' : brd, color: wkCh < 0 ? ac : wkCh > 0 ? rd : t2 }}>{wkCh > 0 ? '+' : ''}{wkCh} kg/wk</div>}
         </div>
         <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ overflow: 'visible' }}>
           {[0, 0.25, 0.5, 0.75, 1].map((p, i) => { const y = pad + p * (H - pad * 2); return (<g key={i}><line x1={pad} y1={y} x2={W - pad} y2={y} stroke={t3} strokeWidth="1" strokeDasharray="4,4" /><text x={pad - 4} y={y + 4} textAnchor="end" fontSize="9" fill={t2}>{r1(mx - p * rng)}</text></g>); })}
-          {pts.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="4" fill={t3} stroke="#0d1117" strokeWidth="2" />)}
+          {pts.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="4" fill={t3} stroke="#f5f5f5" strokeWidth="2" />)}
           <path d={trendLine} fill="none" stroke={bl} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-          {pts.map((p, i) => <circle key={`t${i}`} cx={p.x} cy={p.ty} r="4" fill={bl} stroke="#0d1117" strokeWidth="2" />)}
+          {pts.map((p, i) => <circle key={`t${i}`} cx={p.x} cy={p.ty} r="4" fill={bl} stroke="#f5f5f5" strokeWidth="2" />)}
           {profile.weightGoalKg && (() => { const gy = pad + (1 - (profile.weightGoalKg - mn) / rng) * (H - pad * 2); if (gy > 0 && gy < H) return (<><line x1={pad} y1={gy} x2={W - pad} y2={gy} stroke={ac} strokeWidth="1.5" strokeDasharray="6,4" /><text x={W - pad + 4} y={gy + 4} fontSize="9" fill={ac}>Goal</text></>); return null; })()}
           {pts.filter((_, i) => i === 0 || i === pts.length - 1 || i === Math.floor(pts.length / 2)).map((p, i) => <text key={`d${i}`} x={p.x} y={H - 4} textAnchor="middle" fontSize="9" fill={t2}>{p.d.slice(5)}</text>)}
         </svg>
@@ -100,13 +100,13 @@ export default function Settings({ goTo, onRefresh }) {
   };
 
   return (
-    <div style={{ paddingBottom: 100, background: '#0d1117', minHeight: '100vh' }}>
+    <div style={{ paddingBottom: 100, background: '#f5f5f5', minHeight: '100vh' }}>
       <div style={{ display: 'flex', alignItems: 'center', padding: 20, gap: 12 }}>
         <div style={{ fontSize: 20, fontWeight: 800, flex: 1, color: t1 }}>Settings</div>
-        <button onClick={logout} style={{ padding: '8px 14px', borderRadius: 10, border: `1px solid ${brd}`, background: 'rgba(255,255,255,0.05)', color: t2, fontSize: 12, fontWeight: 600 }}>Log out</button>
+        <button onClick={logout} style={{ padding: '8px 14px', borderRadius: 10, border: `1px solid ${brd}`, background: '#fff', color: t2, fontSize: 12, fontWeight: 600 }}>Log out</button>
       </div>
 
-      {saved && <div style={{ margin: '0 20px 12px', padding: '10px 16px', borderRadius: 12, background: 'rgba(45,186,142,0.15)', color: ac, fontSize: 14, fontWeight: 600 }}>{saved}</div>}
+      {saved && <div style={{ margin: '0 20px 12px', padding: '10px 16px', borderRadius: 12, background: 'rgba(229,57,53,0.08)', color: ac, fontSize: 14, fontWeight: 600 }}>{saved}</div>}
 
       <div style={{ display: 'flex', gap: 6, padding: '0 20px', marginBottom: 20, flexWrap: 'wrap' }}>
         {[{ id: 'profile', l: 'Profile' }, { id: 'goals', l: 'Goals' }, { id: 'supps', l: 'Supplements' }, { id: 'weight', l: 'Weight' }, { id: 'data', l: 'Data' }].map(t => (
@@ -176,7 +176,7 @@ export default function Settings({ goTo, onRefresh }) {
                 <input value={suppForm.dose} onChange={e => setSuppForm(f => ({ ...f, dose: e.target.value }))} placeholder="Dose (e.g. 30mg)" style={{ ...inp, marginBottom: 8 }} />
                 <input value={suppForm.ingredient} onChange={e => setSuppForm(f => ({ ...f, ingredient: e.target.value }))} placeholder="Active ingredient (optional)" style={{ ...inp, marginBottom: 12 }} />
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={() => { setAddingSupp(false); setSuppForm({ name: '', ingredient: '', dose: '' }); }} style={{ flex: 1, padding: 12, borderRadius: 12, border: `1px solid ${brd}`, background: 'rgba(255,255,255,0.05)', color: t1, fontSize: 14, fontWeight: 600 }}>Cancel</button>
+                  <button onClick={() => { setAddingSupp(false); setSuppForm({ name: '', ingredient: '', dose: '' }); }} style={{ flex: 1, padding: 12, borderRadius: 12, border: `1px solid ${brd}`, background: '#fff', color: t1, fontSize: 14, fontWeight: 600 }}>Cancel</button>
                   <button onClick={async () => {
                     if (!suppForm.name || !suppForm.dose) return;
                     await api.createSupplement({ name: suppForm.name, activeIngredient: suppForm.ingredient, activeDose: suppForm.dose });
@@ -250,7 +250,7 @@ export default function Settings({ goTo, onRefresh }) {
                 <div style={{ fontSize: 15, fontWeight: 700, color: rd, marginBottom: 6 }}>Are you sure?</div>
                 <div style={{ fontSize: 13, color: t2, marginBottom: 16 }}>Permanently deletes all diary, recipes, symptoms, weigh-ins, and insights.</div>
                 <div style={{ display: 'flex', gap: 10 }}>
-                  <button onClick={() => setConfirmClear(false)} style={{ flex: 1, padding: 12, borderRadius: 12, border: `1px solid ${brd}`, background: 'rgba(255,255,255,0.05)', color: t1, fontSize: 14, fontWeight: 600 }}>Cancel</button>
+                  <button onClick={() => setConfirmClear(false)} style={{ flex: 1, padding: 12, borderRadius: 12, border: `1px solid ${brd}`, background: '#fff', color: t1, fontSize: 14, fontWeight: 600 }}>Cancel</button>
                   <button onClick={async () => { await api.clearAll(); setConfirmClear(false); flash('All data cleared'); loadData(); onRefresh(); }} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: rd, color: '#fff', fontSize: 14, fontWeight: 600 }}>Delete</button>
                 </div>
               </div>

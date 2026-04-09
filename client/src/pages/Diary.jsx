@@ -318,6 +318,21 @@ export default function Diary({ openPicker, goTo }) {
         })}
       </div>
 
+      {/* Status bar — inline below meals */}
+      {tot.cal > 0 && (
+        <div style={{ margin: '4px 16px 8px', background: '#fff', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, padding: '12px 16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <div style={{ width: 8, height: 8, borderRadius: 4, background: CAL }} />
+            <span style={{ fontSize: 13, fontWeight: 700, color: t1 }}>{remaining.cal} cal left</span>
+          </div>
+          <div style={{ width: 1, height: 16, background: brd }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <div style={{ width: 8, height: 8, borderRadius: 4, background: PRO }} />
+            <span style={{ fontSize: 13, fontWeight: 700, color: t1 }}>{remaining.protein}g P left</span>
+          </div>
+        </div>
+      )}
+
       {/* Symptoms */}
       {daySymptoms.length > 0 && (
         <div style={{ padding: '4px 20px 0' }}>
@@ -331,31 +346,6 @@ export default function Diary({ openPicker, goTo }) {
                 </div>
               );
             })}
-          </div>
-        </div>
-      )}
-
-      {/* Water */}
-      {isToday && (
-        <div style={{ padding: '8px 16px 0' }}>
-          <div style={{ ...card, padding: '14px 16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 14 }}>💧</span>
-                <span style={{ fontSize: 14, fontWeight: 700, color: t1 }}>Water</span>
-              </div>
-              <span style={{ fontSize: 15, fontWeight: 800, color: waterPct >= 100 ? gn : t1 }}>{r1(totalWater / 1000)}L <span style={{ fontSize: 11, fontWeight: 500, color: t3 }}>/ {r1(goals.waterMl / 1000)}L</span></span>
-            </div>
-            <div style={{ height: 6, borderRadius: 3, background: '#E8E8E8', marginBottom: 10 }}>
-              <div style={{ height: 6, borderRadius: 3, background: waterPct >= 100 ? gn : CAL, width: `${waterPct}%`, transition: 'width 0.3s' }} />
-            </div>
-            <div style={{ display: 'flex', gap: 6 }}>
-              {[250, 500, 750].map(ml => (
-                <button key={ml} onClick={() => addWater(ml)} style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: `1.5px solid ${CAL}20`, background: CAL + '08', color: CAL, fontSize: 13, fontWeight: 700 }}>
-                  + {ml}ml
-                </button>
-              ))}
-            </div>
           </div>
         </div>
       )}
@@ -389,20 +379,6 @@ export default function Diary({ openPicker, goTo }) {
         </div>
       )}
 
-      {/* Status bar */}
-      {tot.cal > 0 && (
-        <div style={{ position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)', width: 'calc(100% - 32px)', maxWidth: 398, background: '#fff', borderRadius: 12, boxShadow: '0 2px 12px rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, padding: '10px 16px', zIndex: 90 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <div style={{ width: 8, height: 8, borderRadius: 4, background: CAL }} />
-            <span style={{ fontSize: 12, fontWeight: 600, color: t1 }}>{remaining.cal} left</span>
-          </div>
-          <div style={{ width: 1, height: 16, background: brd }} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <div style={{ width: 8, height: 8, borderRadius: 4, background: PRO }} />
-            <span style={{ fontSize: 12, fontWeight: 600, color: t1 }}>{remaining.protein}g P left</span>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

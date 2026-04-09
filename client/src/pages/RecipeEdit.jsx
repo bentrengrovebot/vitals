@@ -69,7 +69,7 @@ export default function RecipeEdit({ recipe, onBack }) {
   const ps = perServe();
   const card = { background: '#ffffff', borderRadius: 16, border: '1px solid #e5e5e7' };
   const inp = { width: '100%', padding: '14px 16px', borderRadius: 12, border: '1px solid #e5e5e7', background: '#ffffff', fontSize: 15, boxSizing: 'border-box', color: '#1a1a1a' };
-  const ac = '#2dba8e', or = '#e0a526', rd = '#f85149', t1 = '#1a1a1a', t2 = '#6b7280', t3 = '#9ca3af', brd = '#e5e5e7';
+  const ac = '#E53935', or = '#FFA726', rd = '#E53935', t1 = '#212121', t2 = '#757575', t3 = '#BDBDBD', brd = '#EEEEEE';
 
   return (
     <div style={{ paddingBottom: 100, background: '#f5f5f7', minHeight: '100vh' }}>
@@ -85,7 +85,7 @@ export default function RecipeEdit({ recipe, onBack }) {
         <input type="number" value={rec.servings} onChange={e => setRec(r => ({ ...r, servings: Math.max(1, parseInt(e.target.value) || 1) }))} style={{ ...inp, marginTop: 4, marginBottom: 16, width: 80 }} />
 
         {rec.ingredients.length > 0 && (
-          <div style={{ ...card, padding: '16px 18px', marginBottom: 16, background: 'linear-gradient(135deg,#2dba8e,#1a8a6a)', color: '#fff', border: 'none' }}>
+          <div style={{ ...card, padding: '16px 18px', marginBottom: 16, background: 'linear-gradient(135deg,#E53935,#C62828)', color: '#fff', border: 'none' }}>
             <div style={{ fontSize: 10, fontWeight: 700, opacity: 0.6, textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.5px' }}>Per Serve</div>
             <div style={{ display: 'flex', gap: 14 }}>
               <div><span style={{ fontSize: 24, fontWeight: 800 }}>{ps.cal}</span> <span style={{ fontSize: 12, opacity: 0.6 }}>Cal</span></div>
