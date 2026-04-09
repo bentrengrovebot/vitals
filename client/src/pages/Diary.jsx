@@ -110,6 +110,13 @@ export default function Diary({ openPicker, goTo }) {
   }));
   Object.keys(tot).forEach(k => tot[k] = r1(tot[k]));
 
+  // Per-slot macro totals
+  const slotMacros = (sl) => {
+    let c = 0, p = 0, f = 0, cb = 0;
+    (diary[sl] || []).forEach(i => { c += i.calories || 0; p += i.proteinG || 0; f += i.fatG || 0; cb += i.carbsG || 0; });
+    return { cal: r1(c), protein: r1(p), fat: r1(f), carbs: r1(cb) };
+  };
+
   const slotTot = (sl) => {
     let c = 0, p = 0;
     (diary[sl] || []).forEach(i => { c += i.calories || 0; p += i.proteinG || 0; });
@@ -235,13 +242,6 @@ export default function Diary({ openPicker, goTo }) {
     mood_bad: { label: 'Mood ↓', icon: '😤', color: '#ef4444' },
     headache: { label: 'Headache', icon: '🤕', color: '#ec4899' },
     gut_good: { label: 'Gut Good', icon: '✅', color: '#10b981' },
-  };
-
-  // Per-slot macro totals
-  const slotMacros = (sl) => {
-    let c = 0, p = 0, f = 0, cb = 0;
-    (diary[sl] || []).forEach(i => { c += i.calories || 0; p += i.proteinG || 0; f += i.fatG || 0; cb += i.carbsG || 0; });
-    return { cal: r1(c), protein: r1(p), fat: r1(f), carbs: r1(cb) };
   };
 
   // Week days for calendar
