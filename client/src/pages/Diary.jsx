@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { api } from '../api';
 
 const SLOTS = ['Breakfast', 'Lunch', 'Dinner', 'Snacks'];
-const SLOT_COL = { Breakfast: '#f59e0b', Lunch: '#3b82f6', Dinner: '#8b5cf6', Snacks: '#10b981' };
+const MEAL_TIMES = { Breakfast: '6:30 AM', Lunch: '1:30 PM', Dinner: '5:30 PM', Snacks: '8:00 PM' };
 const r1 = n => Math.round(n * 10) / 10;
 
 function dateKey(d = new Date()) {
@@ -170,8 +170,14 @@ export default function Diary({ openPicker, goTo }) {
     loadWeekData(goals);
   }
 
-  const card = { background: 'rgba(255,255,255,0.05)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.08)', overflow: 'hidden' };
-  const ac = '#2dba8e', gn = '#2dba8e', or = '#e0a526', rd = '#f85149', t1 = '#e6edf3', t2 = '#8b949e', t3 = '#484f58', brd = 'rgba(255,255,255,0.08)';
+  const card = { background: '#fff', borderRadius: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.04)', overflow: 'hidden' };
+  const CAL = '#42A5F5', PRO = '#E53935', FAT = '#FFA726', CARB = '#66BB6A';
+  const t1 = '#212121', t2 = '#757575', t3 = '#BDBDBD', brd = '#EEEEEE', rd = '#E53935', gn = '#66BB6A', ac = '#E53935';
+  const pill = (color, label, val, faded) => (
+    <div style={{ padding: '4px 10px', borderRadius: 16, fontSize: 12, fontWeight: 700, background: color + '14', color, opacity: faded ? 0.4 : 1 }}>
+      <span style={{ fontSize: 10, fontWeight: 800, opacity: 0.7 }}>{label}</span> {val}
+    </div>
+  );
 
   // Day symptoms
   const daySymptoms = symptoms.filter(s => s.timestamp?.split('T')[0] === curDate);
@@ -186,16 +192,34 @@ export default function Diary({ openPicker, goTo }) {
     gut_good: { label: 'Gut Good', icon: '✅', color: '#10b981' },
   };
 
+  // Per-slot macro totals
+  const slotMacros = (sl) => {
+    let c = 0, p = 0, f = 0, cb = 0;
+    (diary[sl] || []).forEach(i => { c += i.calories || 0; p += i.proteinG || 0; f += i.fatG || 0; cb += i.carbsG || 0; });
+    return { cal: r1(c), protein: r1(p), fat: r1(f), carbs: r1(cb) };
+  };
+
+  // Week days for calendar
+  const getWeekDays = () => {
+    const dow = new Date(curDate + 'T00:00:00').getDay();
+    const mo = dow === 0 ? -6 : 1 - dow;
+    return Array.from({ length: 7 }, (_, i) => {
+      const dk = shiftDate(curDate, mo + i);
+      const wd = weekData?.days?.find(d => d.dk === dk);
+      return { dk, num: new Date(dk + 'T00:00:00').getDate(), letter: ['M','T','W','T','F','S','S'][i], isSelected: dk === curDate, isToday: dk === dateKey(), cal: wd?.hasData ? wd.cal : null };
+    });
+  };
+
   return (
-    <div style={{ paddingBottom: 100 }}>
+    <div style={{ paddingBottom: 100, background: '#f5f5f5', minHeight: '100vh' }}>
       {/* Delete modal */}
       {del && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={() => setDel(null)}>
           <div onClick={e => e.stopPropagation()} style={{ ...card, padding: 24, width: '100%', maxWidth: 300 }}>
-            <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 6 }}>Delete?</div>
+            <div style={{ fontSize: 17, fontWeight: 700, color: t1, marginBottom: 6 }}>Delete?</div>
             <div style={{ fontSize: 14, color: t2, marginBottom: 20 }}>{del.label}</div>
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => setDel(null)} style={{ flex: 1, padding: 12, borderRadius: 12, border: `1px solid ${brd}`, background: 'rgba(255,255,255,0.05)', color: t1, fontSize: 14, fontWeight: 600 }}>Cancel</button>
+              <button onClick={() => setDel(null)} style={{ flex: 1, padding: 12, borderRadius: 12, border: `1px solid ${brd}`, background: '#fff', color: t1, fontSize: 14, fontWeight: 600 }}>Cancel</button>
               <button onClick={del.action} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: rd, color: '#fff', fontSize: 14, fontWeight: 600 }}>Delete</button>
             </div>
           </div>
@@ -203,176 +227,90 @@ export default function Diary({ openPicker, goTo }) {
       )}
 
       {/* Header */}
-      <div style={{ padding: '20px 20px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      <div style={{ padding: '16px 20px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <div style={{ fontSize: 13, color: t3, fontWeight: 500, letterSpacing: '0.2px' }}>{new Date().toLocaleDateString('en-NZ', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
-          <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.5px', marginTop: 2 }}>{greet()}{profile.name ? `, ${profile.name}` : ''} 👋</div>
-        </div>
-        {streak > 0 && (
-          <div style={{ background: 'linear-gradient(135deg,#f59e0b,#ef4444)', borderRadius: 14, padding: '8px 14px', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 18 }}>🔥</span>
-            <div>
-              <div style={{ fontSize: 18, fontWeight: 800, color: '#fff', lineHeight: 1 }}>{streak}</div>
-              <div style={{ fontSize: 8, fontWeight: 700, color: 'rgba(255,255,255,0.8)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>streak</div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Date nav */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '14px 20px 6px', gap: 20 }}>
-        <button onClick={() => setCurDate(d => shiftDate(d, -1))} style={{ width: 36, height: 36, borderRadius: 12, background: 'rgba(255,255,255,0.05)', border: `1px solid ${brd}`, color: t2, fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>‹</button>
-        <div style={{ fontSize: 16, fontWeight: 700, minWidth: 120, textAlign: 'center' }}>{fmtDate(curDate)}</div>
-        <button onClick={() => setCurDate(d => shiftDate(d, 1))} style={{ width: 36, height: 36, borderRadius: 12, background: 'rgba(255,255,255,0.05)', border: `1px solid ${brd}`, color: t2, fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>›</button>
-      </div>
-
-      {/* Calorie hero card */}
-      <div style={{ padding: '8px 20px 4px' }} onClick={() => setMp(p => (p + 1) % 3)}>
-        <div style={{ ...card, padding: '22px 20px', background: 'linear-gradient(135deg,#3b82f6 0%,#8b5cf6 100%)', color: '#fff', cursor: 'pointer' }}>
-          {mp === 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-              <div style={{ position: 'relative', width: 76, height: 76, flexShrink: 0 }}>
-                <svg width="76" height="76" viewBox="0 0 76 76">
-                  <circle cx="38" cy="38" r="33" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="7" />
-                  <circle cx="38" cy="38" r="33" fill="none" stroke="#fff" strokeWidth="7" strokeDasharray={`${(pct / 100) * 207.3} 207.3`} strokeLinecap="round" transform="rotate(-90 38 38)" style={{ transition: 'all 0.4s' }} />
-                </svg>
-                <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ fontSize: 22, fontWeight: 800, lineHeight: 1 }}>{pct}%</div>
-                </div>
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <div><div style={{ fontSize: 10, opacity: 0.6, fontWeight: 700, letterSpacing: '0.5px' }}>GOAL</div><div style={{ fontSize: 22, fontWeight: 800, lineHeight: 1.2 }}>{goals.calories}</div></div>
-                  <div><div style={{ fontSize: 10, opacity: 0.6, fontWeight: 700, letterSpacing: '0.5px' }}>EATEN</div><div style={{ fontSize: 22, fontWeight: 800, lineHeight: 1.2 }}>{tot.cal}</div></div>
-                  <div><div style={{ fontSize: 10, opacity: 0.6, fontWeight: 700, letterSpacing: '0.5px' }}>LEFT</div><div style={{ fontSize: 22, fontWeight: 800, lineHeight: 1.2, color: goals.calories - tot.cal < 0 ? '#fca5a5' : '#fff' }}>{r1(goals.calories - tot.cal)}</div></div>
-                </div>
-              </div>
-            </div>
-          )}
-          {mp === 1 && (
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, opacity: 0.6, letterSpacing: '0.5px', marginBottom: 14 }}>MACROS</div>
-              <div style={{ display: 'flex', gap: 12 }}>
-                {[{ l: 'Protein', v: tot.protein, g: goals.proteinG, c: '#93c5fd' }, { l: 'Fat', v: tot.fat, g: goals.fatG, c: '#fde68a' }, { l: 'Carbs', v: tot.carbs, g: goals.carbsG, c: '#6ee7b7' }].map(m => {
-                  const p = Math.min(100, Math.round((m.v / m.g) * 100));
-                  return (
-                    <div key={m.l} style={{ flex: 1 }}>
-                      <div style={{ fontSize: 10, opacity: 0.6, fontWeight: 700, letterSpacing: '0.5px' }}>{m.l}</div>
-                      <div style={{ fontSize: 24, fontWeight: 800, lineHeight: 1.3 }}>{m.v}<span style={{ fontSize: 12, opacity: 0.5 }}>/{m.g}g</span></div>
-                      <div style={{ height: 5, borderRadius: 3, background: 'rgba(255,255,255,0.15)', marginTop: 6 }}>
-                        <div style={{ height: 5, borderRadius: 3, background: m.c, width: `${p}%`, transition: 'width 0.3s' }} />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-          {mp === 2 && (
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, opacity: 0.6, letterSpacing: '0.5px', marginBottom: 10 }}>REMAINING TODAY · {mealsLeft} MEAL{mealsLeft !== 1 ? 'S' : ''} LEFT</div>
-              <div style={{ display: 'flex', gap: 16 }}>
-                <div><div style={{ fontSize: 10, opacity: 0.5, fontWeight: 600 }}>Total left</div><div style={{ fontSize: 22, fontWeight: 800 }}>{remaining.cal} <span style={{ fontSize: 11, opacity: 0.5 }}>cal</span></div></div>
-                <div style={{ width: 1, background: 'rgba(255,255,255,0.2)' }} />
-                <div><div style={{ fontSize: 10, opacity: 0.5, fontWeight: 600 }}>Per meal</div><div style={{ fontSize: 22, fontWeight: 800 }}>{perMeal.cal} <span style={{ fontSize: 11, opacity: 0.5 }}>cal</span></div><div style={{ fontSize: 11, opacity: 0.6, marginTop: 2 }}>{perMeal.protein}g P · {perMeal.fat}g F · {perMeal.carbs}g C</div></div>
-              </div>
-            </div>
-          )}
-          <div style={{ display: 'flex', gap: 4, justifyContent: 'center', marginTop: 14 }}>
-            {[0, 1, 2].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: 3, background: mp === i ? '#fff' : 'rgba(255,255,255,0.25)' }} />)}
-          </div>
+          <div style={{ fontSize: 12, color: t2, fontWeight: 500, letterSpacing: '0.2px' }}>{new Date().toLocaleDateString('en-NZ', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+          <div style={{ fontSize: 26, fontWeight: 800, color: t1, letterSpacing: '-0.5px', marginTop: 2 }}>{greet()}{profile.name ? `, ${profile.name}` : ''}</div>
         </div>
       </div>
 
-      {/* Weekly calendar */}
-      {weekData && (
-        <div style={{ padding: '8px 20px 4px' }}>
-          <div style={{ ...card, padding: '14px 16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: t3, textTransform: 'uppercase', letterSpacing: '0.5px' }}>This Week</div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: weekData.weekGoal - weekData.totalCal > 0 ? gn : rd }}>{r1(weekData.weekGoal - weekData.totalCal)} cal left</div>
-            </div>
-            <div style={{ display: 'flex', gap: 4 }}>
-              {weekData.days.map((d, i) => {
-                const p = goals.calories > 0 ? Math.min(100, Math.round((d.cal / goals.calories) * 100)) : 0;
-                const isTdy = d.dk === dateKey();
-                return (
-                  <div key={i} style={{ flex: 1, textAlign: 'center' }}>
-                    <div style={{ fontSize: 10, fontWeight: 600, color: isTdy ? ac : t3, marginBottom: 4 }}>{d.dayName}</div>
-                    <div style={{ height: 40, borderRadius: 6, background: brd, position: 'relative', overflow: 'hidden' }}>
-                      <div style={{ position: 'absolute', bottom: 0, width: '100%', height: `${p}%`, borderRadius: 6, background: p > 100 ? rd : isTdy ? `linear-gradient(180deg,${ac},#8b5cf6)` : d.hasData ? '#c7d2fe' : 'transparent', transition: 'height 0.3s' }} />
-                    </div>
-                    <div style={{ fontSize: 9, fontWeight: 600, color: d.hasData ? t2 : t3, marginTop: 3 }}>{d.hasData ? d.cal : '-'}</div>
-                  </div>
-                );
-              })}
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 11, color: t3 }}>
-              <span>Avg: {weekData.logged > 0 ? r1(weekData.totalCal / weekData.logged) : 0} cal/day</span>
-              <span>{weekData.logged}/7 days</span>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Week Calendar (RP Diet style) */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 4, padding: '14px 16px 6px' }}>
+        {getWeekDays().map(d => (
+          <button key={d.dk} onClick={() => setCurDate(d.dk)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, width: 46, padding: '4px 0', background: 'none', border: 'none' }}>
+            <div style={{ fontSize: 10, fontWeight: 600, color: d.isToday ? ac : t3, textTransform: 'uppercase' }}>{d.letter}</div>
+            <div style={{ width: 36, height: 36, borderRadius: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, background: d.isSelected ? t1 : 'transparent', color: d.isSelected ? '#fff' : d.isToday ? ac : t2 }}>{d.num}</div>
+            <div style={{ fontSize: 9, fontWeight: 600, color: d.cal != null ? t2 : t3 }}>{d.cal != null ? d.cal : '—'}</div>
+          </button>
+        ))}
+      </div>
 
-      {/* Meal slots */}
-      <div style={{ padding: '6px 20px 0' }}>
+      {/* Macro Summary Bar */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 20px 10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+          <div style={{ width: 7, height: 7, borderRadius: 4, background: CAL }} />
+          <span style={{ fontSize: 14, fontWeight: 700, color: CAL }}>{tot.cal}</span>
+          <span style={{ fontSize: 12, color: t3 }}>/{goals.calories}</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: PRO }}>{tot.protein}</span>
+          <span style={{ fontSize: 12, color: t3 }}>/{goals.proteinG}P</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: FAT }}>{tot.fat}</span>
+          <span style={{ fontSize: 12, color: t3 }}>/{goals.fatG}F</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: CARB }}>{tot.carbs}</span>
+          <span style={{ fontSize: 12, color: t3 }}>/{goals.carbsG}C</span>
+        </div>
+      </div>
+
+      {/* Meal Cards */}
+      <div style={{ padding: '0 16px' }}>
         {SLOTS.map(slot => {
           const items = diary[slot] || [];
-          const st = slotTot(slot);
-          const col = SLOT_COL[slot];
+          const sm = slotMacros(slot);
           const empty = items.length === 0;
-          const showTarget = empty && isToday && mealsLeft > 0 && tot.cal > 0;
-          const pctUsed = goals.calories > 0 ? Math.round((tot.cal / goals.calories) * 100) : 0;
-          const isLight = perMeal.cal < (goals.calories / 4) * 0.5 && mealsLeft <= 2 && pctUsed > 60;
-          const isHeavy = perMeal.cal > (goals.calories / 4) * 1.5 && mealsLeft >= 2;
 
           return (
             <div key={slot} style={{ ...card, marginBottom: 8, padding: 0 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px 6px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ width: 10, height: 10, borderRadius: 5, background: col }} />
-                  <span style={{ fontSize: 15, fontWeight: 700 }}>{slot}</span>
-                </div>
-                <div style={{ display: 'flex', gap: 12, fontSize: 13 }}>
-                  <span style={{ color: ac, fontWeight: 700 }}>{st.protein}g P</span>
-                  <span style={{ color: t2, fontWeight: 600 }}>{st.cal} cal</span>
-                </div>
+              {/* Meal header */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px 8px' }}>
+                <span style={{ fontSize: 15, fontWeight: 700, color: empty ? t3 : t1 }}>{slot}</span>
+                <span style={{ fontSize: 12, color: t2, fontWeight: 500 }}>{MEAL_TIMES[slot]}</span>
               </div>
-              {showTarget && (
-                <div style={{ margin: '2px 12px 8px', padding: '10px 14px', borderRadius: 12, background: isLight ? rd + '08' : isHeavy ? or + '08' : ac + '06', border: `1px solid ${isLight ? rd + '20' : isHeavy ? or + '20' : ac + '15'}` }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isLight ? rd : isHeavy ? or : ac} strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="10" /><path d="M12 8v4l2 2" /></svg>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: isLight ? rd : isHeavy ? or : t1 }}>Target</span>
-                    </div>
-                    <span style={{ fontSize: 15, fontWeight: 800, color: isLight ? rd : isHeavy ? or : t1 }}>{perMeal.cal} cal</span>
-                  </div>
-                  <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: ac }}>{perMeal.protein}g P</span>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: or }}>{perMeal.fat}g F</span>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: gn }}>{perMeal.carbs}g C</span>
-                  </div>
-                  {isLight && <div style={{ fontSize: 10, color: rd, marginTop: 4, fontWeight: 500 }}>Light meal needed — you've used {pctUsed}% of your daily budget</div>}
-                </div>
-              )}
+
+              {/* Macro pills */}
+              <div style={{ display: 'flex', gap: 6, padding: '0 16px 12px' }}>
+                {pill(CAL, '\u26A1', empty ? perMeal.cal : sm.cal, empty)}
+                {pill(PRO, 'P', empty ? perMeal.protein : sm.protein, empty)}
+                {pill(FAT, 'F', empty ? perMeal.fat : sm.fat, empty)}
+                {pill(CARB, 'C', empty ? perMeal.carbs : sm.carbs, empty)}
+              </div>
+
+              {/* Copy from yesterday */}
               {empty && (yesterdayDiary[slot] || []).length > 0 && (
-                <button onClick={async () => { await api.copyMeal(shiftDate(curDate, -1), curDate, slot); const d = await api.getDiary(curDate); setDiary(d); loadWeekData(goals); }} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '8px 16px', background: 'none', border: 'none', borderTop: `1px solid ${brd}`, color: ac, fontSize: 11, fontWeight: 600, width: '100%', cursor: 'pointer' }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={ac} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
-                  Copy from yesterday ({(yesterdayDiary[slot] || []).length} item{(yesterdayDiary[slot] || []).length !== 1 ? 's' : ''})
+                <button onClick={async () => { await api.copyMeal(shiftDate(curDate, -1), curDate, slot); const d = await api.getDiary(curDate); setDiary(d); loadWeekData(goals); }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: CAL + '08', border: 'none', borderTop: `1px solid ${brd}`, width: '100%', fontSize: 11, color: CAL, fontWeight: 600 }}>
+                  📋 Copy from yesterday ({(yesterdayDiary[slot] || []).length})
                 </button>
               )}
+
+              {/* Food items */}
               {items.map(item => (
                 <div key={item.id} style={{ display: 'flex', alignItems: 'center', padding: '10px 16px', borderTop: `1px solid ${brd}` }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 14, fontWeight: 500, color: t1 }}>{item.name}</div>
                     {item.portion && <div style={{ fontSize: 11, color: t3, marginTop: 1 }}>{item.portion}</div>}
                   </div>
-                  <span style={{ fontSize: 12, color: ac, fontWeight: 700, marginRight: 10 }}>{item.proteinG}g</span>
-                  <span style={{ fontSize: 12, color: t2, fontWeight: 500, marginRight: 8, minWidth: 30, textAlign: 'right' }}>{item.calories}</span>
+                  <span style={{ fontSize: 12, color: PRO, fontWeight: 700, marginRight: 8 }}>{item.proteinG}g</span>
+                  <span style={{ fontSize: 12, color: t2, fontWeight: 500, marginRight: 6, minWidth: 30, textAlign: 'right' }}>{item.calories}</span>
                   <button onClick={() => setDel({ label: item.name, action: () => deleteEntry(item.id) })} style={{ background: 'none', border: 'none', color: t3, fontSize: 16, padding: '2px 0 2px 6px' }}>×</button>
                 </div>
               ))}
+
+              {/* Add button */}
               <button onClick={() => openPicker(slot, curDate)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '11px 16px', borderTop: `1px solid ${brd}`, background: 'none', border: 'none', borderTop: `1px solid ${brd}`, color: ac, fontSize: 14, fontWeight: 600, width: '100%' }}>
                 <span style={{ fontSize: 17 }}>+</span> Add
               </button>
@@ -384,12 +322,12 @@ export default function Diary({ openPicker, goTo }) {
       {/* Symptoms */}
       {daySymptoms.length > 0 && (
         <div style={{ padding: '4px 20px 0' }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: t3, textTransform: 'uppercase', marginBottom: 6, letterSpacing: '0.5px' }}>Symptoms</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: t2, textTransform: 'uppercase', marginBottom: 6, letterSpacing: '0.5px' }}>Symptoms</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {daySymptoms.map(s => {
               const st = SYMPTOM_MAP[s.type];
               return (
-                <div key={s.id} style={{ fontSize: 12, padding: '5px 11px', borderRadius: 10, background: (st?.color || t3) + '12', border: `1px solid ${(st?.color || t3)}25`, color: st?.color || t3, fontWeight: 600 }}>
+                <div key={s.id} style={{ fontSize: 12, padding: '5px 11px', borderRadius: 10, background: (st?.color || t3) + '14', color: st?.color || t2, fontWeight: 600 }}>
                   {st?.icon} {st?.label} {s.severity}/5
                 </div>
               );
@@ -398,56 +336,39 @@ export default function Diary({ openPicker, goTo }) {
         </div>
       )}
 
-      {/* Water tracking */}
+      {/* Water */}
       {isToday && (
-        <div style={{ padding: '8px 20px 0' }}>
+        <div style={{ padding: '8px 16px 0' }}>
           <div style={{ ...card, padding: '14px 16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" /></svg>
-                <span style={{ fontSize: 14, fontWeight: 700 }}>Water</span>
+                <span style={{ fontSize: 14 }}>💧</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: t1 }}>Water</span>
               </div>
               <span style={{ fontSize: 15, fontWeight: 800, color: waterPct >= 100 ? gn : t1 }}>{r1(totalWater / 1000)}L <span style={{ fontSize: 11, fontWeight: 500, color: t3 }}>/ {r1(goals.waterMl / 1000)}L</span></span>
             </div>
-            <div style={{ height: 6, borderRadius: 3, background: brd, marginBottom: 10 }}>
-              <div style={{ height: 6, borderRadius: 3, background: waterPct >= 100 ? gn : ac, width: `${waterPct}%`, transition: 'width 0.3s' }} />
+            <div style={{ height: 6, borderRadius: 3, background: '#E8E8E8', marginBottom: 10 }}>
+              <div style={{ height: 6, borderRadius: 3, background: waterPct >= 100 ? gn : CAL, width: `${waterPct}%`, transition: 'width 0.3s' }} />
             </div>
             <div style={{ display: 'flex', gap: 6 }}>
               {[250, 500, 750].map(ml => (
-                <button key={ml} onClick={() => addWater(ml)} style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: `1.5px solid ${ac}20`, background: ac + '08', color: ac, fontSize: 13, fontWeight: 700 }}>
-                  + {ml >= 1000 ? `${ml / 1000}L` : `${ml}ml`}
+                <button key={ml} onClick={() => addWater(ml)} style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: `1.5px solid ${CAL}20`, background: CAL + '08', color: CAL, fontSize: 13, fontWeight: 700 }}>
+                  + {ml}ml
                 </button>
               ))}
             </div>
-            {waterLogs.length > 0 && (
-              <div>
-                <button onClick={() => setWaterExpanded(!waterExpanded)} style={{ background: 'none', border: 'none', color: t3, fontSize: 11, fontWeight: 600, padding: '8px 0 0', width: '100%', textAlign: 'left' }}>
-                  {waterExpanded ? 'Hide entries ▲' : `${waterLogs.length} entries today ▼`}
-                </button>
-                {waterExpanded && (
-                  <div style={{ marginTop: 4 }}>
-                    {waterLogs.map(w => (
-                      <div key={w.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', fontSize: 12, color: t2 }}>
-                        <span>{new Date(w.timestamp).toLocaleTimeString('en-NZ', { hour: '2-digit', minute: '2-digit', hour12: true })} — {w.amountMl}ml</span>
-                        <button onClick={async () => { await api.deleteWater(w.id); setWaterLogs(await api.getWater(curDate)); }} style={{ background: 'none', border: 'none', color: t3, fontSize: 14 }}>×</button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         </div>
       )}
 
       {/* Supplements */}
       {isToday && supplements.length > 0 && (
-        <div style={{ padding: '8px 20px 0' }}>
+        <div style={{ padding: '8px 16px 0' }}>
           <div style={{ ...card, padding: '14px 16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" strokeWidth="2" strokeLinecap="round"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z" /><path d="m8.5 8.5 7 7" /></svg>
-                <span style={{ fontSize: 14, fontWeight: 700 }}>Supplements</span>
+                <span style={{ fontSize: 14 }}>💊</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: t1 }}>Supplements</span>
               </div>
               <span style={{ fontSize: 12, fontWeight: 600, color: suppLogs.length === supplements.length ? gn : t3 }}>{suppLogs.length}/{supplements.length}</span>
             </div>
@@ -455,18 +376,31 @@ export default function Diary({ openPicker, goTo }) {
               const taken = suppLogs.find(l => l.supplementId === sup.id);
               return (
                 <div key={sup.id} onClick={() => toggleSupplement(sup)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderTop: `1px solid ${brd}`, cursor: 'pointer' }}>
-                  <div style={{ width: 22, height: 22, borderRadius: 7, border: taken ? 'none' : `2px solid ${brd}`, background: taken ? gn : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}>
+                  <div style={{ width: 22, height: 22, borderRadius: 7, border: taken ? 'none' : `2px solid ${brd}`, background: taken ? gn : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     {taken && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>}
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 14, fontWeight: 500, color: taken ? t2 : t1, textDecoration: taken ? 'line-through' : 'none' }}>{sup.name}</div>
                     <div style={{ fontSize: 11, color: t3 }}>{sup.activeDose}{sup.activeIngredient ? ` · ${sup.activeIngredient}` : ''}</div>
                   </div>
-                  {taken && <span style={{ fontSize: 10, color: t3 }}>{new Date(taken.takenAt).toLocaleTimeString('en-NZ', { hour: '2-digit', minute: '2-digit', hour12: true })}</span>}
                 </div>
               );
             })}
-            <button onClick={() => goTo('settings')} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '8px 0 0', background: 'none', border: 'none', color: ac, fontSize: 12, fontWeight: 600 }}>Manage supplements →</button>
+          </div>
+        </div>
+      )}
+
+      {/* Status bar */}
+      {tot.cal > 0 && (
+        <div style={{ position: 'fixed', bottom: 80, left: '50%', transform: 'translateX(-50%)', width: 'calc(100% - 32px)', maxWidth: 398, background: '#fff', borderRadius: 12, boxShadow: '0 2px 12px rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, padding: '10px 16px', zIndex: 90 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <div style={{ width: 8, height: 8, borderRadius: 4, background: CAL }} />
+            <span style={{ fontSize: 12, fontWeight: 600, color: t1 }}>{remaining.cal} left</span>
+          </div>
+          <div style={{ width: 1, height: 16, background: brd }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <div style={{ width: 8, height: 8, borderRadius: 4, background: PRO }} />
+            <span style={{ fontSize: 12, fontWeight: 600, color: t1 }}>{remaining.protein}g P left</span>
           </div>
         </div>
       )}
