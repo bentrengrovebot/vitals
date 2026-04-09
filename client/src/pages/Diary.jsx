@@ -38,7 +38,8 @@ export default function Diary({ openPicker, goTo }) {
   const [mp, setMp] = useState(0);
   const [waterExpanded, setWaterExpanded] = useState(false);
   const [del, setDel] = useState(null);
-  const [editFood, setEditFood] = useState(null); // { id, name, portion, calories, proteinG, fatG, carbsG }
+  const [editFood, setEditFood] = useState(null);
+  const [lockedMeals, setLockedMeals] = useState(new Set()); // { id, name, portion, calories, proteinG, fatG, carbsG }
 
   const isToday = curDate === dateKey();
 
@@ -117,20 +118,41 @@ export default function Diary({ openPicker, goTo }) {
 
   const pct = goals.calories > 0 ? Math.min(100, Math.round((tot.cal / goals.calories) * 100)) : 0;
 
-  // Remaining / per-meal targets
+  // Locked meal totals (consumed in locked meals)
+  const lockedTot = { cal: 0, protein: 0, fat: 0, carbs: 0 };
+  SLOTS.forEach(sl => {
+    if (lockedMeals.has(sl)) {
+      (diary[sl] || []).forEach(i => {
+        lockedTot.cal += i.calories || 0; lockedTot.protein += i.proteinG || 0;
+        lockedTot.fat += i.fatG || 0; lockedTot.carbs += i.carbsG || 0;
+      });
+    }
+  });
+
+  // Remaining = goal minus everything eaten
   const remaining = {
     cal: r1(Math.max(0, goals.calories - tot.cal)),
     protein: r1(Math.max(0, goals.proteinG - tot.protein)),
     fat: r1(Math.max(0, goals.fatG - tot.fat)),
     carbs: r1(Math.max(0, goals.carbsG - tot.carbs)),
   };
-  const mealsLeft = SLOTS.filter(sl => !(diary[sl]?.length > 0)).length;
+
+  // Unlocked empty meals get the remaining budget split between them
+  const unlockedEmpty = SLOTS.filter(sl => !lockedMeals.has(sl) && !(diary[sl]?.length > 0));
   const perMeal = {
-    cal: r1(remaining.cal / Math.max(1, mealsLeft)),
-    protein: r1(remaining.protein / Math.max(1, mealsLeft)),
-    fat: r1(remaining.fat / Math.max(1, mealsLeft)),
-    carbs: r1(remaining.carbs / Math.max(1, mealsLeft)),
+    cal: r1(remaining.cal / Math.max(1, unlockedEmpty.length)),
+    protein: r1(remaining.protein / Math.max(1, unlockedEmpty.length)),
+    fat: r1(remaining.fat / Math.max(1, unlockedEmpty.length)),
+    carbs: r1(remaining.carbs / Math.max(1, unlockedEmpty.length)),
   };
+
+  function toggleLock(slot) {
+    setLockedMeals(prev => {
+      const next = new Set(prev);
+      if (next.has(slot)) next.delete(slot); else next.add(slot);
+      return next;
+    });
+  }
 
   // Streak (simplified — count today backwards)
   const [streak, setStreak] = useState(0);
@@ -321,11 +343,20 @@ export default function Diary({ openPicker, goTo }) {
           const sm = slotMacros(slot);
           const empty = items.length === 0;
 
+          const locked = lockedMeals.has(slot);
+
           return (
-            <div key={slot} style={{ ...card, marginBottom: 8, padding: 0 }}>
+            <div key={slot} style={{ ...card, marginBottom: 8, padding: 0, opacity: locked && empty ? 0.5 : 1 }}>
               {/* Meal header */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px 8px' }}>
-                <span style={{ fontSize: 15, fontWeight: 700, color: empty ? t3 : t1 }}>{slot}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 15, fontWeight: 700, color: empty ? t3 : t1 }}>{slot}</span>
+                  {!empty && (
+                    <button onClick={() => toggleLock(slot)} style={{ background: 'none', border: 'none', padding: 2, color: lockedMeals.has(slot) ? ac : t3, fontSize: 14 }}>
+                      {lockedMeals.has(slot) ? '🔒' : '🔓'}
+                    </button>
+                  )}
+                </div>
                 {!empty && <span style={{ fontSize: 12, color: t2, fontWeight: 500 }}>{sm.cal} cal</span>}
               </div>
 
