@@ -264,37 +264,57 @@ export default function Diary({ openPicker, goTo }) {
       )}
 
       {/* Edit food modal */}
-      {editFood && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 300, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={() => setEditFood(null)}>
-          <div onClick={e => e.stopPropagation()} style={{ ...card, padding: 20, width: '100%', maxWidth: 430, borderRadius: '16px 16px 0 0' }}>
-            <div style={{ fontSize: 16, fontWeight: 700, color: t1, marginBottom: 12 }}>Edit Food</div>
-            <input value={editFood.name} onChange={e => setEditFood(f => ({ ...f, name: e.target.value }))} placeholder="Name" style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: `1.5px solid ${brd}`, background: '#fff', fontSize: 15, marginBottom: 8, boxSizing: 'border-box', color: t1 }} />
-            <input value={editFood.portion || ''} onChange={e => setEditFood(f => ({ ...f, portion: e.target.value }))} placeholder="Portion (e.g. 200g)" style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: `1.5px solid ${brd}`, background: '#fff', fontSize: 15, marginBottom: 8, boxSizing: 'border-box', color: t1 }} />
-            <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: CAL, marginBottom: 4 }}>CAL</div>
-                <input type="number" value={editFood.calories} onChange={e => setEditFood(f => ({ ...f, calories: e.target.value }))} style={{ width: '100%', padding: '10px', borderRadius: 10, border: `1.5px solid ${brd}`, fontSize: 15, textAlign: 'center', boxSizing: 'border-box', color: t1 }} />
+      {editFood && (() => {
+        const parseGrams = (p) => { const m = String(p || '').match(/(\d+)/); return m ? parseFloat(m[1]) : null; };
+        const origGrams = parseGrams(editFood._origPortion);
+        const curGrams = parseGrams(editFood.portion);
+        const ratio = origGrams && curGrams && origGrams > 0 ? curGrams / origGrams : null;
+        const displayCal = ratio ? r1(editFood._origCal * ratio) : editFood.calories;
+        const displayP = ratio ? r1(editFood._origP * ratio) : editFood.proteinG;
+        const displayF = ratio ? r1(editFood._origF * ratio) : editFood.fatG;
+        const displayC = ratio ? r1(editFood._origC * ratio) : editFood.carbsG;
+
+        return (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={() => setEditFood(null)}>
+            <div onClick={e => e.stopPropagation()} style={{ ...card, padding: 20, width: '100%', maxWidth: 400, borderRadius: 16 }}>
+              <div style={{ fontSize: 16, fontWeight: 700, color: t1, marginBottom: 12 }}>Edit Food</div>
+              <input value={editFood.name} onChange={e => setEditFood(f => ({ ...f, name: e.target.value }))} placeholder="Name" style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: `1.5px solid ${brd}`, background: '#fff', fontSize: 15, marginBottom: 8, boxSizing: 'border-box', color: t1 }} />
+              <input value={editFood.portion || ''} onChange={e => {
+                const newP = e.target.value;
+                const newG = parseGrams(newP);
+                if (origGrams && newG && origGrams > 0) {
+                  const r = newG / origGrams;
+                  setEditFood(f => ({ ...f, portion: newP, calories: r1(f._origCal * r), proteinG: r1(f._origP * r), fatG: r1(f._origF * r), carbsG: r1(f._origC * r) }));
+                } else {
+                  setEditFood(f => ({ ...f, portion: newP }));
+                }
+              }} placeholder="Portion (e.g. 200g)" style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: `1.5px solid ${brd}`, background: '#fff', fontSize: 15, marginBottom: 8, boxSizing: 'border-box', color: t1 }} />
+              <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: CAL, marginBottom: 4 }}>CAL</div>
+                  <input type="number" value={editFood.calories} onChange={e => setEditFood(f => ({ ...f, calories: e.target.value }))} style={{ width: '100%', padding: '10px', borderRadius: 10, border: `1.5px solid ${brd}`, fontSize: 15, textAlign: 'center', boxSizing: 'border-box', color: t1 }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: PRO, marginBottom: 4 }}>P</div>
+                  <input type="number" value={editFood.proteinG} onChange={e => setEditFood(f => ({ ...f, proteinG: e.target.value }))} style={{ width: '100%', padding: '10px', borderRadius: 10, border: `1.5px solid ${brd}`, fontSize: 15, textAlign: 'center', boxSizing: 'border-box', color: t1 }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: FAT, marginBottom: 4 }}>F</div>
+                  <input type="number" value={editFood.fatG} onChange={e => setEditFood(f => ({ ...f, fatG: e.target.value }))} style={{ width: '100%', padding: '10px', borderRadius: 10, border: `1.5px solid ${brd}`, fontSize: 15, textAlign: 'center', boxSizing: 'border-box', color: t1 }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: CARB, marginBottom: 4 }}>C</div>
+                  <input type="number" value={editFood.carbsG} onChange={e => setEditFood(f => ({ ...f, carbsG: e.target.value }))} style={{ width: '100%', padding: '10px', borderRadius: 10, border: `1.5px solid ${brd}`, fontSize: 15, textAlign: 'center', boxSizing: 'border-box', color: t1 }} />
+                </div>
               </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: PRO, marginBottom: 4 }}>P</div>
-                <input type="number" value={editFood.proteinG} onChange={e => setEditFood(f => ({ ...f, proteinG: e.target.value }))} style={{ width: '100%', padding: '10px', borderRadius: 10, border: `1.5px solid ${brd}`, fontSize: 15, textAlign: 'center', boxSizing: 'border-box', color: t1 }} />
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={() => setEditFood(null)} style={{ flex: 1, padding: 14, borderRadius: 12, border: `1.5px solid ${brd}`, background: '#fff', color: t1, fontSize: 14, fontWeight: 600 }}>Cancel</button>
+                <button onClick={saveEditFood} style={{ flex: 1, padding: 14, borderRadius: 12, border: 'none', background: ac, color: '#fff', fontSize: 14, fontWeight: 700 }}>Save</button>
               </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: FAT, marginBottom: 4 }}>F</div>
-                <input type="number" value={editFood.fatG} onChange={e => setEditFood(f => ({ ...f, fatG: e.target.value }))} style={{ width: '100%', padding: '10px', borderRadius: 10, border: `1.5px solid ${brd}`, fontSize: 15, textAlign: 'center', boxSizing: 'border-box', color: t1 }} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: CARB, marginBottom: 4 }}>C</div>
-                <input type="number" value={editFood.carbsG} onChange={e => setEditFood(f => ({ ...f, carbsG: e.target.value }))} style={{ width: '100%', padding: '10px', borderRadius: 10, border: `1.5px solid ${brd}`, fontSize: 15, textAlign: 'center', boxSizing: 'border-box', color: t1 }} />
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={() => setEditFood(null)} style={{ flex: 1, padding: 14, borderRadius: 12, border: `1.5px solid ${brd}`, background: '#fff', color: t1, fontSize: 14, fontWeight: 600 }}>Cancel</button>
-              <button onClick={saveEditFood} style={{ flex: 1, padding: 14, borderRadius: 12, border: 'none', background: ac, color: '#fff', fontSize: 14, fontWeight: 700 }}>Save</button>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Header */}
       <div style={{ padding: '16px 20px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -378,7 +398,7 @@ export default function Diary({ openPicker, goTo }) {
 
               {/* Food items */}
               {items.map(item => (
-                <div key={item.id} onClick={() => setEditFood({ ...item })} style={{ display: 'flex', alignItems: 'center', padding: '10px 16px', borderTop: `1px solid ${brd}`, cursor: 'pointer' }}>
+                <div key={item.id} onClick={() => setEditFood({ ...item, _origPortion: item.portion, _origCal: item.calories, _origP: item.proteinG, _origF: item.fatG, _origC: item.carbsG })} style={{ display: 'flex', alignItems: 'center', padding: '10px 16px', borderTop: `1px solid ${brd}`, cursor: 'pointer' }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 14, fontWeight: 500, color: t1 }}>{item.name}</div>
                     {item.portion && <div style={{ fontSize: 11, color: t3, marginTop: 1 }}>{item.portion}</div>}
