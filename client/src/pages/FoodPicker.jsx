@@ -123,12 +123,15 @@ export default function FoodPicker({ slot, date, onBack }) {
             </div>
             <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
               <div style={{ flex: 1 }}>
-                <label style={{ fontSize: 10, fontWeight: 500, color: t2, textTransform: 'uppercase', letterSpacing: 1 }}>Grams</label>
+                <label style={{ fontSize: 10, fontWeight: 600, color: t2, textTransform: 'uppercase', letterSpacing: 1 }}>Grams</label>
                 <input type="number" value={grams} onChange={e => setGrams(e.target.value)} style={{ ...inp, marginTop: 4 }} />
               </div>
-              <div style={{ flex: 1, display: 'flex', flexWrap: 'wrap', gap: 4, alignContent: 'flex-end' }}>
-                {[50, 100, 150, 200].map(g => (
-                  <button key={g} onClick={() => setGrams(String(g))} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #e5e5e7', background: grams === String(g) ? 'rgba(45,186,142,0.1)' : '#f0f0f2', color: grams === String(g) ? ac : t2, fontSize: 11, fontWeight: 500 }}>{g}g</button>
+              <div style={{ flex: 1.5, display: 'flex', flexWrap: 'wrap', gap: 4, alignContent: 'flex-end' }}>
+                {(selectedFood.servings || []).map((s, i) => (
+                  <button key={i} onClick={() => setGrams(String(s.grams))} style={{ padding: '6px 10px', borderRadius: 8, border: `1px solid ${brd}`, background: grams === String(s.grams) ? ac + '14' : '#f5f5f5', color: grams === String(s.grams) ? ac : t2, fontSize: 10, fontWeight: 600 }}>{s.label}</button>
+                ))}
+                {(!selectedFood.servings || !selectedFood.servings.length) && [50, 100, 150, 200].map(g => (
+                  <button key={g} onClick={() => setGrams(String(g))} style={{ padding: '6px 10px', borderRadius: 8, border: `1px solid ${brd}`, background: grams === String(g) ? ac + '14' : '#f5f5f5', color: grams === String(g) ? ac : t2, fontSize: 10, fontWeight: 600 }}>{g}g</button>
                 ))}
               </div>
             </div>

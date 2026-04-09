@@ -18,10 +18,10 @@ router.get('/search', async (req, res) => {
     const client = getClient();
     const response = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1000,
-      system: `You are a food nutrition database. Given a search query, return 5-8 matching common foods/products with their nutrition per 100g. Know NZ brands (Anchor, Pams, Countdown, Wattie's, Lewis Road, Farrah's, Tegel, Hellers). Respond ONLY with JSON array, no markdown:
-[{"name":"Food name","brand":"Brand or empty","per100g":{"calories":number,"protein":number,"fat":number,"carbs":number},"defaultServing":number,"servingUnit":"g or ml"}]
-Include generic items AND branded items where applicable. Round to 1 decimal place.`,
+      max_tokens: 1500,
+      system: `You are a food nutrition database. Given a search query, return 5-8 matching common foods/products with nutrition per 100g AND common serving sizes. Know NZ brands (Anchor, Pams, Countdown, Wattie's, Lewis Road, Farrah's, Tegel, Hellers). Respond ONLY with JSON array, no markdown:
+[{"name":"Food name","brand":"Brand or empty","per100g":{"calories":number,"protein":number,"fat":number,"carbs":number},"defaultServing":number,"servingUnit":"g or ml","servings":[{"label":"1 piece","grams":7},{"label":"1 handful (15)","grams":25},{"label":"1 cup","grams":140}]}]
+Include 2-4 common serving sizes in the "servings" array for each food. Use real-world portion sizes. Examples: "1 breast" for chicken, "1 medium" for fruits, "1 slice" for bread, "1 cup" for rice, "15 almonds" for nuts, "1 scoop (30g)" for protein powder, "1 tbsp" for oils/sauces. Round to 1 decimal place.`,
       messages: [{ role: 'user', content: q }],
     });
 
