@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Vitals — UI Prototype</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f5f5; color: #212121; max-width: 430px; margin: 0 auto; min-height: 100vh; overflow-x: hidden; }
+
+/* Colors */
+:root {
+  --cal: #42A5F5; --protein: #E53935; --fat: #FFA726; --carbs: #66BB6A;
+  --cal-bg: rgba(66,165,245,0.08); --protein-bg: rgba(229,57,53,0.08); --fat-bg: rgba(255,167,38,0.08); --carbs-bg: rgba(102,187,106,0.08);
+  --bg: #f5f5f5; --card: #ffffff; --text1: #212121; --text2: #757575; --text3: #BDBDBD;
+  --border: #EEEEEE; --cta: #E53935; --cta-dark: #C62828;
+}
+
+/* Tab Bar */
+.tab-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; background: #fff; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-around; padding: 6px 0 24px; z-index: 100; }
+.tab { display: flex; flex-direction: column; align-items: center; gap: 2px; background: none; border: none; padding: 6px 12px; color: var(--text3); font-size: 10px; font-weight: 600; }
+.tab.active { color: var(--cta); }
+.tab svg { width: 22px; height: 22px; }
+.tab-plus { width: 48px; height: 48px; border-radius: 50%; background: var(--cta); border: none; display: flex; align-items: center; justify-content: center; margin-top: -20px; box-shadow: 0 4px 12px rgba(229,57,53,0.3); }
+.tab-plus svg { width: 24px; height: 24px; stroke: #fff; }
+
+/* Page */
+.page { padding-bottom: 90px; }
+
+/* Header */
+.header { padding: 12px 20px 0; }
+.header-date { font-size: 11px; color: var(--text2); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+.header-title { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; margin-top: 2px; }
+
+/* Week Calendar */
+.week-cal { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 16px 20px 8px; }
+.week-day { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 44px; }
+.week-day-label { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; }
+.week-day-num { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; color: var(--text2); background: transparent; }
+.week-day-num.selected { background: #212121; color: #fff; }
+.week-day-num.today { color: var(--cta); }
+.week-day-cal { font-size: 9px; color: var(--text3); font-weight: 500; }
+
+/* Macro Summary Bar */
+.macro-bar { display: flex; justify-content: space-between; padding: 8px 20px 12px; }
+.macro-bar-item { display: flex; align-items: center; gap: 6px; }
+.macro-dot { width: 8px; height: 8px; border-radius: 50%; }
+.macro-bar-val { font-size: 14px; font-weight: 700; }
+.macro-bar-target { font-size: 12px; color: var(--text3); font-weight: 500; }
+
+/* Card */
+.card { background: var(--card); border-radius: 12px; margin: 0 16px 10px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+
+/* Meal Card */
+.meal-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 10px; }
+.meal-left { display: flex; align-items: center; gap: 10px; }
+.meal-icon { font-size: 18px; }
+.meal-name { font-size: 15px; font-weight: 700; color: var(--text1); }
+.meal-time { font-size: 12px; color: var(--text2); font-weight: 500; }
+.meal-macros { display: flex; gap: 6px; padding: 0 16px 14px; }
+.macro-pill { display: flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 16px; font-size: 12px; font-weight: 700; }
+.macro-pill.cal { background: var(--cal-bg); color: var(--cal); }
+.macro-pill.protein { background: var(--protein-bg); color: var(--protein); }
+.macro-pill.fat { background: var(--fat-bg); color: var(--fat); }
+.macro-pill.carbs { background: var(--carbs-bg); color: var(--carbs); }
+.macro-pill-letter { font-size: 10px; font-weight: 800; opacity: 0.7; }
+
+/* Food Item */
+.food-item { display: flex; align-items: center; padding: 10px 16px; border-top: 1px solid var(--border); }
+.food-name { flex: 1; font-size: 13px; color: var(--text1); font-weight: 500; }
+.food-portion { font-size: 11px; color: var(--text3); margin-left: 4px; }
+.food-cal { font-size: 12px; color: var(--text2); font-weight: 600; min-width: 45px; text-align: right; }
+.food-del { background: none; border: none; color: var(--text3); font-size: 16px; padding: 0 0 0 8px; }
+
+/* Add button in meal */
+.meal-add { display: flex; align-items: center; gap: 6px; padding: 11px 16px; border-top: 1px solid var(--border); background: none; border-left: none; border-right: none; border-bottom: none; color: var(--cta); font-size: 14px; font-weight: 600; width: 100%; }
+
+/* Copy button */
+.meal-copy { display: flex; align-items: center; gap: 6px; padding: 8px 16px; background: var(--cal-bg); border: none; width: 100%; font-size: 11px; color: var(--cal); font-weight: 600; }
+
+/* Water Card */
+.water-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; }
+.water-left { display: flex; align-items: center; gap: 8px; }
+.water-icon { font-size: 16px; }
+.water-label { font-size: 14px; font-weight: 700; }
+.water-val { font-size: 15px; font-weight: 800; }
+.water-target { font-size: 11px; color: var(--text3); font-weight: 500; }
+.water-bar { height: 6px; border-radius: 3px; background: var(--border); margin: 0 16px; overflow: hidden; }
+.water-fill { height: 100%; border-radius: 3px; background: var(--cal); transition: width 0.3s; }
+.water-btns { display: flex; gap: 8px; padding: 10px 16px 14px; }
+.water-btn { flex: 1; padding: 10px; border-radius: 10px; border: 1.5px solid rgba(66,165,245,0.15); background: var(--cal-bg); color: var(--cal); font-size: 13px; font-weight: 700; text-align: center; }
+
+/* Supplements */
+.supp-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px 10px; }
+.supp-title { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; }
+.supp-count { font-size: 12px; color: var(--text3); font-weight: 600; }
+.supp-item { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-top: 1px solid var(--border); }
+.supp-check { width: 22px; height: 22px; border-radius: 7px; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.supp-check.done { background: var(--carbs); border: none; }
+.supp-check.done::after { content: '✓'; color: #fff; font-size: 13px; font-weight: 700; }
+.supp-name { font-size: 14px; font-weight: 500; flex: 1; }
+.supp-name.done { color: var(--text2); text-decoration: line-through; }
+.supp-dose { font-size: 11px; color: var(--text3); }
+
+/* Status Bar */
+.status-bar { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); width: calc(100% - 32px); max-width: 398px; background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: center; gap: 16px; padding: 10px 16px; z-index: 90; }
+.status-item { display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; }
+.status-divider { width: 1px; height: 16px; background: var(--border); }
+
+/* Section label */
+.section-label { font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 20px 6px; }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-date">Wednesday, 9 April</div>
+    <div class="header-title">Good morning, Ben 👋</div>
+  </div>
+
+  <!-- Week Calendar -->
+  <div class="week-cal">
+    <div class="week-day">
+      <div class="week-day-label">M</div>
+      <div class="week-day-num">7</div>
+      <div class="week-day-cal">1820</div>
+    </div>
+    <div class="week-day">
+      <div class="week-day-label">T</div>
+      <div class="week-day-num">8</div>
+      <div class="week-day-cal">1950</div>
+    </div>
+    <div class="week-day">
+      <div class="week-day-label">W</div>
+      <div class="week-day-num selected">9</div>
+      <div class="week-day-cal" style="color:var(--text1);font-weight:700">—</div>
+    </div>
+    <div class="week-day">
+      <div class="week-day-label">T</div>
+      <div class="week-day-num">10</div>
+      <div class="week-day-cal">—</div>
+    </div>
+    <div class="week-day">
+      <div class="week-day-label">F</div>
+      <div class="week-day-num">11</div>
+      <div class="week-day-cal">—</div>
+    </div>
+    <div class="week-day">
+      <div class="week-day-label">S</div>
+      <div class="week-day-num">12</div>
+      <div class="week-day-cal">—</div>
+    </div>
+    <div class="week-day">
+      <div class="week-day-label">S</div>
+      <div class="week-day-num">13</div>
+      <div class="week-day-cal">—</div>
+    </div>
+  </div>
+
+  <!-- Macro Summary -->
+  <div class="macro-bar">
+    <div class="macro-bar-item">
+      <div class="macro-dot" style="background:var(--cal)"></div>
+      <span class="macro-bar-val" style="color:var(--cal)">820</span>
+      <span class="macro-bar-target">/ 2000</span>
+    </div>
+    <div class="macro-bar-item">
+      <span class="macro-bar-val" style="color:var(--protein)">87</span>
+      <span class="macro-bar-target">/ 200P</span>
+    </div>
+    <div class="macro-bar-item">
+      <span class="macro-bar-val" style="color:var(--fat)">38</span>
+      <span class="macro-bar-target">/ 97F</span>
+    </div>
+    <div class="macro-bar-item">
+      <span class="macro-bar-val" style="color:var(--carbs)">15</span>
+      <span class="macro-bar-target">/ 75C</span>
+    </div>
+  </div>
+
+  <!-- Meal 1 -->
+  <div class="card">
+    <div class="meal-header">
+      <div class="meal-left">
+        <span class="meal-name">Meal 1</span>
+      </div>
+      <span class="meal-time">6:30 AM</span>
+    </div>
+    <div class="meal-macros">
+      <div class="macro-pill cal"><span class="macro-pill-letter">⚡</span> 336</div>
+      <div class="macro-pill protein"><span class="macro-pill-letter">P</span> 30</div>
+      <div class="macro-pill fat"><span class="macro-pill-letter">F</span> 20</div>
+      <div class="macro-pill carbs"><span class="macro-pill-letter">C</span> 11</div>
+    </div>
+    <div class="food-item">
+      <span class="food-name">Cottage cheese<span class="food-portion"> · 200g</span></span>
+      <span class="food-cal">184 cal</span>
+      <button class="food-del">×</button>
+    </div>
+    <div class="food-item">
+      <span class="food-name">Carrot sticks<span class="food-portion"> · 80g</span></span>
+      <span class="food-cal">28 cal</span>
+      <button class="food-del">×</button>
+    </div>
+    <div class="food-item">
+      <span class="food-name">Almonds (raw)<span class="food-portion"> · 25g</span></span>
+      <span class="food-cal">124 cal</span>
+      <button class="food-del">×</button>
+    </div>
+    <button class="meal-add"><span style="font-size:17px">+</span> Add</button>
+  </div>
+
+  <!-- Meal 2 -->
+  <div class="card">
+    <div class="meal-header">
+      <div class="meal-left">
+        <span class="meal-name">Meal 2</span>
+      </div>
+      <span class="meal-time">10:00 AM</span>
+    </div>
+    <div class="meal-macros">
+      <div class="macro-pill cal"><span class="macro-pill-letter">⚡</span> 484</div>
+      <div class="macro-pill protein"><span class="macro-pill-letter">P</span> 57</div>
+      <div class="macro-pill fat"><span class="macro-pill-letter">F</span> 18</div>
+      <div class="macro-pill carbs"><span class="macro-pill-letter">C</span> 4</div>
+    </div>
+    <div class="food-item">
+      <span class="food-name">Whey isolate<span class="food-portion"> · 40g</span></span>
+      <span class="food-cal">150 cal</span>
+      <button class="food-del">×</button>
+    </div>
+    <div class="food-item">
+      <span class="food-name">Almonds (raw)<span class="food-portion"> · 35g</span></span>
+      <span class="food-cal">195 cal</span>
+      <button class="food-del">×</button>
+    </div>
+    <button class="meal-add"><span style="font-size:17px">+</span> Add</button>
+  </div>
+
+  <!-- Meal 3 (empty) -->
+  <div class="card">
+    <div class="meal-header">
+      <div class="meal-left">
+        <span class="meal-name" style="color:var(--text3)">Meal 3</span>
+      </div>
+      <span class="meal-time">1:30 PM</span>
+    </div>
+    <div class="meal-macros">
+      <div class="macro-pill cal" style="opacity:0.4"><span class="macro-pill-letter">⚡</span> 521</div>
+      <div class="macro-pill protein" style="opacity:0.4"><span class="macro-pill-letter">P</span> 57</div>
+      <div class="macro-pill fat" style="opacity:0.4"><span class="macro-pill-letter">F</span> 17</div>
+      <div class="macro-pill carbs" style="opacity:0.4"><span class="macro-pill-letter">C</span> 33</div>
+    </div>
+    <button class="meal-copy">📋 Copy from yesterday (3 items)</button>
+    <button class="meal-add"><span style="font-size:17px">+</span> Add</button>
+  </div>
+
+  <!-- Meal 4 (empty) -->
+  <div class="card">
+    <div class="meal-header">
+      <div class="meal-left">
+        <span class="meal-name" style="color:var(--text3)">Dinner</span>
+      </div>
+      <span class="meal-time">5:30 PM</span>
+    </div>
+    <div class="meal-macros">
+      <div class="macro-pill cal" style="opacity:0.4"><span class="macro-pill-letter">⚡</span> 398</div>
+      <div class="macro-pill protein" style="opacity:0.4"><span class="macro-pill-letter">P</span> 46</div>
+      <div class="macro-pill fat" style="opacity:0.4"><span class="macro-pill-letter">F</span> 14</div>
+      <div class="macro-pill carbs" style="opacity:0.4"><span class="macro-pill-letter">C</span> 21</div>
+    </div>
+    <button class="meal-add"><span style="font-size:17px">+</span> Add</button>
+  </div>
+
+  <!-- Meal 5 (empty) -->
+  <div class="card">
+    <div class="meal-header">
+      <div class="meal-left">
+        <span class="meal-name" style="color:var(--text3)">Buffer</span>
+      </div>
+      <span class="meal-time">8:00 PM</span>
+    </div>
+    <div class="meal-macros">
+      <div class="macro-pill cal" style="opacity:0.4"><span class="macro-pill-letter">⚡</span> 150</div>
+      <div class="macro-pill protein" style="opacity:0.4"><span class="macro-pill-letter">P</span> 33</div>
+      <div class="macro-pill fat" style="opacity:0.4"><span class="macro-pill-letter">F</span> 1</div>
+      <div class="macro-pill carbs" style="opacity:0.4"><span class="macro-pill-letter">C</span> 2</div>
+    </div>
+    <button class="meal-add"><span style="font-size:17px">+</span> Add</button>
+  </div>
+
+  <!-- Water -->
+  <div class="section-label">Hydration</div>
+  <div class="card">
+    <div class="water-row">
+      <div class="water-left">
+        <span class="water-icon">💧</span>
+        <span class="water-label">Water</span>
+      </div>
+      <div>
+        <span class="water-val">1.25L</span>
+        <span class="water-target"> / 2.5L</span>
+      </div>
+    </div>
+    <div class="water-bar"><div class="water-fill" style="width:50%"></div></div>
+    <div class="water-btns">
+      <button class="water-btn">+ 250ml</button>
+      <button class="water-btn">+ 500ml</button>
+      <button class="water-btn">+ 750ml</button>
+    </div>
+  </div>
+
+  <!-- Supplements -->
+  <div class="section-label">Supplements</div>
+  <div class="card">
+    <div class="supp-header">
+      <div class="supp-title">💊 Daily Stack</div>
+      <span class="supp-count">2 / 8</span>
+    </div>
+    <div class="supp-item">
+      <div class="supp-check done"></div>
+      <div>
+        <div class="supp-name done">P5P</div>
+        <div class="supp-dose">B6 · morning</div>
+      </div>
+    </div>
+    <div class="supp-item">
+      <div class="supp-check done"></div>
+      <div>
+        <div class="supp-name done">B Complex</div>
+        <div class="supp-dose">Thorne · morning</div>
+      </div>
+    </div>
+    <div class="supp-item">
+      <div class="supp-check"></div>
+      <div>
+        <div class="supp-name">Digestive Enzyme</div>
+        <div class="supp-dose">Thorne · with lunch</div>
+      </div>
+    </div>
+    <div class="supp-item">
+      <div class="supp-check"></div>
+      <div>
+        <div class="supp-name">Creatine</div>
+        <div class="supp-dose">5g · with lunch</div>
+      </div>
+    </div>
+    <div class="supp-item">
+      <div class="supp-check"></div>
+      <div>
+        <div class="supp-name">Super EPA Pro</div>
+        <div class="supp-dose">Fish oil · with lunch</div>
+      </div>
+    </div>
+    <div class="supp-item">
+      <div class="supp-check"></div>
+      <div>
+        <div class="supp-name">Digestive Enzyme</div>
+        <div class="supp-dose">Thorne · with dinner</div>
+      </div>
+    </div>
+    <div class="supp-item">
+      <div class="supp-check"></div>
+      <div>
+        <div class="supp-name">Calcium D-Glucarate</div>
+        <div class="supp-dose">Thorne · with dinner</div>
+      </div>
+    </div>
+    <div class="supp-item">
+      <div class="supp-check"></div>
+      <div>
+        <div class="supp-name">Magnesium</div>
+        <div class="supp-dose">400mg · bedtime</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Status Bar -->
+<div class="status-bar">
+  <div class="status-item">
+    <div class="status-dot" style="background:var(--cal)"></div>
+    <span style="color:var(--text1)">1,180 left</span>
+  </div>
+  <div class="status-divider"></div>
+  <div class="status-item">
+    <div class="status-dot" style="background:var(--protein)"></div>
+    <span style="color:var(--text1)">113g P left</span>
+  </div>
+</div>
+
+<!-- Tab Bar -->
+<div class="tab-bar">
+  <button class="tab active">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+    Diary
+  </button>
+  <button class="tab">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6.5 6.5h11M6.5 17.5h11M4 10h1.5M4 14h1.5M18.5 10H20M18.5 14H20M7.5 10v4M16.5 10v4M9.5 8v8M14.5 8v8"/></svg>
+    Training
+  </button>
+  <button class="tab-plus">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
+  <button class="tab">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+    Insights
+  </button>
+  <button class="tab">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/></svg>
+    Settings
+  </button>
+</div>
+
+</body>
+</html>
