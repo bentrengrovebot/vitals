@@ -311,7 +311,7 @@ export default function Diary({ openPicker, goTo }) {
               ))}
 
               {/* Add button */}
-              <button onClick={() => openPicker(slot, curDate)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '11px 16px', borderTop: `1px solid ${brd}`, background: 'none', border: 'none', borderTop: `1px solid ${brd}`, color: ac, fontSize: 14, fontWeight: 600, width: '100%' }}>
+              <button onClick={() => openPicker(slot, curDate)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '11px 16px', background: 'none', border: 'none', borderTop: `1px solid ${brd}`, color: ac, fontSize: 14, fontWeight: 600, width: '100%' }}>
                 <span style={{ fontSize: 17 }}>+</span> Add
               </button>
             </div>
