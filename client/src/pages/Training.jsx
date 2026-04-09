@@ -142,6 +142,20 @@ export default function Training({ goTo }) {
     if (Object.keys(newHist).length > 0) setExerciseHistory(prev => ({ ...prev, ...newHist }));
   }
 
+  async function updateExistingSet(setId, data) {
+    if (!activeSession) return;
+    await api.updateSet(setId, {
+      reps: data.reps ? parseInt(data.reps) : null,
+      weightKg: data.weightKg ? parseFloat(data.weightKg) : null,
+      rir: data.rir !== '' && data.rir != null ? parseInt(data.rir) : null,
+      completed: true,
+    });
+    const updated = await api.getSessionById(activeSession.id);
+    setActiveSession(updated);
+    setEditingSet(null);
+    startTimer(120);
+  }
+
   async function logSet(exerciseId, data) {
     if (!activeSession) return;
     await api.addSet(activeSession.id, {
@@ -319,13 +333,44 @@ export default function Training({ goTo }) {
 
                 {/* Set rows */}
                 {group.sets.map((set, idx) => (
-                  <div key={set.id} style={{ display: 'flex', alignItems: 'center', padding: '10px 16px', gap: 4, borderTop: `1px solid ${brd}` }}>
-                    <span style={{ width: 32, fontSize: 14, fontWeight: 700, color: set.reps ? ac : t3 }}>{idx + 1}</span>
-                    <span style={{ flex: 1, fontSize: 15, fontWeight: 600, color: set.weightKg != null ? t1 : t3 }}>{set.weightKg != null ? set.weightKg : '—'}</span>
-                    <span style={{ flex: 1, fontSize: 15, fontWeight: 600, color: set.reps ? t1 : t3 }}>{set.reps || '—'}</span>
-                    <span style={{ width: 44, fontSize: 15, fontWeight: 500, color: set.rir != null ? t2 : t3 }}>{set.rir != null ? set.rir : '—'}</span>
-                    <button onClick={() => deleteSet(set.id)} style={{ width: 28, background: 'none', border: 'none', color: '#d1d5db', fontSize: 16, padding: 0 }}>×</button>
-                  </div>
+                  editingSet?.setId === set.id ? (
+                    <div key={set.id} style={{ padding: '10px 16px 14px', borderTop: `1px solid ${brd}` }}>
+                      <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+                        <input type="number" placeholder="kg" value={editingSet.weightKg}
+                          onChange={e => setEditingSet(s => ({ ...s, weightKg: e.target.value }))}
+                          style={{ flex: 1, padding: '12px 10px', borderRadius: 10, border: `1.5px solid ${brd}`, background: '#fff', fontSize: 15, textAlign: 'center', boxSizing: 'border-box' }} autoFocus />
+                        <input type="number" placeholder="reps" value={editingSet.reps}
+                          onChange={e => setEditingSet(s => ({ ...s, reps: e.target.value }))}
+                          style={{ flex: 1, padding: '12px 10px', borderRadius: 10, border: `1.5px solid ${brd}`, background: '#fff', fontSize: 15, textAlign: 'center', boxSizing: 'border-box' }} />
+                        <input type="number" placeholder="RIR" value={editingSet.rir}
+                          onChange={e => setEditingSet(s => ({ ...s, rir: e.target.value }))}
+                          style={{ flex: 0.6, padding: '12px 10px', borderRadius: 10, border: `1.5px solid ${brd}`, background: '#fff', fontSize: 15, textAlign: 'center', boxSizing: 'border-box', minWidth: 0 }} />
+                      </div>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button onClick={() => setEditingSet(null)}
+                          style={{ flex: 1, padding: 12, borderRadius: 12, border: `1.5px solid ${brd}`, background: '#fff', color: t2, fontSize: 14, fontWeight: 600 }}>Cancel</button>
+                        <button onClick={() => updateExistingSet(set.id, editingSet)}
+                          style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: ac, color: '#fff', fontSize: 14, fontWeight: 700 }}>Save</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div key={set.id} onClick={() => {
+                      const hist = exerciseHistory[group.exerciseId];
+                      const sug = hist?.suggested;
+                      setEditingSet({
+                        exerciseId: group.exerciseId, setId: set.id,
+                        weightKg: set.weightKg != null ? String(set.weightKg) : (sug?.weightKg != null ? String(sug.weightKg) : ''),
+                        reps: set.reps ? String(set.reps) : (sug?.reps != null ? String(sug.reps) : ''),
+                        rir: set.rir != null ? String(set.rir) : (sug?.rir != null ? String(sug.rir) : ''),
+                      });
+                    }} style={{ display: 'flex', alignItems: 'center', padding: '10px 16px', gap: 4, borderTop: `1px solid ${brd}`, cursor: 'pointer' }}>
+                      <span style={{ width: 32, fontSize: 14, fontWeight: 700, color: set.reps ? ac : t3 }}>{idx + 1}</span>
+                      <span style={{ flex: 1, fontSize: 15, fontWeight: 600, color: set.weightKg != null ? t1 : t3 }}>{set.weightKg != null ? set.weightKg : '—'}</span>
+                      <span style={{ flex: 1, fontSize: 15, fontWeight: 600, color: set.reps ? t1 : t3 }}>{set.reps || '—'}</span>
+                      <span style={{ width: 44, fontSize: 15, fontWeight: 500, color: set.rir != null ? t2 : t3 }}>{set.rir != null ? set.rir : '—'}</span>
+                      <button onClick={(e) => { e.stopPropagation(); deleteSet(set.id); }} style={{ width: 28, background: 'none', border: 'none', color: '#d1d5db', fontSize: 16, padding: 0 }}>×</button>
+                    </div>
+                  )
                 ))}
 
                 {/* Add set row */}
