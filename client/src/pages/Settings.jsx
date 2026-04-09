@@ -21,6 +21,9 @@ export default function Settings({ goTo, onRefresh }) {
   const [profile, setProfile] = useState({ name: '', dob: '', sex: 'Male', heightCm: '', weightKg: '', weightGoalKg: '' });
   const [goals, setGoals] = useState({ calories: 2300, proteinG: 150, fatG: 80, carbsG: 250, waterMl: 2500 });
   const [supplements, setSupplements] = useState([]);
+  const [myFoods, setMyFoods] = useState([]);
+  const [foodForm, setFoodForm] = useState({ name: '', servingSize: '100', unit: 'g', calories: '', proteinG: '', fatG: '', carbsG: '' });
+  const [addingFood, setAddingFood] = useState(false);
   const [weighIns, setWeighIns] = useState([]);
   const [wiVal, setWiVal] = useState('');
   const [suppForm, setSuppForm] = useState({ name: '', ingredient: '', dose: '' });
@@ -31,9 +34,10 @@ export default function Settings({ goTo, onRefresh }) {
   useEffect(() => { loadData(); }, []);
 
   async function loadData() {
-    const [p, g, s, w] = await Promise.all([
-      api.getProfile(), api.getGoals(), api.getSupplements(), api.getWeighIns(30),
+    const [p, g, s, w, mf] = await Promise.all([
+      api.getProfile(), api.getGoals(), api.getSupplements(), api.getWeighIns(30), api.getMyFoods().catch(() => []),
     ]);
+    setMyFoods(mf);
     if (p) setProfile({
       name: p.name || '', dob: p.dob ? p.dob.split('T')[0] : '', sex: p.sex || 'Male',
       heightCm: p.heightCm || '', weightKg: p.weightKg || '', weightGoalKg: p.weightGoalKg || '',
@@ -109,7 +113,7 @@ export default function Settings({ goTo, onRefresh }) {
       {saved && <div style={{ margin: '0 20px 12px', padding: '10px 16px', borderRadius: 12, background: 'rgba(229,57,53,0.08)', color: ac, fontSize: 14, fontWeight: 600 }}>{saved}</div>}
 
       <div style={{ display: 'flex', gap: 6, padding: '0 20px', marginBottom: 20, flexWrap: 'wrap' }}>
-        {[{ id: 'profile', l: 'Profile' }, { id: 'goals', l: 'Goals' }, { id: 'supps', l: 'Supplements' }, { id: 'weight', l: 'Weight' }, { id: 'data', l: 'Data' }].map(t => (
+        {[{ id: 'profile', l: 'Profile' }, { id: 'goals', l: 'Goals' }, { id: 'myfoods', l: 'My Foods' }, { id: 'supps', l: 'Supplements' }, { id: 'weight', l: 'Weight' }, { id: 'data', l: 'Data' }].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={pill(tab === t.id)}>{t.l}</button>
         ))}
       </div>
@@ -154,6 +158,48 @@ export default function Settings({ goTo, onRefresh }) {
         )}
 
         {/* Supplements */}
+        {tab === 'myfoods' && (
+          <div>
+            {myFoods.map(f => (
+              <div key={f.id} style={{ ...card, padding: '14px 16px', marginBottom: 8, display: 'flex', alignItems: 'center' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: t1 }}>{f.name}</div>
+                  <div style={{ fontSize: 12, color: t2, marginTop: 2 }}>{f.servingSize}{f.unit} · {f.calories} cal · {f.proteinG}P · {f.fatG}F · {f.carbsG}C</div>
+                </div>
+                <button onClick={async () => { await api.deleteMyFood(f.id); setMyFoods(await api.getMyFoods()); flash('Deleted'); }} style={{ background: 'none', border: 'none', color: t3, fontSize: 18, padding: 4 }}>×</button>
+              </div>
+            ))}
+            {addingFood ? (
+              <div style={{ ...card, padding: 16 }}>
+                <input value={foodForm.name} onChange={e => setFoodForm(f => ({ ...f, name: e.target.value }))} placeholder="Food name" style={inp} />
+                <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                  <input type="number" value={foodForm.servingSize} onChange={e => setFoodForm(f => ({ ...f, servingSize: e.target.value }))} placeholder="Serving" style={{ ...inp, flex: 1 }} />
+                  <select value={foodForm.unit} onChange={e => setFoodForm(f => ({ ...f, unit: e.target.value }))} style={{ ...inp, flex: 0.6 }}>
+                    <option value="g">g</option>
+                    <option value="ml">ml</option>
+                    <option value="serve">serve</option>
+                  </select>
+                </div>
+                <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                  <input type="number" value={foodForm.calories} onChange={e => setFoodForm(f => ({ ...f, calories: e.target.value }))} placeholder="Cal" style={{ ...inp, flex: 1 }} />
+                  <input type="number" value={foodForm.proteinG} onChange={e => setFoodForm(f => ({ ...f, proteinG: e.target.value }))} placeholder="P" style={{ ...inp, flex: 1 }} />
+                  <input type="number" value={foodForm.fatG} onChange={e => setFoodForm(f => ({ ...f, fatG: e.target.value }))} placeholder="F" style={{ ...inp, flex: 1 }} />
+                  <input type="number" value={foodForm.carbsG} onChange={e => setFoodForm(f => ({ ...f, carbsG: e.target.value }))} placeholder="C" style={{ ...inp, flex: 1 }} />
+                </div>
+                <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                  <button onClick={() => { setAddingFood(false); setFoodForm({ name: '', servingSize: '100', unit: 'g', calories: '', proteinG: '', fatG: '', carbsG: '' }); }} style={{ flex: 1, padding: 12, borderRadius: 12, border: `1px solid ${brd}`, background: '#fff', color: t1, fontSize: 14, fontWeight: 600 }}>Cancel</button>
+                  <button onClick={async () => {
+                    await api.createMyFood({ name: foodForm.name, servingSize: parseFloat(foodForm.servingSize) || 100, unit: foodForm.unit, calories: parseFloat(foodForm.calories) || 0, proteinG: parseFloat(foodForm.proteinG) || 0, fatG: parseFloat(foodForm.fatG) || 0, carbsG: parseFloat(foodForm.carbsG) || 0 });
+                    setMyFoods(await api.getMyFoods()); setAddingFood(false); setFoodForm({ name: '', servingSize: '100', unit: 'g', calories: '', proteinG: '', fatG: '', carbsG: '' }); flash('Food saved');
+                  }} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: ac, color: '#fff', fontSize: 14, fontWeight: 700 }}>Save</button>
+                </div>
+              </div>
+            ) : (
+              <button onClick={() => setAddingFood(true)} style={{ width: '100%', padding: 14, borderRadius: 12, border: `2px dashed ${brd}`, background: '#fff', color: t2, fontSize: 14, fontWeight: 600 }}>+ Add Food</button>
+            )}
+          </div>
+        )}
+
         {tab === 'supps' && (
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, color: t2, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Your Supplements</div>

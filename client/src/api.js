@@ -115,6 +115,12 @@ export const api = {
   exportData: () => request('/data/export'),
 
   // Foods
+  // My Foods
+  getMyFoods: () => request('/my-foods'),
+  createMyFood: (data) => request('/my-foods', { method: 'POST', body: JSON.stringify(data) }),
+  updateMyFood: (id, data) => request(`/my-foods/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteMyFood: (id) => request(`/my-foods/${id}`, { method: 'DELETE' }),
+
   searchFoods: (q) => request(`/foods/search?q=${encodeURIComponent(q)}`),
   aiSearchFood: (name, grams) => request('/foods/ai-search', { method: 'POST', body: JSON.stringify({ name, grams }) }),
 

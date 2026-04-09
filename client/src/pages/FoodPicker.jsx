@@ -18,6 +18,7 @@ export default function FoodPicker({ slot, date, onBack }) {
   const [tab, setTab] = useState('search');
   const [search, setSearch] = useState('');
   const [recipes, setRecipes] = useState([]);
+  const [myFoods, setMyFoods] = useState([]);
   const [recent, setRecent] = useState([]);
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
@@ -27,6 +28,7 @@ export default function FoodPicker({ slot, date, onBack }) {
 
   useEffect(() => {
     api.getRecipes().then(setRecipes);
+    api.getMyFoods().then(setMyFoods);
     const end = new Date().toISOString().split('T')[0];
     const start = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
     api.getDiaryRange(start, end).then(entries => {
@@ -104,7 +106,7 @@ export default function FoodPicker({ slot, date, onBack }) {
       <div style={{ padding: '0 20px' }}>
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search foods..." style={{ ...inp, marginBottom: 14 }} autoFocus />
         <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
-          {[{ id: 'search', l: 'Search' }, { id: 'recipes', l: 'Recipes' }, { id: 'recent', l: 'Recent' }].map(t => (
+          {[{ id: 'search', l: 'Search' }, { id: 'myfoods', l: 'My Foods' }, { id: 'recipes', l: 'Recipes' }, { id: 'recent', l: 'Recent' }].map(t => (
             <button key={t.id} onClick={() => setTab(t.id)} style={pill(tab === t.id)}>{t.l}</button>
           ))}
         </div>
@@ -178,6 +180,23 @@ export default function FoodPicker({ slot, date, onBack }) {
         )}
 
         {/* Recipes */}
+        {/* My Foods */}
+        {tab === 'myfoods' && (
+          <>
+            {myFoods.filter(f => !search || f.name.toLowerCase().includes(search.toLowerCase())).map(f => (
+              <div key={f.id} style={{ display: 'flex', alignItems: 'center', padding: '14px 0', borderBottom: `1px solid ${brd}` }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: '#212121' }}>{f.name}</div>
+                  <div style={{ fontSize: 11, color: t2, marginTop: 2 }}>{f.servingSize}{f.unit} · {f.calories} cal · {f.proteinG}g P · {f.fatG}g F · {f.carbsG}g C</div>
+                </div>
+                <button onClick={() => addItem({ name: f.name, cal: f.calories, protein: f.proteinG, fat: f.fatG, carbs: f.carbsG, portion: `${f.servingSize}${f.unit}` })}
+                  style={{ width: 36, height: 36, borderRadius: 12, background: 'rgba(229,57,53,0.12)', border: 'none', color: ac, fontSize: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+              </div>
+            ))}
+            {!myFoods.length && <div style={{ color: t3, fontSize: 13, padding: 24, textAlign: 'center' }}>No custom foods yet. Create them in Settings.</div>}
+          </>
+        )}
+
         {tab === 'recipes' && (
           <>
             {recipes.filter(r => !search || r.name.toLowerCase().includes(search.toLowerCase())).map(r => {
