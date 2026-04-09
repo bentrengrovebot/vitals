@@ -39,6 +39,7 @@ export const api = {
   createRecipe: (data) => request('/recipes', { method: 'POST', body: JSON.stringify(data) }),
   updateRecipe: (id, data) => request(`/recipes/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteRecipe: (id) => request(`/recipes/${id}`, { method: 'DELETE' }),
+  seedMealPlanV8: () => request('/recipes/seed-v8', { method: 'POST' }),
 
   // Diary
   getDiary: (date) => request(`/diary/${date}`),

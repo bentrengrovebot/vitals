@@ -150,6 +150,20 @@ export default function Settings({ goTo, onRefresh }) {
             </div>
             <button onClick={async () => { await api.updateGoals(goals); flash('Goals saved'); onRefresh(); }}
               style={{ width: '100%', padding: 16, borderRadius: 14, border: 'none', background: ac, color: '#fff', fontSize: 15, fontWeight: 700 }}>Save Goals</button>
+            <div style={{ marginTop: 20, padding: '16px 0', borderTop: `1px solid ${brd}` }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: t2, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Meal Plan</div>
+              <button onClick={async () => {
+                try {
+                  const r = await api.seedMealPlanV8();
+                  setGoals({ calories: 2000, proteinG: 200, fatG: 97, carbsG: 75, waterMl: 2500 });
+                  flash(`Loaded ${r.recipesCreated} recipes + goals set`);
+                  onRefresh();
+                } catch (e) { flash('Error: ' + e.message); }
+              }} style={{ width: '100%', padding: 14, borderRadius: 12, border: `1px solid ${brd}`, background: 'rgba(255,255,255,0.05)', color: bl, fontSize: 14, fontWeight: 600 }}>
+                Load v8 Meal Plan (recipes + macros)
+              </button>
+              <div style={{ fontSize: 11, color: t3, marginTop: 6 }}>Adds 9 recipes (M1-M5) and sets goals to 2000 cal / 200P / 75C / 97F</div>
+            </div>
           </div>
         )}
 
