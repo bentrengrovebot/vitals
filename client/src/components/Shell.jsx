@@ -7,6 +7,14 @@ import Training from '../pages/Training';
 import Insights from '../pages/Insights';
 import Settings from '../pages/Settings';
 
+const TABS = [
+  { id: 'diary', label: 'Diary' },
+  { id: 'training', label: 'Training' },
+  { id: 'recipes', label: 'Recipes' },
+  { id: 'insights', label: 'Insights' },
+  { id: 'settings', label: 'Settings' },
+];
+
 const NAV_ICONS = {
   diary: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>,
   training: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6.5 6.5h11M6.5 17.5h11M4 10h1.5M4 14h1.5M18.5 10H20M18.5 14H20M7.5 10v4M16.5 10v4M9.5 8v8M14.5 8v8"/></svg>,
@@ -23,22 +31,14 @@ export default function Shell() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const refresh = () => setRefreshKey(k => k + 1);
-
-  const openPicker = (slot, date) => {
-    setPickerSlot(slot);
-    setPickerDate(date);
-    setScreen('picker');
-  };
-
-  const openRecipeEdit = (recipe) => {
-    setEditRecipe(recipe);
-    setScreen('recipe_edit');
-  };
+  const openPicker = (slot, date) => { setPickerSlot(slot); setPickerDate(date); setScreen('picker'); };
+  const openRecipeEdit = (recipe) => { setEditRecipe(recipe); setScreen('recipe_edit'); };
 
   const showNav = !['picker', 'recipe_edit'].includes(screen);
+  const isOverlay = ['picker', 'recipe_edit'].includes(screen);
 
-  return (
-    <div style={{ minHeight: '100vh', background: '#f8f8fa', maxWidth: 480, margin: '0 auto', position: 'relative' }}>
+  const content = (
+    <>
       {screen === 'diary' && <Diary key={refreshKey} openPicker={openPicker} goTo={setScreen} />}
       {screen === 'training' && <Training goTo={setScreen} />}
       {screen === 'recipes' && <Recipes onEdit={openRecipeEdit} goTo={setScreen} />}
@@ -46,25 +46,25 @@ export default function Shell() {
       {screen === 'picker' && <FoodPicker slot={pickerSlot} date={pickerDate} onBack={() => { setScreen('diary'); refresh(); }} />}
       {screen === 'insights' && <Insights goTo={setScreen} />}
       {screen === 'settings' && <Settings goTo={setScreen} onRefresh={refresh} />}
+    </>
+  );
 
+  // ============ MOBILE (<768px) ============
+  const mobileLayout = (
+    <div style={{ minHeight: '100vh', background: '#f5f5f5', maxWidth: 480, margin: '0 auto', position: 'relative' }}>
+      {content}
       {showNav && (
         <div style={{
           position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)',
-          width: '100%', maxWidth: 480, background: '#fff', borderTop: '1px solid #eaeaef',
+          width: '100%', maxWidth: 480, background: '#fff', borderTop: '1px solid #EEEEEE',
           display: 'flex', zIndex: 50, padding: '6px 8px 28px',
         }}>
-          {[
-            { id: 'diary', label: 'Diary' },
-            { id: 'training', label: 'Training' },
-            { id: 'recipes', label: 'Recipes' },
-            { id: 'insights', label: 'Insights' },
-            { id: 'settings', label: 'Settings' },
-          ].map(tab => (
+          {TABS.map(tab => (
             <button key={tab.id} onClick={() => setScreen(tab.id)}
               style={{
                 flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
                 background: 'none', border: 'none', padding: '8px 0',
-                color: screen === tab.id ? '#3b82f6' : '#9ca3af', fontSize: 10, fontWeight: 600,
+                color: screen === tab.id ? '#E53935' : '#BDBDBD', fontSize: 10, fontWeight: 600,
               }}>
               {NAV_ICONS[tab.id]}
               {tab.label}
@@ -73,5 +73,66 @@ export default function Shell() {
         </div>
       )}
     </div>
+  );
+
+  // ============ DESKTOP (>=768px) ============
+  const desktopLayout = (
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#f5f5f5' }}>
+      {/* Left Sidebar */}
+      <div style={{
+        width: 220, background: '#fff', borderRight: '1px solid #EEEEEE',
+        display: 'flex', flexDirection: 'column', position: 'fixed', top: 0, bottom: 0, left: 0, zIndex: 60,
+      }}>
+        {/* Logo */}
+        <div style={{ padding: '24px 20px 20px', borderBottom: '1px solid #EEEEEE' }}>
+          <div style={{ fontSize: 22, fontWeight: 800, color: '#212121', letterSpacing: '-0.5px' }}>Vitals</div>
+          <div style={{ fontSize: 11, color: '#BDBDBD', fontWeight: 500, marginTop: 2 }}>Health Tracker</div>
+        </div>
+
+        {/* Nav Items */}
+        <div style={{ padding: '12px 10px', flex: 1 }}>
+          {TABS.map(tab => {
+            const active = screen === tab.id;
+            return (
+              <button key={tab.id} onClick={() => setScreen(tab.id)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 12, width: '100%',
+                  padding: '12px 14px', borderRadius: 10, border: 'none', marginBottom: 4,
+                  background: active ? '#FBE9E7' : 'transparent',
+                  color: active ? '#E53935' : '#757575',
+                  fontSize: 14, fontWeight: active ? 700 : 500, cursor: 'pointer',
+                  transition: 'all 0.15s',
+                }}>
+                {NAV_ICONS[tab.id]}
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div style={{ flex: 1, marginLeft: 220, display: 'flex', justifyContent: 'center' }}>
+        <div style={{ width: '100%', maxWidth: 600, minHeight: '100vh' }}>
+          {content}
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Mobile */}
+      <div className="shell-mobile" style={{ display: 'block' }}>{mobileLayout}</div>
+      {/* Desktop */}
+      <div className="shell-desktop" style={{ display: 'none' }}>{desktopLayout}</div>
+
+      <style>{`
+        @media (min-width: 768px) {
+          .shell-mobile { display: none !important; }
+          .shell-desktop { display: block !important; }
+        }
+      `}</style>
+    </>
   );
 }
