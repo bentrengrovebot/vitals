@@ -9,7 +9,7 @@ import Settings from '../pages/Settings';
 
 const TABS = [
   { id: 'diary', label: 'Diary' },
-  { id: 'training', label: 'Training' },
+  // { id: 'training', label: 'Training' },
   { id: 'recipes', label: 'Recipes' },
   { id: 'insights', label: 'Insights' },
   { id: 'settings', label: 'Settings' },
