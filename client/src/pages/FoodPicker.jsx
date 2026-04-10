@@ -105,7 +105,7 @@ export default function FoodPicker({ slot, date, onBack }) {
   const t2 = '#6b7280', t3 = '#9ca3af', ac = '#E53935', brd = '#e5e5e7';
 
   return (
-    <div style={{ paddingBottom: 20, background: '#f5f5f7', minHeight: '100vh' }}>
+    <div style={{ paddingBottom: 100, background: '#f5f5f7', minHeight: '100vh' }}>
       <div style={{ display: 'flex', alignItems: 'center', padding: 'calc(env(safe-area-inset-top, 16px) + 8px) 20px 16px', gap: 12 }}>
         <button onClick={onBack} style={{ background: 'none', border: 'none', color: t2, fontSize: 22 }}>←</button>
         <div style={{ fontSize: 17, fontWeight: 600, flex: 1, color: '#1a1a1a' }}>Add to {slot}</div>

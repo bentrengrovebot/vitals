@@ -34,7 +34,7 @@ export default function Shell() {
   const openPicker = (slot, date) => { setPickerSlot(slot); setPickerDate(date); setScreen('picker'); };
   const openRecipeEdit = (recipe) => { setEditRecipe(recipe); setScreen('recipe_edit'); };
 
-  const showNav = !['picker', 'recipe_edit'].includes(screen);
+  const showNav = true;
   const isOverlay = ['picker', 'recipe_edit'].includes(screen);
 
   const content = (
