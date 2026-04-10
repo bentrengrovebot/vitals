@@ -344,7 +344,7 @@ export default function Diary({ openPicker, goTo }) {
       })()}
 
       {/* Header */}
-      <div style={{ padding: '16px 20px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      <div style={{ padding: 'calc(env(safe-area-inset-top, 16px) + 8px) 20px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <div style={{ fontSize: 12, color: t2, fontWeight: 500, letterSpacing: '0.2px' }}>{new Date().toLocaleDateString('en-NZ', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
           <div style={{ fontSize: 26, fontWeight: 800, color: t1, letterSpacing: '-0.5px', marginTop: 2 }}>{greet()}{profile.name ? `, ${profile.name}` : ''}</div>
