@@ -39,11 +39,18 @@ export default function Diary({ openPicker, goTo }) {
   const [waterExpanded, setWaterExpanded] = useState(false);
   const [del, setDel] = useState(null);
   const [editFood, setEditFood] = useState(null);
-  const [lockedMeals, setLockedMeals] = useState(new Set()); // { id, name, portion, calories, proteinG, fatG, carbsG }
+  // Locked meals — persisted in localStorage per date
+  const lockKey = `locks_${curDate}`;
+  const [lockedMeals, setLockedMeals] = useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem(lockKey) || '[]')); } catch { return new Set(); }
+  });
 
   const isToday = curDate === dateKey();
 
-  useEffect(() => { loadData(); setLockedMeals(new Set()); }, [curDate]);
+  useEffect(() => {
+    loadData();
+    try { setLockedMeals(new Set(JSON.parse(localStorage.getItem(`locks_${curDate}`) || '[]'))); } catch { setLockedMeals(new Set()); }
+  }, [curDate]);
 
   async function loadData() {
     const yesterdayDate = shiftDate(curDate, -1);
@@ -165,6 +172,7 @@ export default function Diary({ openPicker, goTo }) {
     setLockedMeals(prev => {
       const next = new Set(prev);
       if (next.has(slot)) next.delete(slot); else next.add(slot);
+      localStorage.setItem(lockKey, JSON.stringify([...next]));
       return next;
     });
   }
