@@ -5,6 +5,7 @@ import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Shell from './components/Shell';
+import UpdatePrompt from './components/UpdatePrompt';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -24,6 +25,8 @@ function PublicRoute({ children }) {
 
 export default function App() {
   return (
+    <>
+    <UpdatePrompt />
     <Routes>
       <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
       <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
@@ -31,5 +34,6 @@ export default function App() {
       <Route path="/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} />
       <Route path="/*" element={<ProtectedRoute><Shell /></ProtectedRoute>} />
     </Routes>
+    </>
   );
 }
