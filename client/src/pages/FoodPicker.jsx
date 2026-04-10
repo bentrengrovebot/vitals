@@ -59,16 +59,21 @@ export default function FoodPicker({ slot, date, onBack }) {
   }, [search, tab]);
 
   async function addItem(item) {
-    await api.addDiaryEntry({
-      date, slot,
-      name: item.name,
-      portion: item.portion,
-      calories: item.cal || item.calories,
-      proteinG: item.protein || item.proteinG,
-      fatG: item.fat || item.fatG,
-      carbsG: item.carbs || item.carbsG,
-    });
-    onBack();
+    try {
+      await api.addDiaryEntry({
+        date, slot,
+        name: item.name,
+        portion: item.portion,
+        calories: item.cal ?? item.calories ?? 0,
+        proteinG: item.protein ?? item.proteinG ?? 0,
+        fatG: item.fat ?? item.fatG ?? 0,
+        carbsG: item.carbs ?? item.carbsG ?? 0,
+      });
+      onBack();
+    } catch (err) {
+      console.error('Failed to add diary entry:', err);
+      alert('Could not add food. Please try again.');
+    }
   }
 
   function selectDbFood(product) {
@@ -101,7 +106,7 @@ export default function FoodPicker({ slot, date, onBack }) {
 
   return (
     <div style={{ paddingBottom: 20, background: '#f5f5f7', minHeight: '100vh' }}>
-      <div style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', padding: 'calc(env(safe-area-inset-top, 16px) + 8px) 20px 16px', gap: 12 }}>
         <button onClick={onBack} style={{ background: 'none', border: 'none', color: t2, fontSize: 22 }}>←</button>
         <div style={{ fontSize: 17, fontWeight: 600, flex: 1, color: '#1a1a1a' }}>Add to {slot}</div>
       </div>

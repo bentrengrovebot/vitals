@@ -207,7 +207,7 @@ export default function Training({ goTo }) {
   if (view === 'picker') {
     return (
       <div style={{ paddingBottom: 100 }}>
-        <div style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', padding: 'calc(env(safe-area-inset-top, 16px) + 8px) 20px 16px', gap: 12 }}>
           <button onClick={() => setView('session')} style={{ background: 'none', border: 'none', color: t2, fontSize: 22 }}>←</button>
           <div style={{ fontSize: 18, fontWeight: 800, flex: 1 }}>Add Exercise</div>
         </div>
@@ -264,7 +264,7 @@ export default function Training({ goTo }) {
     return (
       <div style={{ paddingBottom: 100 }}>
         {/* Session header */}
-        <div style={{ background: 'linear-gradient(135deg,#3b82f6 0%,#8b5cf6 100%)', color: '#fff', padding: '20px 20px 16px' }}>
+        <div style={{ background: 'linear-gradient(135deg,#3b82f6 0%,#8b5cf6 100%)', color: '#fff', padding: 'calc(env(safe-area-inset-top, 16px) + 8px) 20px 16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
               <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.5px' }}>{activeSession.name}</div>
@@ -429,7 +429,7 @@ export default function Training({ goTo }) {
 
   return (
     <div style={{ paddingBottom: 100 }}>
-      <div style={{ padding: '20px 20px 0' }}>
+      <div style={{ padding: 'calc(env(safe-area-inset-top, 16px) + 8px) 20px 0' }}>
         <div style={{ fontSize: 20, fontWeight: 800 }}>Training</div>
       </div>
 

@@ -105,7 +105,7 @@ export default function Settings({ goTo, onRefresh }) {
 
   return (
     <div style={{ paddingBottom: 100, background: '#f5f5f5', minHeight: '100vh' }}>
-      <div style={{ display: 'flex', alignItems: 'center', padding: 20, gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', padding: 'calc(env(safe-area-inset-top, 16px) + 8px) 20px 20px', gap: 12 }}>
         <div style={{ fontSize: 20, fontWeight: 800, flex: 1, color: t1 }}>Settings</div>
         <button onClick={logout} style={{ padding: '8px 14px', borderRadius: 10, border: `1px solid ${brd}`, background: '#fff', color: t2, fontSize: 12, fontWeight: 600 }}>Log out</button>
       </div>

@@ -102,7 +102,7 @@ export default function Insights({ goTo }) {
 
   return (
     <div style={{ paddingBottom: 100, background: '#f5f5f5', minHeight: '100vh' }}>
-      <div style={{ padding: '20px 20px 0' }}>
+      <div style={{ padding: 'calc(env(safe-area-inset-top, 16px) + 8px) 20px 0' }}>
         <div style={{ fontSize: 20, fontWeight: 800, color: t1 }}>Insights</div>
       </div>
 
