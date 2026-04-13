@@ -27,6 +27,9 @@ export default function FoodPicker({ slot, date, onBack }) {
   const [myFoodServings, setMyFoodServings] = useState('1');
   const [grams, setGrams] = useState('100');
   const searchTimer = useRef(null);
+  // In-memory cache: normalized query -> products. Shrinks the
+  // perceived latency to zero on same-session repeat searches.
+  const searchCache = useRef(new Map());
 
   useEffect(() => {
     api.getRecipes().then(setRecipes);
@@ -46,12 +49,20 @@ export default function FoodPicker({ slot, date, onBack }) {
   // Debounced search
   useEffect(() => {
     if (tab !== 'search' || search.length < 2) { setResults([]); return; }
+    const key = search.trim().toLowerCase().replace(/\s+/g, ' ');
+    if (searchCache.current.has(key)) {
+      setResults(searchCache.current.get(key));
+      setSearching(false);
+      return;
+    }
     clearTimeout(searchTimer.current);
     searchTimer.current = setTimeout(async () => {
       setSearching(true);
       try {
         const data = await api.searchFoods(search);
-        setResults(data.products || []);
+        const products = data.products || [];
+        searchCache.current.set(key, products);
+        setResults(products);
       } catch { setResults([]); }
       setSearching(false);
     }, 400);

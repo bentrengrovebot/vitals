@@ -9,24 +9,43 @@ function getClient() {
   return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 }
 
+// Simple in-memory cache: normalized query -> products.
+// Nutrition data is static, so infinite TTL is fine. Bounded at 1000 entries.
+const searchCache = new Map();
+const MAX_CACHE = 1000;
+const normalize = q => q.trim().toLowerCase().replace(/\s+/g, ' ');
+
 // GET /api/foods/search?q=chicken breast
 router.get('/search', async (req, res) => {
   try {
     const { q } = req.query;
     if (!q || q.length < 2) return res.json({ products: [] });
 
+    const key = normalize(q);
+    if (searchCache.has(key)) {
+      return res.json({ products: searchCache.get(key), cached: true });
+    }
+
     const client = getClient();
     const response = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1500,
-      system: `You are a food nutrition database. Given a search query, return 5-8 matching common foods/products with nutrition per 100g AND common serving sizes. Know NZ brands (Anchor, Pams, Countdown, Wattie's, Lewis Road, Farrah's, Tegel, Hellers). Respond ONLY with JSON array, no markdown:
-[{"name":"Food name","brand":"Brand or empty","per100g":{"calories":number,"protein":number,"fat":number,"carbs":number},"defaultServing":number,"servingUnit":"g or ml","servings":[{"label":"1 piece","grams":7},{"label":"1 handful (15)","grams":25},{"label":"1 cup","grams":140}]}]
-Include 2-4 common serving sizes in the "servings" array for each food. Use real-world portion sizes. Examples: "1 breast" for chicken, "1 medium" for fruits, "1 slice" for bread, "1 cup" for rice, "15 almonds" for nuts, "1 scoop (30g)" for protein powder, "1 tbsp" for oils/sauces. Round to 1 decimal place.`,
+      max_tokens: 900,
+      system: `You are a food nutrition database. Given a search query, return 5-8 matching foods with nutrition per 100g AND common serving sizes. ALWAYS include generic/unbranded options (e.g. "Black coffee", "White bread", "Whole milk") alongside NZ branded products where relevant (Anchor, Pams, Countdown, Wattie's, Lewis Road, Farrah's, Tegel, Hellers). For beverages, include per-100ml nutrition. Respond ONLY with JSON array, no markdown:
+[{"name":"Food name","brand":"Brand or empty","per100g":{"calories":number,"protein":number,"fat":number,"carbs":number},"defaultServing":number,"servingUnit":"g or ml","servings":[{"label":"1 piece","grams":7},{"label":"1 cup","grams":140}]}]
+Include 2-4 common serving sizes per food ("1 breast", "1 medium", "1 slice", "1 cup", "15 almonds", "1 scoop (30g)", "1 tbsp", "1 mug (240ml)"). Round to 1 decimal place.`,
       messages: [{ role: 'user', content: q }],
     });
 
     const text = (response.content[0]?.text || '').replace(/```json|```/g, '').trim();
     const products = JSON.parse(text);
+
+    // Cache it. Evict oldest if at cap.
+    if (searchCache.size >= MAX_CACHE) {
+      const firstKey = searchCache.keys().next().value;
+      searchCache.delete(firstKey);
+    }
+    searchCache.set(key, products);
+
     res.json({ products });
   } catch (err) {
     console.error('Food search error:', err);
