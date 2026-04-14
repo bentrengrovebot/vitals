@@ -47,6 +47,10 @@ model Goals {
   fatG          Int      @default(80)
   carbsG        Int      @default(250)
   waterMl       Int      @default(2500)
+  fiberG        Int      @default(30)
+  satFatG       Int      @default(15)
+  sugarG        Int      @default(25)
+  sodiumMg      Int      @default(2300)
   effectiveFrom DateTime @default(now())
   createdAt     DateTime @default(now())
 }
@@ -85,6 +89,10 @@ model DiaryEntry {
   proteinG Float
   fatG     Float
   carbsG   Float
+  fiberG   Float?
+  satFatG  Float?
+  sugarG   Float?
+  sodiumMg Float?
   recipeId String?
   mealTime DateTime?
   createdAt DateTime @default(now())

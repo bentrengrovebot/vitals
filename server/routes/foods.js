@@ -65,6 +65,26 @@ function mapNzfcd(f) {
   };
 }
 
+// Generate typo/plural variants for each query word so "potatoe",
+// "potatos", "potatoes" all match "potato". Only strips trailing
+// chars — we want to match broader, not narrower.
+function wordVariants(w) {
+  const v = new Set([w]);
+  if (w.length >= 5) {
+    if (w.endsWith('es')) v.add(w.slice(0, -2));
+    if (w.endsWith('s')) v.add(w.slice(0, -1));
+    if (w.endsWith('e')) v.add(w.slice(0, -1));
+    if (w.endsWith('ies')) { v.add(w.slice(0, -3) + 'y'); }
+  }
+  return [...v];
+}
+
+function nameMatchesQuery(name, queryWords) {
+  const lower = name.toLowerCase();
+  // Each query word must match via any of its variants.
+  return queryWords.every(w => wordVariants(w).some(v => lower.includes(v)));
+}
+
 // Rank by simplicity (shorter names are more generic) and whether the
 // first query word prefixes the name (exact hits win).
 function searchNzfcd(q) {
@@ -74,7 +94,7 @@ function searchNzfcd(q) {
   const scored = [];
   for (const f of NZFCD) {
     const name = f.name.toLowerCase();
-    if (!words.every(w => name.includes(w))) continue;
+    if (!nameMatchesQuery(name, words)) continue;
 
     let score = name.length / 10;
     if (name.startsWith(words[0])) score -= 5;
@@ -151,25 +171,80 @@ const STAPLES = [
   { name: 'Tea, black (no milk)',      keywords: ['tea'],                      per100g: { calories: 1,   protein: 0,    fat: 0,    carbs: 0.3 }, defaultServing: 240, servingUnit: 'ml', servings: [{ label: '1 mug (240ml)', grams: 240 }] },
 ];
 
+// Micronutrient values for staples, per 100g/100ml.
+// Cross-referenced against NZFCD entries where available, with
+// USDA fallback for items NZFCD doesn't cover.
+const STAPLE_MICROS = {
+  'Chicken breast, raw':       { fiber: 0,   sugar: 0,   satFat: 0.6,  sodium: 74  },
+  'Chicken breast, cooked':    { fiber: 0,   sugar: 0,   satFat: 1.0,  sodium: 74  },
+  'Chicken thigh, skinless':   { fiber: 0,   sugar: 0,   satFat: 2.3,  sodium: 88  },
+  'Beef mince, lean':          { fiber: 0,   sugar: 0,   satFat: 4,    sodium: 66  },
+  'Beef sirloin steak':        { fiber: 0,   sugar: 0,   satFat: 3.6,  sodium: 51  },
+  'Salmon fillet':             { fiber: 0,   sugar: 0,   satFat: 3.1,  sodium: 59  },
+  'Tuna in springwater':       { fiber: 0,   sugar: 0,   satFat: 0.3,  sodium: 247 },
+  'Egg, whole':                { fiber: 0,   sugar: 0.7, satFat: 3.1,  sodium: 142 },
+  'Egg white':                 { fiber: 0,   sugar: 0.7, satFat: 0,    sodium: 166 },
+  'Cottage cheese, low fat':   { fiber: 0,   sugar: 3.4, satFat: 0.6,  sodium: 330 },
+  'Greek yoghurt, plain':      { fiber: 0,   sugar: 3.6, satFat: 0.3,  sodium: 36  },
+  'Whey protein isolate':      { fiber: 0,   sugar: 3,   satFat: 0.5,  sodium: 180 },
+  'Prawns, cooked':            { fiber: 0,   sugar: 0,   satFat: 0.1,  sodium: 160 },
+  'White rice, cooked':        { fiber: 0.4, sugar: 0.1, satFat: 0.1,  sodium: 1   },
+  'Brown rice, cooked':        { fiber: 1.8, sugar: 0.4, satFat: 0.2,  sodium: 7   },
+  'Potato, boiled':            { fiber: 1.8, sugar: 0.9, satFat: 0,    sodium: 4   },
+  'Potato, baked':             { fiber: 2.2, sugar: 1.2, satFat: 0,    sodium: 10  },
+  'Kumara (sweet potato)':     { fiber: 3,   sugar: 4.2, satFat: 0,    sodium: 55  },
+  'Rolled oats, dry':          { fiber: 10,  sugar: 1,   satFat: 1.2,  sodium: 6   },
+  'White bread':               { fiber: 2.4, sugar: 5,   satFat: 0.7,  sodium: 491 },
+  'Wholemeal bread':           { fiber: 6,   sugar: 4,   satFat: 0.7,  sodium: 400 },
+  'Pasta, cooked':             { fiber: 1.8, sugar: 0.6, satFat: 0.2,  sodium: 6   },
+  'Broccoli, raw':             { fiber: 2.6, sugar: 1.7, satFat: 0,    sodium: 33  },
+  'Carrot, raw':               { fiber: 2.8, sugar: 4.7, satFat: 0,    sodium: 69  },
+  'Spinach, raw':              { fiber: 2.2, sugar: 0.4, satFat: 0.1,  sodium: 79  },
+  'Tomato, raw':               { fiber: 1.2, sugar: 2.6, satFat: 0,    sodium: 5   },
+  'Capsicum (bell pepper)':    { fiber: 2.1, sugar: 4.2, satFat: 0,    sodium: 4   },
+  'Cucumber':                  { fiber: 0.5, sugar: 1.7, satFat: 0,    sodium: 2   },
+  'Mushrooms, raw':            { fiber: 1,   sugar: 2,   satFat: 0,    sodium: 5   },
+  'Banana':                    { fiber: 2.6, sugar: 12,  satFat: 0.1,  sodium: 1   },
+  'Apple':                     { fiber: 2.4, sugar: 10,  satFat: 0,    sodium: 1   },
+  'Blueberries':               { fiber: 2.4, sugar: 10,  satFat: 0,    sodium: 1   },
+  'Strawberries':              { fiber: 2,   sugar: 4.9, satFat: 0,    sodium: 1   },
+  'Avocado':                   { fiber: 6.7, sugar: 0.7, satFat: 2.1,  sodium: 7   },
+  'Almonds':                   { fiber: 12,  sugar: 4.4, satFat: 3.8,  sodium: 1   },
+  'Peanut butter, natural':    { fiber: 6,   sugar: 9,   satFat: 10,   sodium: 17  },
+  'Olive oil':                 { fiber: 0,   sugar: 0,   satFat: 14,   sodium: 2   },
+  'Butter':                    { fiber: 0,   sugar: 0.1, satFat: 51,   sodium: 643 },
+  'Whole milk (blue top)':     { fiber: 0,   sugar: 4.8, satFat: 1.9,  sodium: 43  },
+  'Trim milk (green top)':     { fiber: 0,   sugar: 5,   satFat: 0.1,  sodium: 42  },
+  'Black coffee':              { fiber: 0,   sugar: 0,   satFat: 0,    sodium: 2   },
+  'Flat white (trim milk)':    { fiber: 0,   sugar: 4.5, satFat: 1,    sodium: 42  },
+  'Tea, black (no milk)':      { fiber: 0,   sugar: 0,   satFat: 0,    sodium: 3   },
+};
+
+function augmentStaple(s) {
+  const m = STAPLE_MICROS[s.name];
+  if (!m) return s;
+  return { ...s, per100g: { ...s.per100g, ...m } };
+}
+
 function findStaples(q) {
   const words = q.toLowerCase().split(/\s+/).filter(Boolean);
   if (!words.length) return [];
-  return STAPLES.filter(s =>
-    words.some(w => s.keywords.some(k => k.includes(w) || w.includes(k)))
-  );
+  return STAPLES
+    .filter(s => words.some(w => s.keywords.some(k => k.includes(w) || w.includes(k))))
+    .map(augmentStaple);
 }
 
 // ----- Open Food Facts ---------------------------------------------------
 
 // Drop entries that are mostly non-Latin (Korean/Arabic/etc) or don't
-// contain any query word — OFF returns global results and we want the
-// English-speaking ones.
+// match any query word — OFF returns global results and we want the
+// ones actually relevant to what the user typed. Every query word must
+// match via its variants (plural/typo tolerance).
 function isRelevant(name, queryWords) {
   if (!name) return false;
   const asciiChars = [...name].filter(c => /[\x20-\x7E]/.test(c)).length;
-  if (asciiChars / name.length < 0.8) return false;
-  const lower = name.toLowerCase();
-  return queryWords.some(w => lower.includes(w));
+  if (asciiChars / name.length < 0.85) return false;
+  return nameMatchesQuery(name, queryWords);
 }
 
 function mapOffProduct(p) {
@@ -194,10 +269,23 @@ function mapOffProduct(p) {
   }
   servings.push({ label: `100${unit}`, grams: 100 });
 
+  // OFF stores sodium in grams; convert to mg to match NZFCD.
+  const sodiumG = n['sodium_100g'];
+  const sodiumMg = typeof sodiumG === 'number' ? sodiumG * 1000 : null;
+
   return {
     name,
     brand,
-    per100g: { calories: r1(cal), protein: r1(protein), fat: r1(fat), carbs: r1(carbs) },
+    per100g: {
+      calories: r1(cal),
+      protein: r1(protein),
+      fat: r1(fat),
+      carbs: r1(carbs),
+      fiber:  typeof n['fiber_100g'] === 'number' ? r1(n['fiber_100g']) : null,
+      sugar:  typeof n['sugars_100g'] === 'number' ? r1(n['sugars_100g']) : null,
+      satFat: typeof n['saturated-fat_100g'] === 'number' ? r1(n['saturated-fat_100g']) : null,
+      sodium: sodiumMg != null ? r1(sodiumMg) : null,
+    },
     defaultServing,
     servingUnit: unit,
     servings,
@@ -287,16 +375,23 @@ router.get('/search', async (req, res) => {
     const staples = findStaples(q);
     const nzfcd = searchNzfcd(q);
 
+    // Re-apply relevance check to cached network results too — older
+    // cache entries pre-date the filter and can contain Korean noodles,
+    // French biscuits, etc. Defensive re-filtering on read is cheap and
+    // means bad data gets weeded out even without cache invalidation.
+    const queryWords = q.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+    const filterCached = arr => (arr || []).filter(p => isRelevant(p.name, queryWords));
+
     // L1: in-memory (network results only)
     if (memCache.has(key)) {
-      return res.json({ products: merge(staples, nzfcd, memCache.get(key)), cached: 'mem' });
+      return res.json({ products: merge(staples, nzfcd, filterCached(memCache.get(key))), cached: 'mem' });
     }
 
     // L2: Postgres (network results only)
     const cached = await req.prisma.foodSearchCache.findUnique({ where: { query: key } }).catch(() => null);
     if (cached) {
       memSet(key, cached.results);
-      return res.json({ products: merge(staples, nzfcd, cached.results), cached: 'db' });
+      return res.json({ products: merge(staples, nzfcd, filterCached(cached.results)), cached: 'db' });
     }
 
     // If we already have 5+ in-memory hits, skip the network entirely.

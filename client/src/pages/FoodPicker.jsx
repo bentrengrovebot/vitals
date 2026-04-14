@@ -79,6 +79,10 @@ export default function FoodPicker({ slot, date, onBack }) {
         proteinG: item.protein ?? item.proteinG ?? 0,
         fatG: item.fat ?? item.fatG ?? 0,
         carbsG: item.carbs ?? item.carbsG ?? 0,
+        fiberG: item.fiber ?? item.fiberG ?? null,
+        satFatG: item.satFat ?? item.satFatG ?? null,
+        sugarG: item.sugar ?? item.sugarG ?? null,
+        sodiumMg: item.sodium ?? item.sodiumMg ?? null,
       });
       onBack();
     } catch (err) {
@@ -96,13 +100,20 @@ export default function FoodPicker({ slot, date, onBack }) {
     if (!selectedFood) return;
     const g = parseFloat(grams) || 100;
     const mult = g / 100;
+    const unit = selectedFood.servingUnit || 'g';
+    const p = selectedFood.per100g;
+    const scale = v => v == null ? null : r1(v * mult);
     addItem({
       name: `${selectedFood.name}${selectedFood.brand ? ` (${selectedFood.brand})` : ''}`,
-      portion: `${g}g`,
-      cal: r1(selectedFood.per100g.calories * mult),
-      protein: r1(selectedFood.per100g.protein * mult),
-      fat: r1(selectedFood.per100g.fat * mult),
-      carbs: r1(selectedFood.per100g.carbs * mult),
+      portion: `${g}${unit}`,
+      cal: scale(p.calories),
+      protein: scale(p.protein),
+      fat: scale(p.fat),
+      carbs: scale(p.carbs),
+      fiber: scale(p.fiber),
+      satFat: scale(p.satFat),
+      sugar: scale(p.sugar),
+      sodium: scale(p.sodium),
     });
   }
 
@@ -135,20 +146,23 @@ export default function FoodPicker({ slot, date, onBack }) {
             <div style={{ fontSize: 15, fontWeight: 600, color: '#1a1a1a', marginBottom: 2 }}>{selectedFood.name}</div>
             {selectedFood.brand && <div style={{ fontSize: 12, color: t2, marginBottom: 10 }}>{selectedFood.brand}</div>}
             <div style={{ fontSize: 11, color: t2, marginBottom: 12 }}>
-              Per 100g: {selectedFood.per100g.calories} cal · {selectedFood.per100g.protein}g P · {selectedFood.per100g.fat}g F · {selectedFood.per100g.carbs}g C
+              Per 100{selectedFood.servingUnit || 'g'}: {selectedFood.per100g.calories} cal · {selectedFood.per100g.protein}g P · {selectedFood.per100g.fat}g F · {selectedFood.per100g.carbs}g C
             </div>
             <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
               <div style={{ flex: 1 }}>
-                <label style={{ fontSize: 10, fontWeight: 600, color: t2, textTransform: 'uppercase', letterSpacing: 1 }}>Grams</label>
+                <label style={{ fontSize: 10, fontWeight: 600, color: t2, textTransform: 'uppercase', letterSpacing: 1 }}>{selectedFood.servingUnit === 'ml' ? 'ml' : 'Grams'}</label>
                 <input type="number" value={grams} onChange={e => setGrams(e.target.value)} style={{ ...inp, marginTop: 4 }} />
               </div>
               <div style={{ flex: 1.5, display: 'flex', flexWrap: 'wrap', gap: 4, alignContent: 'flex-end' }}>
                 {(selectedFood.servings || []).map((s, i) => (
                   <button key={i} onClick={() => setGrams(String(s.grams))} style={{ padding: '6px 10px', borderRadius: 8, border: `1px solid ${brd}`, background: grams === String(s.grams) ? ac + '14' : '#f5f5f5', color: grams === String(s.grams) ? ac : t2, fontSize: 10, fontWeight: 600 }}>{s.label}</button>
                 ))}
-                {(!selectedFood.servings || !selectedFood.servings.length) && [50, 100, 150, 200].map(g => (
-                  <button key={g} onClick={() => setGrams(String(g))} style={{ padding: '6px 10px', borderRadius: 8, border: `1px solid ${brd}`, background: grams === String(g) ? ac + '14' : '#f5f5f5', color: grams === String(g) ? ac : t2, fontSize: 10, fontWeight: 600 }}>{g}g</button>
-                ))}
+                {(!selectedFood.servings || !selectedFood.servings.length) && [50, 100, 150, 200].map(g => {
+                  const unit = selectedFood.servingUnit || 'g';
+                  return (
+                    <button key={g} onClick={() => setGrams(String(g))} style={{ padding: '6px 10px', borderRadius: 8, border: `1px solid ${brd}`, background: grams === String(g) ? ac + '14' : '#f5f5f5', color: grams === String(g) ? ac : t2, fontSize: 10, fontWeight: 600 }}>{g}{unit}</button>
+                  );
+                })}
               </div>
             </div>
             {/* Preview with selected grams */}

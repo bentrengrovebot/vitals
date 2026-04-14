@@ -110,10 +110,12 @@ export default function Diary({ openPicker, goTo }) {
   }
 
   // Totals
-  const tot = { cal: 0, protein: 0, fat: 0, carbs: 0 };
+  const tot = { cal: 0, protein: 0, fat: 0, carbs: 0, fiber: 0, satFat: 0, sugar: 0, sodium: 0 };
   SLOTS.forEach(sl => (diary[sl] || []).forEach(i => {
     tot.cal += i.calories || 0; tot.protein += i.proteinG || 0;
     tot.fat += i.fatG || 0; tot.carbs += i.carbsG || 0;
+    tot.fiber += i.fiberG || 0; tot.satFat += i.satFatG || 0;
+    tot.sugar += i.sugarG || 0; tot.sodium += i.sodiumMg || 0;
   }));
   Object.keys(tot).forEach(k => tot[k] = r1(tot[k]));
 
@@ -363,7 +365,7 @@ export default function Diary({ openPicker, goTo }) {
       </div>
 
       {/* Macro Summary Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 20px 10px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 20px 4px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
           <div style={{ width: 7, height: 7, borderRadius: 4, background: CAL }} />
           <span style={{ fontSize: 14, fontWeight: 700, color: CAL }}>{tot.cal}</span>
@@ -381,6 +383,27 @@ export default function Diary({ openPicker, goTo }) {
           <span style={{ fontSize: 14, fontWeight: 700, color: CARB }}>{tot.carbs}</span>
           <span style={{ fontSize: 12, color: t3 }}>/{goals.carbsG}C</span>
         </div>
+      </div>
+
+      {/* Extended nutrients — fiber, sat fat, sugar, sodium. Colour satFat
+          red when over goal (apoB/CV flag); fiber green when on target. */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 20px 10px', fontSize: 11, color: t2 }}>
+        <span>
+          <span style={{ fontWeight: 700, color: tot.fiber >= (goals.fiberG || 30) ? '#22c55e' : t1 }}>Fib {tot.fiber}</span>
+          <span style={{ color: t3 }}>/{goals.fiberG || 30}g</span>
+        </span>
+        <span>
+          <span style={{ fontWeight: 700, color: tot.satFat > (goals.satFatG || 15) ? '#ef4444' : t1 }}>SFa {tot.satFat}</span>
+          <span style={{ color: t3 }}>/{goals.satFatG || 15}g</span>
+        </span>
+        <span>
+          <span style={{ fontWeight: 700, color: tot.sugar > (goals.sugarG || 25) ? '#ef4444' : t1 }}>Sug {tot.sugar}</span>
+          <span style={{ color: t3 }}>/{goals.sugarG || 25}g</span>
+        </span>
+        <span>
+          <span style={{ fontWeight: 700, color: tot.sodium > (goals.sodiumMg || 2300) ? '#ef4444' : t1 }}>Na {tot.sodium}</span>
+          <span style={{ color: t3 }}>/{goals.sodiumMg || 2300}mg</span>
+        </span>
       </div>
 
       {/* Meal Cards */}
