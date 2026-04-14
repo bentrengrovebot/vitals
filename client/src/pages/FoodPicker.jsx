@@ -145,9 +145,17 @@ export default function FoodPicker({ slot, date, onBack }) {
           <div style={{ background: '#ffffff', border: '1px solid #e5e5e7', borderRadius: 14, padding: 18, marginBottom: 16 }}>
             <div style={{ fontSize: 15, fontWeight: 600, color: '#1a1a1a', marginBottom: 2 }}>{selectedFood.name}</div>
             {selectedFood.brand && <div style={{ fontSize: 12, color: t2, marginBottom: 10 }}>{selectedFood.brand}</div>}
-            <div style={{ fontSize: 11, color: t2, marginBottom: 12 }}>
+            <div style={{ fontSize: 11, color: t2, marginBottom: 4 }}>
               Per 100{selectedFood.servingUnit || 'g'}: {selectedFood.per100g.calories} cal · {selectedFood.per100g.protein}g P · {selectedFood.per100g.fat}g F · {selectedFood.per100g.carbs}g C
             </div>
+            {(selectedFood.per100g.fiber != null || selectedFood.per100g.satFat != null || selectedFood.per100g.sugar != null || selectedFood.per100g.sodium != null) && (
+              <div style={{ fontSize: 10, color: t3, marginBottom: 12 }}>
+                {selectedFood.per100g.fiber != null && <>Fibre {selectedFood.per100g.fiber}g · </>}
+                {selectedFood.per100g.satFat != null && <>Sat fat {selectedFood.per100g.satFat}g · </>}
+                {selectedFood.per100g.sugar != null && <>Sugar {selectedFood.per100g.sugar}g · </>}
+                {selectedFood.per100g.sodium != null && <>Sodium {selectedFood.per100g.sodium}mg</>}
+              </div>
+            )}
             <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
               <div style={{ flex: 1 }}>
                 <label style={{ fontSize: 10, fontWeight: 600, color: t2, textTransform: 'uppercase', letterSpacing: 1 }}>{selectedFood.servingUnit === 'ml' ? 'ml' : 'Grams'}</label>
@@ -165,16 +173,29 @@ export default function FoodPicker({ slot, date, onBack }) {
                 })}
               </div>
             </div>
-            {/* Preview with selected grams */}
+            {/* Preview with selected grams — main macros + extended nutrients */}
             {(() => {
               const g = parseFloat(grams) || 100;
               const mult = g / 100;
+              const p = selectedFood.per100g;
+              const scale = v => v == null ? null : r1(v * mult);
+              const hasExtras = p.fiber != null || p.satFat != null || p.sugar != null || p.sodium != null;
               return (
-                <div style={{ background: '#f0f0f2', borderRadius: 10, padding: '10px 14px', marginBottom: 12, display: 'flex', justifyContent: 'space-around' }}>
-                  <div style={{ textAlign: 'center' }}><div style={{ fontSize: 18, fontWeight: 700, color: '#1a1a1a' }}>{r1(selectedFood.per100g.calories * mult)}</div><div style={{ fontSize: 9, color: t2, textTransform: 'uppercase', letterSpacing: 0.5 }}>cal</div></div>
-                  <div style={{ textAlign: 'center' }}><div style={{ fontSize: 18, fontWeight: 700, color: '#e0a526' }}>{r1(selectedFood.per100g.protein * mult)}</div><div style={{ fontSize: 9, color: t2, textTransform: 'uppercase', letterSpacing: 0.5 }}>protein</div></div>
-                  <div style={{ textAlign: 'center' }}><div style={{ fontSize: 18, fontWeight: 700, color: '#E53935' }}>{r1(selectedFood.per100g.fat * mult)}</div><div style={{ fontSize: 9, color: t2, textTransform: 'uppercase', letterSpacing: 0.5 }}>fat</div></div>
-                  <div style={{ textAlign: 'center' }}><div style={{ fontSize: 18, fontWeight: 700, color: '#8b5ef6' }}>{r1(selectedFood.per100g.carbs * mult)}</div><div style={{ fontSize: 9, color: t2, textTransform: 'uppercase', letterSpacing: 0.5 }}>carbs</div></div>
+                <div style={{ background: '#f0f0f2', borderRadius: 10, padding: '10px 14px', marginBottom: 12 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-around' }}>
+                    <div style={{ textAlign: 'center' }}><div style={{ fontSize: 18, fontWeight: 700, color: '#1a1a1a' }}>{scale(p.calories)}</div><div style={{ fontSize: 9, color: t2, textTransform: 'uppercase', letterSpacing: 0.5 }}>cal</div></div>
+                    <div style={{ textAlign: 'center' }}><div style={{ fontSize: 18, fontWeight: 700, color: '#e0a526' }}>{scale(p.protein)}</div><div style={{ fontSize: 9, color: t2, textTransform: 'uppercase', letterSpacing: 0.5 }}>protein</div></div>
+                    <div style={{ textAlign: 'center' }}><div style={{ fontSize: 18, fontWeight: 700, color: '#E53935' }}>{scale(p.fat)}</div><div style={{ fontSize: 9, color: t2, textTransform: 'uppercase', letterSpacing: 0.5 }}>fat</div></div>
+                    <div style={{ textAlign: 'center' }}><div style={{ fontSize: 18, fontWeight: 700, color: '#8b5ef6' }}>{scale(p.carbs)}</div><div style={{ fontSize: 9, color: t2, textTransform: 'uppercase', letterSpacing: 0.5 }}>carbs</div></div>
+                  </div>
+                  {hasExtras && (
+                    <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: 8, paddingTop: 8, borderTop: '1px solid #d8d8dc' }}>
+                      <div style={{ textAlign: 'center' }}><div style={{ fontSize: 13, fontWeight: 600, color: '#1a1a1a' }}>{scale(p.fiber) ?? '–'}</div><div style={{ fontSize: 9, color: t2, textTransform: 'uppercase', letterSpacing: 0.5 }}>fibre</div></div>
+                      <div style={{ textAlign: 'center' }}><div style={{ fontSize: 13, fontWeight: 600, color: '#1a1a1a' }}>{scale(p.satFat) ?? '–'}</div><div style={{ fontSize: 9, color: t2, textTransform: 'uppercase', letterSpacing: 0.5 }}>sat fat</div></div>
+                      <div style={{ textAlign: 'center' }}><div style={{ fontSize: 13, fontWeight: 600, color: '#1a1a1a' }}>{scale(p.sugar) ?? '–'}</div><div style={{ fontSize: 9, color: t2, textTransform: 'uppercase', letterSpacing: 0.5 }}>sugar</div></div>
+                      <div style={{ textAlign: 'center' }}><div style={{ fontSize: 13, fontWeight: 600, color: '#1a1a1a' }}>{scale(p.sodium) ?? '–'}</div><div style={{ fontSize: 9, color: t2, textTransform: 'uppercase', letterSpacing: 0.5 }}>sodium</div></div>
+                    </div>
+                  )}
                 </div>
               );
             })()}
