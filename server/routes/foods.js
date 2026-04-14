@@ -184,7 +184,9 @@ const STAPLES = [
   { name: 'Egg, whole',                keywords: ['egg', 'eggs'],                     per100g: { calories: 143, protein: 13,   fat: 10,   carbs: 0.7 }, defaultServing: 50,  servingUnit: 'g', servings: [{ label: '1 large egg (50g)', grams: 50 }, { label: '2 eggs (100g)', grams: 100 }, { label: '3 eggs (150g)', grams: 150 }] },
   { name: 'Egg white',                 keywords: ['egg', 'white'],                    per100g: { calories: 52,  protein: 11,   fat: 0.2,  carbs: 0.7 }, defaultServing: 33,  servingUnit: 'g', servings: [{ label: '1 white (33g)', grams: 33 }, { label: '100g', grams: 100 }] },
   { name: 'Cottage cheese, low fat',   keywords: ['cottage', 'cheese'],               per100g: { calories: 72,  protein: 12,   fat: 1,    carbs: 3.4 }, defaultServing: 200, servingUnit: 'g', servings: [{ label: '200g tub', grams: 200 }, { label: '100g', grams: 100 }] },
-  { name: 'Greek yoghurt, plain',      keywords: ['greek', 'yoghurt', 'yogurt'],      per100g: { calories: 59,  protein: 10,   fat: 0.4,  carbs: 3.6 }, defaultServing: 170, servingUnit: 'g', servings: [{ label: '1 pot (170g)', grams: 170 }, { label: '100g', grams: 100 }] },
+  { name: 'Greek yoghurt, plain, low-fat', keywords: ['greek', 'yoghurt', 'yogurt'],  per100g: { calories: 59,  protein: 10,   fat: 0.4,  carbs: 3.6 }, defaultServing: 170, servingUnit: 'g', servings: [{ label: '1 pot (170g)', grams: 170 }, { label: '100g', grams: 100 }] },
+  { name: 'Greek yoghurt, plain, full-fat', keywords: ['greek', 'yoghurt', 'yogurt'], per100g: { calories: 97,  protein: 9,    fat: 5,    carbs: 3.6 }, defaultServing: 170, servingUnit: 'g', servings: [{ label: '1 pot (170g)', grams: 170 }, { label: '100g', grams: 100 }] },
+  { name: 'Skyr / high-protein yoghurt',keywords: ['skyr', 'yoghurt', 'yogurt', 'protein'], per100g: { calories: 63,  protein: 11,   fat: 0.2,  carbs: 4   }, defaultServing: 170, servingUnit: 'g', servings: [{ label: '1 pot (170g)', grams: 170 }, { label: '100g', grams: 100 }] },
   { name: 'Whey protein isolate',      keywords: ['whey', 'protein', 'isolate'],      per100g: { calories: 373, protein: 88,   fat: 1,    carbs: 3   }, defaultServing: 30,  servingUnit: 'g', servings: [{ label: '1 scoop (30g)', grams: 30 }, { label: '2 scoops (60g)', grams: 60 }, { label: '40g', grams: 40 }] },
 
   // Carbs
@@ -219,6 +221,15 @@ const STAPLES = [
   { name: 'Peanut butter, natural',    keywords: ['peanut', 'butter'],                per100g: { calories: 588, protein: 25,   fat: 50,   carbs: 20  }, defaultServing: 16,  servingUnit: 'g', servings: [{ label: '1 tbsp (16g)', grams: 16 }, { label: '2 tbsp (32g)', grams: 32 }] },
   { name: 'Olive oil',                 keywords: ['olive', 'oil'],                    per100g: { calories: 884, protein: 0,    fat: 100,  carbs: 0   }, defaultServing: 14,  servingUnit: 'g', servings: [{ label: '1 tsp (4.5g)', grams: 4.5 }, { label: '1 tbsp (14g)', grams: 14 }] },
   { name: 'Butter',                    keywords: ['butter'],                          per100g: { calories: 717, protein: 0.9,  fat: 81,   carbs: 0.1 }, defaultServing: 14,  servingUnit: 'g', servings: [{ label: '1 tsp (5g)', grams: 5 }, { label: '1 tbsp (14g)', grams: 14 }] },
+  { name: 'Cashews, roasted, salted',  keywords: ['cashew', 'cashews'],               per100g: { calories: 574, protein: 15,   fat: 46,   carbs: 33  }, defaultServing: 30,  servingUnit: 'g', servings: [{ label: '15 nuts (20g)', grams: 20 }, { label: '1 handful (30g)', grams: 30 }, { label: '¼ cup (35g)', grams: 35 }] },
+  { name: 'Cashews, roasted, unsalted',keywords: ['cashew', 'cashews'],               per100g: { calories: 574, protein: 15,   fat: 46,   carbs: 33  }, defaultServing: 30,  servingUnit: 'g', servings: [{ label: '15 nuts (20g)', grams: 20 }, { label: '1 handful (30g)', grams: 30 }, { label: '¼ cup (35g)', grams: 35 }] },
+  { name: 'Macadamias, raw',           keywords: ['macadamia', 'macadamias'],         per100g: { calories: 718, protein: 7.9,  fat: 76,   carbs: 14  }, defaultServing: 30,  servingUnit: 'g', servings: [{ label: '10 nuts (18g)', grams: 18 }, { label: '1 handful (30g)', grams: 30 }] },
+  { name: 'Walnuts, raw',              keywords: ['walnut', 'walnuts'],               per100g: { calories: 654, protein: 15,   fat: 65,   carbs: 14  }, defaultServing: 30,  servingUnit: 'g', servings: [{ label: '14 halves (30g)', grams: 30 }, { label: '1 handful (30g)', grams: 30 }] },
+  { name: 'Brazil nuts, raw',          keywords: ['brazil'],                          per100g: { calories: 659, protein: 14,   fat: 67,   carbs: 12  }, defaultServing: 30,  servingUnit: 'g', servings: [{ label: '6 nuts (30g)', grams: 30 }, { label: '1 handful (30g)', grams: 30 }] },
+  { name: 'Pumpkin seeds (pepitas), raw', keywords: ['pumpkin', 'seed', 'seeds', 'pepitas'], per100g: { calories: 559, protein: 30, fat: 49, carbs: 11 }, defaultServing: 30, servingUnit: 'g', servings: [{ label: '1 tbsp (10g)', grams: 10 }, { label: '1 handful (30g)', grams: 30 }, { label: '¼ cup (32g)', grams: 32 }] },
+  { name: 'Sunflower seeds, raw',      keywords: ['sunflower', 'seed', 'seeds'],      per100g: { calories: 584, protein: 21,   fat: 51,   carbs: 20  }, defaultServing: 30,  servingUnit: 'g', servings: [{ label: '1 tbsp (9g)', grams: 9 }, { label: '1 handful (30g)', grams: 30 }] },
+  { name: 'Chia seeds, dry',           keywords: ['chia', 'seed', 'seeds'],           per100g: { calories: 486, protein: 17,   fat: 31,   carbs: 42  }, defaultServing: 12,  servingUnit: 'g', servings: [{ label: '1 tbsp (12g)', grams: 12 }, { label: '2 tbsp (24g)', grams: 24 }] },
+  { name: 'Flaxseed (linseed), ground',keywords: ['flax', 'flaxseed', 'linseed'],     per100g: { calories: 534, protein: 18,   fat: 42,   carbs: 29  }, defaultServing: 10,  servingUnit: 'g', servings: [{ label: '1 tbsp (10g)', grams: 10 }, { label: '2 tbsp (20g)', grams: 20 }] },
 
   // Dairy & drinks
   { name: 'Whole milk (blue top)',     keywords: ['milk', 'whole', 'blue'],           per100g: { calories: 61,  protein: 3.2,  fat: 3.3,  carbs: 4.8 }, defaultServing: 250, servingUnit: 'ml', servings: [{ label: '1 glass (250ml)', grams: 250 }, { label: '1 cup (240ml)', grams: 240 }, { label: '100ml', grams: 100 }] },
@@ -226,6 +237,15 @@ const STAPLES = [
   { name: 'Black coffee',              keywords: ['coffee', 'espresso', 'americano', 'long', 'black'], per100g: { calories: 2,   protein: 0.3,  fat: 0,    carbs: 0   }, defaultServing: 240, servingUnit: 'ml', servings: [{ label: '1 espresso (30ml)', grams: 30 }, { label: '1 long black (150ml)', grams: 150 }, { label: '1 mug (240ml)', grams: 240 }] },
   { name: 'Flat white (trim milk)',    keywords: ['coffee', 'flat', 'white'],         per100g: { calories: 45,  protein: 2.5,  fat: 1.5,  carbs: 4.5 }, defaultServing: 230, servingUnit: 'ml', servings: [{ label: '1 small (180ml)', grams: 180 }, { label: '1 regular (230ml)', grams: 230 }] },
   { name: 'Tea, black (no milk)',      keywords: ['tea'],                             per100g: { calories: 1,   protein: 0,    fat: 0,    carbs: 0.3 }, defaultServing: 240, servingUnit: 'ml', servings: [{ label: '1 mug (240ml)', grams: 240 }] },
+
+  // Cheeses
+  { name: 'Tasty cheddar',             keywords: ['tasty', 'cheddar', 'cheese'],      per100g: { calories: 402, protein: 25,   fat: 33,   carbs: 0.5 }, defaultServing: 20,  servingUnit: 'g', servings: [{ label: '1 slice (20g)', grams: 20 }, { label: '1 cube (20g)', grams: 20 }, { label: '1 match (30g)', grams: 30 }] },
+  { name: 'Edam cheese',               keywords: ['edam', 'cheese'],                  per100g: { calories: 357, protein: 25,   fat: 28,   carbs: 1.4 }, defaultServing: 20,  servingUnit: 'g', servings: [{ label: '1 slice (20g)', grams: 20 }, { label: '1 cube (20g)', grams: 20 }] },
+  { name: 'Feta cheese',               keywords: ['feta', 'cheese'],                  per100g: { calories: 264, protein: 14,   fat: 21,   carbs: 4   }, defaultServing: 30,  servingUnit: 'g', servings: [{ label: '1 cube (30g)', grams: 30 }, { label: '¼ cup crumbled (38g)', grams: 38 }] },
+  { name: 'Haloumi cheese',            keywords: ['haloumi', 'halloumi', 'cheese'],   per100g: { calories: 321, protein: 21,   fat: 26,   carbs: 2   }, defaultServing: 50,  servingUnit: 'g', servings: [{ label: '1 slice (25g)', grams: 25 }, { label: '2 slices (50g)', grams: 50 }, { label: '3 slices (75g)', grams: 75 }] },
+  { name: 'Parmesan cheese',           keywords: ['parmesan', 'cheese'],              per100g: { calories: 431, protein: 38,   fat: 29,   carbs: 4   }, defaultServing: 25,  servingUnit: 'g', servings: [{ label: '1 tbsp grated (5g)', grams: 5 }, { label: '¼ cup grated (25g)', grams: 25 }] },
+  { name: 'Cream cheese',              keywords: ['cream', 'cheese'],                 per100g: { calories: 342, protein: 6,    fat: 34,   carbs: 4   }, defaultServing: 30,  servingUnit: 'g', servings: [{ label: '1 tbsp (15g)', grams: 15 }, { label: '2 tbsp (30g)', grams: 30 }] },
+  { name: 'Mozzarella',                keywords: ['mozzarella', 'cheese'],            per100g: { calories: 280, protein: 28,   fat: 17,   carbs: 3.1 }, defaultServing: 30,  servingUnit: 'g', servings: [{ label: '1 slice (30g)', grams: 30 }, { label: '50g', grams: 50 }] },
 ];
 
 // Micronutrient values for staples, per 100g/100ml.
@@ -284,7 +304,9 @@ const STAPLE_MICROS = {
   'Egg, whole':                           { fiber: 0,   sugar: 0.7, satFat: 3.1,  sodium: 142 },
   'Egg white':                            { fiber: 0,   sugar: 0.7, satFat: 0,    sodium: 166 },
   'Cottage cheese, low fat':              { fiber: 0,   sugar: 3.4, satFat: 0.6,  sodium: 330 },
-  'Greek yoghurt, plain':                 { fiber: 0,   sugar: 3.6, satFat: 0.3,  sodium: 36  },
+  'Greek yoghurt, plain, low-fat':        { fiber: 0,   sugar: 3.6, satFat: 0.3,  sodium: 36  },
+  'Greek yoghurt, plain, full-fat':       { fiber: 0,   sugar: 3.6, satFat: 3.2,  sodium: 36  },
+  'Skyr / high-protein yoghurt':          { fiber: 0,   sugar: 4,   satFat: 0.1,  sodium: 55  },
   'Whey protein isolate':                 { fiber: 0,   sugar: 3,   satFat: 0.5,  sodium: 180 },
   // Carbs
   'White rice, cooked':                   { fiber: 0.4, sugar: 0.1, satFat: 0.1,  sodium: 1   },
@@ -321,6 +343,24 @@ const STAPLE_MICROS = {
   'Black coffee':                         { fiber: 0,   sugar: 0,   satFat: 0,    sodium: 2   },
   'Flat white (trim milk)':               { fiber: 0,   sugar: 4.5, satFat: 1,    sodium: 42  },
   'Tea, black (no milk)':                 { fiber: 0,   sugar: 0,   satFat: 0,    sodium: 3   },
+  // Nuts & seeds
+  'Cashews, roasted, salted':             { fiber: 3,   sugar: 5,   satFat: 8,    sodium: 350 },
+  'Cashews, roasted, unsalted':           { fiber: 3,   sugar: 5,   satFat: 8,    sodium: 16  },
+  'Macadamias, raw':                      { fiber: 8.6, sugar: 4.6, satFat: 12,   sodium: 5   },
+  'Walnuts, raw':                         { fiber: 6.7, sugar: 2.6, satFat: 6,    sodium: 2   },
+  'Brazil nuts, raw':                     { fiber: 7.5, sugar: 2.3, satFat: 15,   sodium: 3   },
+  'Pumpkin seeds (pepitas), raw':         { fiber: 6,   sugar: 1.4, satFat: 8.7,  sodium: 7   },
+  'Sunflower seeds, raw':                 { fiber: 8.6, sugar: 2.6, satFat: 4.5,  sodium: 9   },
+  'Chia seeds, dry':                      { fiber: 34,  sugar: 0,   satFat: 3.3,  sodium: 16  },
+  'Flaxseed (linseed), ground':           { fiber: 27,  sugar: 1.5, satFat: 3.7,  sodium: 30  },
+  // Cheeses
+  'Tasty cheddar':                        { fiber: 0,   sugar: 0.5, satFat: 20,   sodium: 725 },
+  'Edam cheese':                          { fiber: 0,   sugar: 1.4, satFat: 18,   sodium: 819 },
+  'Feta cheese':                          { fiber: 0,   sugar: 4,   satFat: 14,   sodium: 917 },
+  'Haloumi cheese':                       { fiber: 0,   sugar: 2,   satFat: 16,   sodium: 1000 },
+  'Parmesan cheese':                      { fiber: 0,   sugar: 0.9, satFat: 19,   sodium: 1600 },
+  'Cream cheese':                         { fiber: 0,   sugar: 3.2, satFat: 20,   sodium: 321 },
+  'Mozzarella':                           { fiber: 0,   sugar: 1.1, satFat: 10,   sodium: 627 },
 };
 
 function augmentStaple(s) {
