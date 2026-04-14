@@ -121,6 +121,15 @@ model CustomFood {
   createdAt   DateTime @default(now())
 }
 
+model FoodSearchCache {
+  id        String   @id @default(cuid())
+  query     String   @unique
+  source    String
+  results   Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model WaterLog {
   id        String   @id @default(cuid())
   userId    String
