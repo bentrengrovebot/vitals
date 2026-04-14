@@ -1,4 +1,7 @@
 import { Router } from 'express';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import Anthropic from '@anthropic-ai/sdk';
 import { authMiddleware } from '../middleware/auth.js';
 
@@ -21,6 +24,69 @@ function memSet(key, products) {
     memCache.delete(memCache.keys().next().value);
   }
   memCache.set(key, products);
+}
+
+// ----- NZ Food Composition Database --------------------------------------
+// Parsed from the Concise NZ Food Composition Tables 14th Ed 2021.
+// 1,278 foods, NZ-accurate macros + fibre/satFat/sodium/sugar. Loaded
+// once at module init — trivial memory cost (~600KB), zero network.
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const NZFCD_PATH = path.resolve(__dirname, '..', '..', 'data', 'nzfcd.json');
+let NZFCD = [];
+try {
+  NZFCD = JSON.parse(fs.readFileSync(NZFCD_PATH, 'utf8'));
+  console.log(`Loaded NZFCD: ${NZFCD.length} foods`);
+} catch (err) {
+  console.warn('NZFCD not loaded:', err.message);
+}
+
+function mapNzfcd(f) {
+  const hasMl = f.servings.some(s => /\bml\b|\bmL\b|\bL\b|litre|liter/i.test(s.label));
+  return {
+    name: f.name,
+    brand: '',
+    per100g: {
+      calories: f.per100g.calories,
+      protein: f.per100g.protein,
+      fat: f.per100g.fat,
+      carbs: f.per100g.carbs,
+      // Extra nutrients — the client doesn't render these yet, but we
+      // ship them so DiaryEntry can capture them once the schema expands.
+      fiber: f.per100g.fiber,
+      sugar: f.per100g.sugar,
+      satFat: f.per100g.satFat,
+      sodium: f.per100g.sodium,
+    },
+    defaultServing: 100,
+    servingUnit: hasMl ? 'ml' : 'g',
+    servings: f.servings,
+    source: 'nzfcd',
+  };
+}
+
+// Rank by simplicity (shorter names are more generic) and whether the
+// first query word prefixes the name (exact hits win).
+function searchNzfcd(q) {
+  const words = q.toLowerCase().split(/\s+/).filter(w => w.length >= 2);
+  if (!words.length || !NZFCD.length) return [];
+
+  const scored = [];
+  for (const f of NZFCD) {
+    const name = f.name.toLowerCase();
+    if (!words.every(w => name.includes(w))) continue;
+
+    let score = name.length / 10;
+    if (name.startsWith(words[0])) score -= 5;
+    // Penalize commercial/fast-food entries for unqualified queries —
+    // they're usually less useful than plain ingredients.
+    if (/®|™|kentucky fried|mcdonald/i.test(f.name)) score += 2;
+
+    scored.push({ food: f, score });
+  }
+
+  scored.sort((a, b) => a.score - b.score);
+  return scored.slice(0, 8).map(s => mapNzfcd(s.food));
 }
 
 // ----- Staples: whole foods that don't exist in OFF ----------------------
@@ -200,32 +266,51 @@ function merge(...lists) {
 // ----- Route -------------------------------------------------------------
 
 // GET /api/foods/search?q=chicken breast
+//
+// Lookup order (fastest first):
+//   1. STAPLES       — ~45 hand-curated whole foods (in-memory, instant)
+//   2. NZFCD         — 1,278 Concise NZ Food Composition Tables entries
+//                      (in-memory, instant, NZ-accurate with micros)
+//   3. memCache      — previous network results this process has seen
+//   4. Postgres cache — previous network results from any deploy
+//   5. Open Food Facts — ~3M branded products (network, ~400ms)
+//   6. Claude Haiku   — fallback for the long tail (network, ~2-3s)
+//
+// Staples + NZFCD are always computed fresh — they're code-owned data,
+// cheap to run, and shouldn't poison the network cache.
 router.get('/search', async (req, res) => {
   try {
     const { q } = req.query;
     if (!q || q.length < 2) return res.json({ products: [] });
 
     const key = normalize(q);
-    const staples = findStaples(q); // always computed fresh, never cached
+    const staples = findStaples(q);
+    const nzfcd = searchNzfcd(q);
 
-    // L1: in-memory
+    // L1: in-memory (network results only)
     if (memCache.has(key)) {
-      return res.json({ products: merge(staples, memCache.get(key)), cached: 'mem' });
+      return res.json({ products: merge(staples, nzfcd, memCache.get(key)), cached: 'mem' });
     }
 
-    // L2: Postgres
+    // L2: Postgres (network results only)
     const cached = await req.prisma.foodSearchCache.findUnique({ where: { query: key } }).catch(() => null);
     if (cached) {
       memSet(key, cached.results);
-      return res.json({ products: merge(staples, cached.results), cached: 'db' });
+      return res.json({ products: merge(staples, nzfcd, cached.results), cached: 'db' });
     }
 
-    // L3: Open Food Facts (fast, free)
+    // If we already have 5+ in-memory hits, skip the network entirely.
+    const localHits = staples.length + nzfcd.length;
+    if (localHits >= 5) {
+      return res.json({ products: merge(staples, nzfcd), source: 'local' });
+    }
+
+    // L3: Open Food Facts for the long-tail branded stuff NZFCD misses.
     let offResults = await searchOpenFoodFacts(q);
     let source = 'openfoodfacts';
 
-    // Fallback to Claude only when both staples and OFF are empty.
-    if (staples.length === 0 && offResults.length === 0) {
+    // Fallback to Claude only when nothing local OR OFF answered.
+    if (localHits === 0 && offResults.length === 0) {
       try {
         offResults = await searchClaude(q);
         source = 'claude';
@@ -235,7 +320,7 @@ router.get('/search', async (req, res) => {
       }
     }
 
-    // Cache the network half (staples are code-owned, don't re-cache them).
+    // Cache the network half (local sources are code-owned, don't re-cache).
     if (offResults.length > 0) {
       memSet(key, offResults);
       await req.prisma.foodSearchCache.upsert({
@@ -245,7 +330,7 @@ router.get('/search', async (req, res) => {
       }).catch(err => console.warn('Cache write failed:', err.message));
     }
 
-    res.json({ products: merge(staples, offResults), source });
+    res.json({ products: merge(staples, nzfcd, offResults), source });
   } catch (err) {
     console.error('Food search error:', err);
     res.status(500).json({ error: 'Search failed', products: [] });
