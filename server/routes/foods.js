@@ -41,8 +41,20 @@ try {
   console.warn('NZFCD not loaded:', err.message);
 }
 
+// Only true beverages should display as ml. NZFCD uses "1 cup (250 mL)"
+// as a measuring-spoon reference on solid foods too, so serving-label
+// matching flips solids to ml. Category is the reliable signal.
+function isBeverageCategory(cat) {
+  return /^BEVERAGES/i.test(cat || '');
+}
+
 function mapNzfcd(f) {
-  const hasMl = f.servings.some(s => /\bml\b|\bmL\b|\bL\b|litre|liter/i.test(s.label));
+  const beverage = isBeverageCategory(f.category);
+  // If it's a beverage, rewrite the default "100g" serving as "100ml"
+  // so the UI labels match the unit users actually think in.
+  const servings = beverage
+    ? f.servings.map(s => s.label === '100g' ? { label: '100ml', grams: 100 } : s)
+    : f.servings;
   return {
     name: f.name,
     brand: '',
@@ -51,16 +63,16 @@ function mapNzfcd(f) {
       protein: f.per100g.protein,
       fat: f.per100g.fat,
       carbs: f.per100g.carbs,
-      // Extra nutrients — the client doesn't render these yet, but we
-      // ship them so DiaryEntry can capture them once the schema expands.
+      // Extra nutrients — sat fat / fiber / sugar / sodium. Consumed by
+      // Diary's second macro row and DiaryEntry storage.
       fiber: f.per100g.fiber,
       sugar: f.per100g.sugar,
       satFat: f.per100g.satFat,
       sodium: f.per100g.sodium,
     },
     defaultServing: 100,
-    servingUnit: hasMl ? 'ml' : 'g',
-    servings: f.servings,
+    servingUnit: beverage ? 'ml' : 'g',
+    servings,
     source: 'nzfcd',
   };
 }
