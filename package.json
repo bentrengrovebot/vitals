@@ -7,9 +7,9 @@
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "node --watch server/index.js",
     "dev:client": "cd client && npm run dev",
-    "build": "prisma generate && cd client && npm install && npm run build",
+    "build": "prisma generate && cd client && npm install --include=dev && npm run build",
     "start": "node server/start.js",
-    "postinstall": "prisma generate && cd client && npm install"
+    "postinstall": "prisma generate && cd client && npm install --include=dev"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.86.1",
