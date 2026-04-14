@@ -160,6 +160,26 @@ const STAPLES = [
   { name: 'Snapper, cooked',                    keywords: ['snapper', 'fish'],                               per100g: { calories: 110, protein: 22,   fat: 2,    carbs: 0   }, defaultServing: 150, servingUnit: 'g', servings: [{ label: '1 fillet (150g)', grams: 150 }, { label: '100g', grams: 100 }] },
   { name: 'Prawns, cooked',                     keywords: ['prawns', 'shrimp'],                              per100g: { calories: 99,  protein: 24,   fat: 0.3,  carbs: 0.2 }, defaultServing: 100, servingUnit: 'g', servings: [{ label: '100g', grams: 100 }, { label: '150g', grams: 150 }] },
 
+  // Proteins — pork
+  { name: 'Pork mince, lean, raw',              keywords: ['pork', 'mince', 'ground'],                       per100g: { calories: 168, protein: 20,   fat: 10,   carbs: 0   }, defaultServing: 150, servingUnit: 'g', servings: [{ label: '1 handful (100g)', grams: 100 }, { label: '1 serve (150g)', grams: 150 }, { label: '1 pack (500g)', grams: 500 }] },
+  { name: 'Pork mince, lean, cooked',           keywords: ['pork', 'mince', 'ground'],                       per100g: { calories: 250, protein: 27,   fat: 15,   carbs: 0   }, defaultServing: 150, servingUnit: 'g', servings: [{ label: '1 handful (100g)', grams: 100 }, { label: '1 serve (150g)', grams: 150 }, { label: '1 cup (200g)', grams: 200 }] },
+  { name: 'Pork loin chop, lean, cooked',       keywords: ['pork', 'chop', 'loin'],                          per100g: { calories: 175, protein: 28,   fat: 7,    carbs: 0   }, defaultServing: 120, servingUnit: 'g', servings: [{ label: '1 small chop (100g)', grams: 100 }, { label: '1 medium chop (120g)', grams: 120 }, { label: '1 large chop (150g)', grams: 150 }] },
+  { name: 'Pork belly, cooked',                 keywords: ['pork', 'belly'],                                 per100g: { calories: 518, protein: 10,   fat: 53,   carbs: 0   }, defaultServing: 100, servingUnit: 'g', servings: [{ label: '1 small serve (80g)', grams: 80 }, { label: '1 serve (100g)', grams: 100 }, { label: '1 large serve (150g)', grams: 150 }] },
+  { name: 'Pork scotch fillet, cooked',         keywords: ['pork', 'scotch', 'fillet', 'shoulder'],          per100g: { calories: 223, protein: 24,   fat: 14,   carbs: 0   }, defaultServing: 150, servingUnit: 'g', servings: [{ label: '1 medium (150g)', grams: 150 }, { label: '1 large (200g)', grams: 200 }] },
+  { name: 'Pork fillet (tenderloin), cooked',   keywords: ['pork', 'fillet', 'tenderloin'],                  per100g: { calories: 143, protein: 26,   fat: 3.5,  carbs: 0   }, defaultServing: 150, servingUnit: 'g', servings: [{ label: '1 small (120g)', grams: 120 }, { label: '1 medium (150g)', grams: 150 }, { label: '1 large (200g)', grams: 200 }] },
+  { name: 'Bacon, middle rasher, cooked',       keywords: ['bacon', 'middle', 'streaky'],                    per100g: { calories: 320, protein: 28,   fat: 22,   carbs: 0   }, defaultServing: 50,  servingUnit: 'g', servings: [{ label: '1 rasher (25g)', grams: 25 }, { label: '2 rashers (50g)', grams: 50 }, { label: '3 rashers (75g)', grams: 75 }] },
+  { name: 'Bacon, shortcut, cooked',            keywords: ['bacon', 'shortcut', 'lean'],                     per100g: { calories: 180, protein: 26,   fat: 8,    carbs: 0   }, defaultServing: 50,  servingUnit: 'g', servings: [{ label: '1 rasher (25g)', grams: 25 }, { label: '2 rashers (50g)', grams: 50 }, { label: '3 rashers (75g)', grams: 75 }] },
+  { name: 'Ham, lean, sliced',                  keywords: ['ham'],                                           per100g: { calories: 107, protein: 17,   fat: 4,    carbs: 1   }, defaultServing: 45,  servingUnit: 'g', servings: [{ label: '1 slice (15g)', grams: 15 }, { label: '3 slices (45g)', grams: 45 }, { label: '5 slices (75g)', grams: 75 }] },
+
+  // Proteins — lamb
+  { name: 'Lamb mince, raw',                    keywords: ['lamb', 'mince', 'ground'],                       per100g: { calories: 235, protein: 17,   fat: 18,   carbs: 0   }, defaultServing: 150, servingUnit: 'g', servings: [{ label: '1 handful (100g)', grams: 100 }, { label: '1 serve (150g)', grams: 150 }, { label: '1 pack (500g)', grams: 500 }] },
+  { name: 'Lamb mince, cooked',                 keywords: ['lamb', 'mince', 'ground'],                       per100g: { calories: 282, protein: 25,   fat: 20,   carbs: 0   }, defaultServing: 150, servingUnit: 'g', servings: [{ label: '1 handful (100g)', grams: 100 }, { label: '1 serve (150g)', grams: 150 }, { label: '1 cup (200g)', grams: 200 }] },
+  { name: 'Lamb loin chop, cooked',             keywords: ['lamb', 'chop', 'loin'],                          per100g: { calories: 294, protein: 25,   fat: 21,   carbs: 0   }, defaultServing: 140, servingUnit: 'g', servings: [{ label: '1 chop (70g)', grams: 70 }, { label: '2 chops (140g)', grams: 140 }, { label: '3 chops (210g)', grams: 210 }] },
+  { name: 'Lamb rack, cooked',                  keywords: ['lamb', 'rack', 'cutlet'],                        per100g: { calories: 284, protein: 25,   fat: 20,   carbs: 0   }, defaultServing: 120, servingUnit: 'g', servings: [{ label: '1 cutlet (40g)', grams: 40 }, { label: '2 cutlets (80g)', grams: 80 }, { label: '3 cutlets (120g)', grams: 120 }] },
+  { name: 'Lamb leg, lean, cooked',             keywords: ['lamb', 'leg', 'roast'],                          per100g: { calories: 191, protein: 28,   fat: 8,    carbs: 0   }, defaultServing: 150, servingUnit: 'g', servings: [{ label: '1 small (100g)', grams: 100 }, { label: '1 serve (150g)', grams: 150 }, { label: '1 large (200g)', grams: 200 }] },
+  { name: 'Lamb shoulder, cooked',              keywords: ['lamb', 'shoulder'],                              per100g: { calories: 278, protein: 22,   fat: 21,   carbs: 0   }, defaultServing: 150, servingUnit: 'g', servings: [{ label: '1 serve (100g)', grams: 100 }, { label: '1 portion (150g)', grams: 150 }] },
+  { name: 'Lamb backstrap, cooked',             keywords: ['lamb', 'backstrap'],                             per100g: { calories: 180, protein: 30,   fat: 6,    carbs: 0   }, defaultServing: 150, servingUnit: 'g', servings: [{ label: '1 small (100g)', grams: 100 }, { label: '1 medium (150g)', grams: 150 }, { label: '1 large (200g)', grams: 200 }] },
+
   // Proteins — eggs, dairy, other
   { name: 'Egg, whole',                keywords: ['egg', 'eggs'],                     per100g: { calories: 143, protein: 13,   fat: 10,   carbs: 0.7 }, defaultServing: 50,  servingUnit: 'g', servings: [{ label: '1 large egg (50g)', grams: 50 }, { label: '2 eggs (100g)', grams: 100 }, { label: '3 eggs (150g)', grams: 150 }] },
   { name: 'Egg white',                 keywords: ['egg', 'white'],                    per100g: { calories: 52,  protein: 11,   fat: 0.2,  carbs: 0.7 }, defaultServing: 33,  servingUnit: 'g', servings: [{ label: '1 white (33g)', grams: 33 }, { label: '100g', grams: 100 }] },
@@ -242,6 +262,24 @@ const STAPLE_MICROS = {
   'Blue cod, cooked':                     { fiber: 0,   sugar: 0,   satFat: 0.2,  sodium: 90  },
   'Snapper, cooked':                      { fiber: 0,   sugar: 0,   satFat: 0.5,  sodium: 95  },
   'Prawns, cooked':                       { fiber: 0,   sugar: 0,   satFat: 0.1,  sodium: 160 },
+  // Pork
+  'Pork mince, lean, raw':                { fiber: 0,   sugar: 0,   satFat: 3.5,  sodium: 56  },
+  'Pork mince, lean, cooked':             { fiber: 0,   sugar: 0,   satFat: 5.5,  sodium: 75  },
+  'Pork loin chop, lean, cooked':         { fiber: 0,   sugar: 0,   satFat: 2.5,  sodium: 60  },
+  'Pork belly, cooked':                   { fiber: 0,   sugar: 0,   satFat: 19,   sodium: 32  },
+  'Pork scotch fillet, cooked':           { fiber: 0,   sugar: 0,   satFat: 5,    sodium: 64  },
+  'Pork fillet (tenderloin), cooked':     { fiber: 0,   sugar: 0,   satFat: 1.2,  sodium: 50  },
+  'Bacon, middle rasher, cooked':         { fiber: 0,   sugar: 0,   satFat: 7.5,  sodium: 1700 },
+  'Bacon, shortcut, cooked':              { fiber: 0,   sugar: 0,   satFat: 2.8,  sodium: 1500 },
+  'Ham, lean, sliced':                    { fiber: 0,   sugar: 0.6, satFat: 1.3,  sodium: 1200 },
+  // Lamb
+  'Lamb mince, raw':                      { fiber: 0,   sugar: 0,   satFat: 8,    sodium: 59  },
+  'Lamb mince, cooked':                   { fiber: 0,   sugar: 0,   satFat: 9,    sodium: 72  },
+  'Lamb loin chop, cooked':               { fiber: 0,   sugar: 0,   satFat: 9.5,  sodium: 70  },
+  'Lamb rack, cooked':                    { fiber: 0,   sugar: 0,   satFat: 9,    sodium: 72  },
+  'Lamb leg, lean, cooked':               { fiber: 0,   sugar: 0,   satFat: 3,    sodium: 64  },
+  'Lamb shoulder, cooked':                { fiber: 0,   sugar: 0,   satFat: 9,    sodium: 70  },
+  'Lamb backstrap, cooked':               { fiber: 0,   sugar: 0,   satFat: 2.5,  sodium: 55  },
   // Eggs & dairy
   'Egg, whole':                           { fiber: 0,   sugar: 0.7, satFat: 3.1,  sodium: 142 },
   'Egg white':                            { fiber: 0,   sugar: 0.7, satFat: 0,    sodium: 166 },
