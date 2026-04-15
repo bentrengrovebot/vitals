@@ -217,6 +217,7 @@ export default function Diary({ openPicker, goTo }) {
       proteinG: parseFloat(editFood.proteinG) || 0,
       fatG: parseFloat(editFood.fatG) || 0,
       carbsG: parseFloat(editFood.carbsG) || 0,
+      mealTime: editFood.mealTime || null,
     });
     setEditFood(null);
     const d = await api.getDiary(curDate);
@@ -336,6 +337,19 @@ export default function Diary({ openPicker, goTo }) {
                   <input type="number" value={editFood.carbsG} onChange={e => setEditFood(f => ({ ...f, carbsG: e.target.value }))} style={{ width: '100%', padding: '10px', borderRadius: 10, border: `1.5px solid ${brd}`, fontSize: 15, textAlign: 'center', boxSizing: 'border-box', color: t1 }} />
                 </div>
               </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: t2, textTransform: 'uppercase', letterSpacing: 1, minWidth: 60 }}>Eaten at</div>
+                <input type="time"
+                  value={editFood.mealTime ? new Date(editFood.mealTime).toLocaleTimeString('en-NZ', { hour: '2-digit', minute: '2-digit', hour12: false }) : ''}
+                  onChange={e => {
+                    const hhmm = e.target.value;
+                    const base = editFood.mealTime ? new Date(editFood.mealTime) : new Date(curDate + 'T00:00:00');
+                    const [h, m] = hhmm.split(':').map(Number);
+                    base.setHours(h || 0, m || 0, 0, 0);
+                    setEditFood(f => ({ ...f, mealTime: base.toISOString() }));
+                  }}
+                  style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: `1.5px solid ${brd}`, background: '#fff', fontSize: 15, color: t1, boxSizing: 'border-box' }} />
+              </div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button onClick={() => setEditFood(null)} style={{ flex: 1, padding: 14, borderRadius: 12, border: `1.5px solid ${brd}`, background: '#fff', color: t1, fontSize: 14, fontWeight: 600 }}>Cancel</button>
                 <button onClick={saveEditFood} style={{ flex: 1, padding: 14, borderRadius: 12, border: 'none', background: ac, color: '#fff', fontSize: 14, fontWeight: 700 }}>Save</button>
@@ -454,17 +468,24 @@ export default function Diary({ openPicker, goTo }) {
               )}
 
               {/* Food items */}
-              {items.map(item => (
-                <div key={item.id} onClick={() => setEditFood({ ...item, _origPortion: item.portion, _origCal: item.calories, _origP: item.proteinG, _origF: item.fatG, _origC: item.carbsG })} style={{ display: 'flex', alignItems: 'center', padding: '10px 16px', borderTop: `1px solid ${brd}`, cursor: 'pointer' }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 14, fontWeight: 500, color: t1 }}>{item.name}</div>
-                    {item.portion && <div style={{ fontSize: 11, color: t3, marginTop: 1 }}>{item.portion}</div>}
+              {items.map(item => {
+                const eatTimeStr = item.mealTime ? new Date(item.mealTime).toLocaleTimeString('en-NZ', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase().replace(' ', '') : null;
+                return (
+                  <div key={item.id} onClick={() => setEditFood({ ...item, _origPortion: item.portion, _origCal: item.calories, _origP: item.proteinG, _origF: item.fatG, _origC: item.carbsG })} style={{ display: 'flex', alignItems: 'center', padding: '10px 16px', borderTop: `1px solid ${brd}`, cursor: 'pointer' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: t1 }}>{item.name}</div>
+                      <div style={{ fontSize: 11, color: t3, marginTop: 1 }}>
+                        {item.portion}
+                        {item.portion && eatTimeStr && ' · '}
+                        {eatTimeStr}
+                      </div>
+                    </div>
+                    <span style={{ fontSize: 12, color: PRO, fontWeight: 700, marginRight: 8 }}>{item.proteinG}g</span>
+                    <span style={{ fontSize: 12, color: t2, fontWeight: 500, marginRight: 6, minWidth: 30, textAlign: 'right' }}>{item.calories}</span>
+                    <button onClick={(e) => { e.stopPropagation(); setDel({ label: item.name, action: () => deleteEntry(item.id) }); }} style={{ background: 'none', border: 'none', color: t3, fontSize: 16, padding: '2px 0 2px 6px' }}>×</button>
                   </div>
-                  <span style={{ fontSize: 12, color: PRO, fontWeight: 700, marginRight: 8 }}>{item.proteinG}g</span>
-                  <span style={{ fontSize: 12, color: t2, fontWeight: 500, marginRight: 6, minWidth: 30, textAlign: 'right' }}>{item.calories}</span>
-                  <button onClick={(e) => { e.stopPropagation(); setDel({ label: item.name, action: () => deleteEntry(item.id) }); }} style={{ background: 'none', border: 'none', color: t3, fontSize: 16, padding: '2px 0 2px 6px' }}>×</button>
-                </div>
-              ))}
+                );
+              })}
 
               {/* Add button — hide on locked meals */}
               {!locked && (

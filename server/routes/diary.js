@@ -42,7 +42,7 @@ router.get('/range/query', async (req, res) => {
 // POST /api/diary
 router.post('/', async (req, res) => {
   try {
-    const { date, slot, name, portion, calories, proteinG, fatG, carbsG, fiberG, satFatG, sugarG, sodiumMg, recipeId } = req.body;
+    const { date, slot, name, portion, calories, proteinG, fatG, carbsG, fiberG, satFatG, sugarG, sodiumMg, recipeId, mealTime } = req.body;
     const entry = await req.prisma.diaryEntry.create({
       data: {
         userId: req.userId,
@@ -52,7 +52,10 @@ router.post('/', async (req, res) => {
         portion,
         calories,
         proteinG,
-        mealTime: new Date(), // timestamp when food was actually logged
+        // mealTime = when the food was actually eaten. Defaults to
+        // server "now" only if the client doesn't supply one (e.g. for
+        // future intelligence: "you ate dinner at 9pm avg").
+        mealTime: mealTime ? new Date(mealTime) : new Date(),
         fatG,
         carbsG,
         fiberG: fiberG ?? null,
@@ -104,10 +107,14 @@ router.post('/copy', async (req, res) => {
 // PUT /api/diary/:id
 router.put('/:id', async (req, res) => {
   try {
-    const { name, portion, calories, proteinG, fatG, carbsG } = req.body;
+    const { name, portion, calories, proteinG, fatG, carbsG, mealTime } = req.body;
+    const data = { name, portion, calories, proteinG, fatG, carbsG };
+    // Only overwrite mealTime if the client explicitly sent one — avoids
+    // wiping the original eating time on every edit.
+    if (mealTime !== undefined) data.mealTime = mealTime ? new Date(mealTime) : null;
     const entry = await req.prisma.diaryEntry.update({
       where: { id: req.params.id },
-      data: { name, portion, calories, proteinG, fatG, carbsG },
+      data,
     });
     res.json(entry);
   } catch (err) {

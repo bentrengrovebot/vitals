@@ -14,6 +14,29 @@ function recipeNutrition(rec) {
   return { cal: r1(t.cal / s), protein: r1(t.protein / s), fat: r1(t.fat / s), carbs: r1(t.carbs / s) };
 }
 
+// Default eating time per slot — used when logging on a date that
+// isn't today (so "now" doesn't make sense as a default).
+const SLOT_DEFAULT_TIME = { Breakfast: '07:00', Lunch: '13:00', Dinner: '18:00', Snacks: '15:00' };
+
+function defaultEatTime(date, slot) {
+  const today = new Date();
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  if (date === todayKey) {
+    return `${String(today.getHours()).padStart(2, '0')}:${String(today.getMinutes()).padStart(2, '0')}`;
+  }
+  return SLOT_DEFAULT_TIME[slot] || '12:00';
+}
+
+// Combine the diary date (YYYY-MM-DD) with a HH:MM time into a full
+// ISO timestamp for the server.
+function buildMealTimeISO(date, hhmm) {
+  if (!hhmm) return null;
+  const [h, m] = hhmm.split(':').map(Number);
+  const d = new Date(date + 'T00:00:00');
+  d.setHours(h || 0, m || 0, 0, 0);
+  return d.toISOString();
+}
+
 export default function FoodPicker({ slot, date, onBack }) {
   const [tab, setTab] = useState('search');
   const [search, setSearch] = useState('');
@@ -24,6 +47,7 @@ export default function FoodPicker({ slot, date, onBack }) {
   const [searching, setSearching] = useState(false);
   const [selectedFood, setSelectedFood] = useState(null);
   const [selectedMyFood, setSelectedMyFood] = useState(null);
+  const [eatTime, setEatTime] = useState(() => defaultEatTime(date, slot));
   const [myFoodServings, setMyFoodServings] = useState('1');
   const [grams, setGrams] = useState('100');
   const searchTimer = useRef(null);
@@ -83,12 +107,25 @@ export default function FoodPicker({ slot, date, onBack }) {
         satFatG: item.satFat ?? item.satFatG ?? null,
         sugarG: item.sugar ?? item.sugarG ?? null,
         sodiumMg: item.sodium ?? item.sodiumMg ?? null,
+        mealTime: buildMealTimeISO(date, eatTime),
       });
       onBack();
     } catch (err) {
       console.error('Failed to add diary entry:', err);
       alert('Could not add food. Please try again.');
     }
+  }
+
+  // Quick-adjust the eatTime by N minutes. Used by "now/-30m/-1h" chips.
+  function adjustEatTime(deltaMin) {
+    const [h, m] = (eatTime || '12:00').split(':').map(Number);
+    const d = new Date();
+    d.setHours(h, m + deltaMin, 0, 0);
+    setEatTime(`${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`);
+  }
+  function setEatTimeNow() {
+    const d = new Date();
+    setEatTime(`${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`);
   }
 
   function selectDbFood(product) {
@@ -199,6 +236,24 @@ export default function FoodPicker({ slot, date, onBack }) {
                 </div>
               );
             })()}
+            {/* Eaten-at picker — captures actual meal time, not log time. */}
+            <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', marginBottom: 12 }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: 10, fontWeight: 600, color: t2, textTransform: 'uppercase', letterSpacing: 1 }}>Eaten at</label>
+                <input type="time" value={eatTime} onChange={e => setEatTime(e.target.value)} style={{ ...inp, marginTop: 4 }} />
+              </div>
+              <div style={{ flex: 1.5, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                {[
+                  { label: 'Now', fn: setEatTimeNow },
+                  { label: '−15m', fn: () => adjustEatTime(-15) },
+                  { label: '−30m', fn: () => adjustEatTime(-30) },
+                  { label: '−1h', fn: () => adjustEatTime(-60) },
+                  { label: '−2h', fn: () => adjustEatTime(-120) },
+                ].map(c => (
+                  <button key={c.label} onClick={c.fn} style={{ padding: '6px 10px', borderRadius: 8, border: `1px solid ${brd}`, background: '#f5f5f5', color: t2, fontSize: 10, fontWeight: 600 }}>{c.label}</button>
+                ))}
+              </div>
+            </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <button onClick={() => setSelectedFood(null)} style={{ flex: 1, padding: 12, borderRadius: 12, border: '1px solid #e5e5e7', background: '#ffffff', color: '#1a1a1a', fontSize: 14, fontWeight: 500 }}>Cancel</button>
               <button onClick={addDbFood} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: ac, color: '#fff', fontSize: 14, fontWeight: 600 }}>Add</button>
