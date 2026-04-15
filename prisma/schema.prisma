@@ -162,11 +162,14 @@ model Supplement {
 }
 
 model SupplementLog {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   userId       String
   supplementId String
-  date         DateTime @db.Date
+  date         DateTime  @db.Date
   takenAt      DateTime
+  endTime      DateTime?
+  notes        String?
+  withFood     Boolean   @default(false)
 }
 
 model AiInsight {

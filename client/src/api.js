@@ -69,7 +69,8 @@ export const api = {
   updateSupplement: (id, data) => request(`/supplements/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteSupplement: (id) => request(`/supplements/${id}`, { method: 'DELETE' }),
   getSupplementLogs: (date) => request(`/supplements/log/${date}`),
-  logSupplement: (supplementId) => request('/supplements/log', { method: 'POST', body: JSON.stringify({ supplementId }) }),
+  logSupplement: (data) => request('/supplements/log', { method: 'POST', body: JSON.stringify(typeof data === 'string' ? { supplementId: data } : data) }),
+  updateSupplementLog: (id, data) => request(`/supplements/log/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteSupplementLog: (id) => request(`/supplements/log/${id}`, { method: 'DELETE' }),
 
   // Training

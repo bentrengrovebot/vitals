@@ -72,11 +72,39 @@ router.get('/log/:date', async (req, res) => {
 // POST /api/supplements/log
 router.post('/log', async (req, res) => {
   try {
-    const { supplementId } = req.body;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const { supplementId, date, takenAt, endTime, notes, withFood } = req.body;
+    // Use the diary date (or today if not provided) so retroactive logs
+    // attach to the correct day even when takenAt time-of-day is custom.
+    const dateBucket = date ? new Date(date + 'T00:00:00') : (() => { const d = new Date(); d.setHours(0,0,0,0); return d; })();
     const log = await req.prisma.supplementLog.create({
-      data: { userId: req.userId, supplementId, date: today, takenAt: new Date() },
+      data: {
+        userId: req.userId,
+        supplementId,
+        date: dateBucket,
+        takenAt: takenAt ? new Date(takenAt) : new Date(),
+        endTime: endTime ? new Date(endTime) : null,
+        notes: notes || null,
+        withFood: !!withFood,
+      },
+    });
+    res.json(log);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// PUT /api/supplements/log/:id — edit timing/notes
+router.put('/log/:id', async (req, res) => {
+  try {
+    const { takenAt, endTime, notes, withFood } = req.body;
+    const data = {};
+    if (takenAt !== undefined) data.takenAt = takenAt ? new Date(takenAt) : null;
+    if (endTime !== undefined) data.endTime = endTime ? new Date(endTime) : null;
+    if (notes !== undefined) data.notes = notes || null;
+    if (withFood !== undefined) data.withFood = !!withFood;
+    const log = await req.prisma.supplementLog.update({
+      where: { id: req.params.id },
+      data,
     });
     res.json(log);
   } catch (err) {

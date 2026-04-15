@@ -39,6 +39,7 @@ export default function Diary({ openPicker, goTo }) {
   const [waterExpanded, setWaterExpanded] = useState(false);
   const [del, setDel] = useState(null);
   const [editFood, setEditFood] = useState(null);
+  const [editSuppLog, setEditSuppLog] = useState(null);
   // Locked meals — persisted in localStorage per date
   const lockKey = `locks_${curDate}`;
   const [lockedMeals, setLockedMeals] = useState(() => {
@@ -204,8 +205,29 @@ export default function Diary({ openPicker, goTo }) {
     if (taken) {
       await api.deleteSupplementLog(taken.id);
     } else {
-      await api.logSupplement(sup.id);
+      // Log against the diary date; default takenAt = now if today,
+      // otherwise the slot's typical time on that date.
+      const now = new Date();
+      const isCurDateToday = curDate === dateKey();
+      const takenAt = isCurDateToday
+        ? now.toISOString()
+        : (() => { const d = new Date(curDate + 'T08:00:00'); return d.toISOString(); })();
+      await api.logSupplement({ supplementId: sup.id, date: curDate, takenAt });
     }
+    const sl = await api.getSupplementLogs(curDate);
+    setSuppLogs(sl);
+  }
+
+  // Edit timing/notes on an existing supplement log.
+  async function saveEditSuppLog() {
+    if (!editSuppLog) return;
+    await api.updateSupplementLog(editSuppLog.id, {
+      takenAt: editSuppLog.takenAt,
+      endTime: editSuppLog.endTime || null,
+      notes: editSuppLog.notes || null,
+      withFood: !!editSuppLog.withFood,
+    });
+    setEditSuppLog(null);
     const sl = await api.getSupplementLogs(curDate);
     setSuppLogs(sl);
   }
@@ -354,6 +376,53 @@ export default function Diary({ openPicker, goTo }) {
               <div style={{ display: 'flex', gap: 8 }}>
                 <button onClick={() => setEditFood(null)} style={{ flex: 1, padding: 14, borderRadius: 12, border: `1.5px solid ${brd}`, background: '#fff', color: t1, fontSize: 14, fontWeight: 600 }}>Cancel</button>
                 <button onClick={saveEditFood} style={{ flex: 1, padding: 14, borderRadius: 12, border: 'none', background: ac, color: '#fff', fontSize: 14, fontWeight: 700 }}>Save</button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Edit supplement log — adjust takenAt, endTime, with-food, notes. */}
+      {editSuppLog && (() => {
+        const isoToHHMM = iso => iso ? new Date(iso).toLocaleTimeString('en-NZ', { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
+        const setTime = (key, hhmm) => setEditSuppLog(s => {
+          if (!hhmm) return { ...s, [key]: null };
+          const base = s[key] ? new Date(s[key]) : new Date(curDate + 'T00:00:00');
+          const [h, m] = hhmm.split(':').map(Number);
+          base.setHours(h || 0, m || 0, 0, 0);
+          return { ...s, [key]: base.toISOString() };
+        });
+        const sup = supplements.find(s => s.id === editSuppLog.supplementId);
+        return (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={() => setEditSuppLog(null)}>
+            <div onClick={e => e.stopPropagation()} style={{ ...card, padding: 20, width: '100%', maxWidth: 400, borderRadius: 16 }}>
+              <div style={{ fontSize: 16, fontWeight: 700, color: t1, marginBottom: 4 }}>{sup?.name || 'Supplement'}</div>
+              <div style={{ fontSize: 12, color: t2, marginBottom: 14 }}>{sup?.activeDose}{sup?.activeIngredient ? ` · ${sup.activeIngredient}` : ''}</div>
+
+              <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: t2, textTransform: 'uppercase', letterSpacing: 1 }}>Taken at</label>
+                  <input type="time" value={isoToHHMM(editSuppLog.takenAt)} onChange={e => setTime('takenAt', e.target.value)} style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: `1.5px solid ${brd}`, background: '#fff', fontSize: 15, color: t1, marginTop: 4, boxSizing: 'border-box' }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: t2, textTransform: 'uppercase', letterSpacing: 1 }}>Until (optional)</label>
+                  <input type="time" value={isoToHHMM(editSuppLog.endTime)} onChange={e => setTime('endTime', e.target.value)} style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: `1.5px solid ${brd}`, background: '#fff', fontSize: 15, color: t1, marginTop: 4, boxSizing: 'border-box' }} />
+                </div>
+              </div>
+
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, cursor: 'pointer' }}>
+                <input type="checkbox" checked={!!editSuppLog.withFood} onChange={e => setEditSuppLog(s => ({ ...s, withFood: e.target.checked }))} />
+                <span style={{ fontSize: 13, color: t1 }}>Taken with food</span>
+              </label>
+
+              <div style={{ marginBottom: 14 }}>
+                <label style={{ fontSize: 10, fontWeight: 700, color: t2, textTransform: 'uppercase', letterSpacing: 1 }}>Notes</label>
+                <input type="text" value={editSuppLog.notes || ''} onChange={e => setEditSuppLog(s => ({ ...s, notes: e.target.value }))} placeholder="e.g. pre-workout, sipped over morning" style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: `1.5px solid ${brd}`, background: '#fff', fontSize: 14, color: t1, marginTop: 4, boxSizing: 'border-box' }} />
+              </div>
+
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={() => setEditSuppLog(null)} style={{ flex: 1, padding: 14, borderRadius: 12, border: `1.5px solid ${brd}`, background: '#fff', color: t1, fontSize: 14, fontWeight: 600 }}>Cancel</button>
+                <button onClick={saveEditSuppLog} style={{ flex: 1, padding: 14, borderRadius: 12, border: 'none', background: ac, color: '#fff', fontSize: 14, fontWeight: 700 }}>Save</button>
               </div>
             </div>
           </div>
@@ -522,8 +591,9 @@ export default function Diary({ openPicker, goTo }) {
         </div>
       )}
 
-      {/* Supplements */}
-      {isToday && supplements.length > 0 && (
+      {/* Supplements — visible on any date so retroactive logs and
+          historical compliance are both editable. */}
+      {supplements.length > 0 && (
         <div style={{ padding: '8px 16px 0' }}>
           <div style={{ ...card, padding: '14px 16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
@@ -535,15 +605,24 @@ export default function Diary({ openPicker, goTo }) {
             </div>
             {supplements.map(sup => {
               const taken = suppLogs.find(l => l.supplementId === sup.id);
+              const fmt = iso => new Date(iso).toLocaleTimeString('en-NZ', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase().replace(' ', '');
+              const timing = taken ? (taken.endTime ? `${fmt(taken.takenAt)} – ${fmt(taken.endTime)}` : fmt(taken.takenAt)) : null;
               return (
-                <div key={sup.id} onClick={() => toggleSupplement(sup)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderTop: `1px solid ${brd}`, cursor: 'pointer' }}>
-                  <div style={{ width: 22, height: 22, borderRadius: 7, border: taken ? 'none' : `2px solid ${brd}`, background: taken ? gn : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div key={sup.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderTop: `1px solid ${brd}` }}>
+                  <div onClick={() => toggleSupplement(sup)} style={{ width: 22, height: 22, borderRadius: 7, border: taken ? 'none' : `2px solid ${brd}`, background: taken ? gn : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}>
                     {taken && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>}
                   </div>
-                  <div style={{ flex: 1 }}>
+                  <div onClick={() => toggleSupplement(sup)} style={{ flex: 1, cursor: 'pointer' }}>
                     <div style={{ fontSize: 14, fontWeight: 500, color: taken ? t2 : t1, textDecoration: taken ? 'line-through' : 'none' }}>{sup.name}</div>
-                    <div style={{ fontSize: 11, color: t3 }}>{sup.activeDose}{sup.activeIngredient ? ` · ${sup.activeIngredient}` : ''}</div>
+                    <div style={{ fontSize: 11, color: t3 }}>
+                      {sup.activeDose}{sup.activeIngredient ? ` · ${sup.activeIngredient}` : ''}
+                      {taken?.withFood && ' · with food'}
+                      {taken?.notes && ` · ${taken.notes}`}
+                    </div>
                   </div>
+                  {taken && (
+                    <button onClick={(e) => { e.stopPropagation(); setEditSuppLog({ ...taken }); }} style={{ background: 'none', border: 'none', color: t2, fontSize: 11, fontWeight: 600, padding: '4px 8px', borderRadius: 6 }}>{timing} ✎</button>
+                  )}
                 </div>
               );
             })}
