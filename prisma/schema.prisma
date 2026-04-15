@@ -11,6 +11,10 @@ model User {
   id           String   @id @default(cuid())
   email        String   @unique
   passwordHash String
+  // SHA-256 hash of the user's MCP/API bearer token. Used by the
+  // /mcp endpoint to authenticate Claude.ai (or any client) hitting
+  // it with `Authorization: Bearer <token>`. Null = MCP locked out.
+  mcpTokenHash String?
   profile      Profile?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

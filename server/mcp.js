@@ -9,10 +9,15 @@ function dateKey(d = new Date()) {
 
 const r1 = n => Math.round(n * 10) / 10;
 
-function createMcpServer(prisma) {
+function createMcpServer(prisma, authedUserId = null) {
   const server = new McpServer({ name: 'vitals', version: '1.0.0' });
 
+  // Returns the userId for the current MCP session. If called via the
+  // authenticated /mcp endpoint, that's the bearer-token holder. The
+  // legacy "first user" fallback only fires when no token is set
+  // (single-user dev environments).
   async function getUserId() {
+    if (authedUserId) return authedUserId;
     const user = await prisma.user.findFirst();
     if (!user) throw new Error('No user found. Sign up in the app first.');
     return user.id;
@@ -344,8 +349,32 @@ function createMcpServer(prisma) {
 
 /**
  * Stateless Streamable HTTP MCP endpoint for claude.ai custom connectors.
- * No auth — leave OAuth fields empty when adding connector in claude.ai.
+ *
+ * Auth: Bearer token. The token is generated in Settings (POST
+ * /api/auth/mcp-token) and stored as a SHA-256 hash on the User
+ * row. The raw token is supplied via `Authorization: Bearer <token>`
+ * by claude.ai's custom connector config.
+ *
+ * If no token has ever been generated, the endpoint accepts any
+ * request and operates against the first user (legacy single-user
+ * behaviour) — keeps local Claude Code stdio bridge working until
+ * the user opts into auth via Settings.
  */
+async function authBearerOrFallback(req, prisma) {
+  const auth = req.headers.authorization || '';
+  const match = auth.match(/^Bearer\s+(.+)$/i);
+  if (match) {
+    const hash = crypto.createHash('sha256').update(match[1].trim()).digest('hex');
+    const user = await prisma.user.findFirst({ where: { mcpTokenHash: hash } });
+    if (user) return user;
+  }
+  // No bearer or invalid: only allow if NO user has set a token yet.
+  const anyTokenSet = await prisma.user.findFirst({ where: { mcpTokenHash: { not: null } }, select: { id: true } });
+  if (anyTokenSet) return null;
+  // Fallback: first user, legacy behaviour
+  return prisma.user.findFirst();
+}
+
 export function setupMCP(app, prisma) {
   // CORS headers required for claude.ai
   app.use('/mcp', (req, res, next) => {
@@ -364,9 +393,19 @@ export function setupMCP(app, prisma) {
       req.headers.accept = 'application/json, ' + req.headers.accept;
     }
     console.log(`MCP ${req.method} from ${req.ip}`, req.method === 'POST' ? JSON.stringify(req.body).substring(0, 200) : '');
+
+    const user = await authBearerOrFallback(req, prisma);
+    if (!user) {
+      return res.status(401).json({
+        jsonrpc: '2.0',
+        error: { code: -32001, message: 'Unauthorized — supply Authorization: Bearer <token>. Generate a token in Vitals → Settings → Goals.' },
+      });
+    }
+
     try {
       const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
-      const server = createMcpServer(prisma);
+      // Pass the authenticated user id so all tool calls scope to them.
+      const server = createMcpServer(prisma, user.id);
       await server.connect(transport);
       await transport.handleRequest(req, res, req.body);
       await server.close();
@@ -376,5 +415,5 @@ export function setupMCP(app, prisma) {
     }
   });
 
-  console.log('MCP remote endpoint mounted at /mcp');
+  console.log('MCP remote endpoint mounted at /mcp (Bearer auth + single-user fallback)');
 }

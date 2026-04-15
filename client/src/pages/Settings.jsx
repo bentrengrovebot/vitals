@@ -2,6 +2,97 @@ import { useState, useEffect } from 'react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 
+// MCP / Claude API token panel. Lives in Settings → Claude tab.
+// Raw token is shown ONCE on generation; subsequent loads only know
+// whether a token exists (via /api/auth/mcp-token GET).
+function ClaudeTokenSection({ ac, t1, t2, t3, brd, card, inp, flash }) {
+  const [exists, setExists] = useState(null);   // null = loading
+  const [rawToken, setRawToken] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [confirmRevoke, setConfirmRevoke] = useState(false);
+
+  useEffect(() => { api.getMcpTokenStatus().then(s => setExists(!!s.exists)).catch(() => setExists(false)); }, []);
+
+  const mcpUrl = (typeof window !== 'undefined' ? window.location.origin : '') + '/mcp';
+
+  async function generate() {
+    setBusy(true);
+    try {
+      const { token } = await api.generateMcpToken();
+      setRawToken(token);
+      setExists(true);
+      flash(exists ? 'Token rotated' : 'Token generated');
+    } catch { flash('Failed'); }
+    setBusy(false);
+  }
+
+  async function revoke() {
+    setBusy(true);
+    try {
+      await api.revokeMcpToken();
+      setExists(false);
+      setRawToken(null);
+      setConfirmRevoke(false);
+      flash('Token revoked');
+    } catch { flash('Failed'); }
+    setBusy(false);
+  }
+
+  return (
+    <div>
+      <div style={{ ...card, marginBottom: 14 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: t1, marginBottom: 6 }}>Claude / MCP connector</div>
+        <div style={{ fontSize: 12, color: t2, lineHeight: 1.5 }}>
+          Lets <b>claude.ai</b> (or any MCP-compatible client) read &amp; modify your Vitals data via a Bearer token. With this connected, you can chat at claude.ai about your meals, supps, weight trend, training, and labs in real time — using your Pro/Max subscription, no per-token cost from this app.
+        </div>
+      </div>
+
+      {exists === null && <div style={{ color: t3, fontSize: 13 }}>Loading…</div>}
+
+      {exists === false && !rawToken && (
+        <div style={{ ...card, marginBottom: 14 }}>
+          <div style={{ fontSize: 13, color: t1, marginBottom: 12 }}>No token yet — anyone with this app's URL would be locked out of <code>/mcp</code>. Generate one to enable Claude.</div>
+          <button onClick={generate} disabled={busy} style={{ width: '100%', padding: 14, borderRadius: 12, border: 'none', background: ac, color: '#fff', fontSize: 14, fontWeight: 700 }}>{busy ? 'Generating…' : 'Generate token'}</button>
+        </div>
+      )}
+
+      {rawToken && (
+        <div style={{ ...card, marginBottom: 14, background: '#FFF8E6', borderColor: '#F2C94C' }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#7A5C00', marginBottom: 8 }}>⚠ Save this token now — it won't be shown again.</div>
+          <div style={{ fontFamily: 'monospace', fontSize: 12, background: '#fff', padding: '10px 12px', borderRadius: 8, border: `1px solid ${brd}`, wordBreak: 'break-all', color: t1, marginBottom: 10 }}>{rawToken}</div>
+          <button onClick={() => { navigator.clipboard?.writeText(rawToken); flash('Copied'); }} style={{ padding: '8px 14px', borderRadius: 10, border: `1px solid ${brd}`, background: '#fff', color: t1, fontSize: 13, fontWeight: 600 }}>Copy token</button>
+        </div>
+      )}
+
+      {exists && !rawToken && (
+        <div style={{ ...card, marginBottom: 14 }}>
+          <div style={{ fontSize: 13, color: t1, marginBottom: 4 }}><span style={{ color: '#22c55e', fontWeight: 700 }}>● Active</span> — a token is set.</div>
+          <div style={{ fontSize: 12, color: t2, marginBottom: 12 }}>The raw token isn't stored. Rotate to get a new one (the old one stops working immediately).</div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={generate} disabled={busy} style={{ flex: 1, padding: 12, borderRadius: 10, border: `1px solid ${brd}`, background: '#fff', color: t1, fontSize: 13, fontWeight: 600 }}>Rotate token</button>
+            {!confirmRevoke ? (
+              <button onClick={() => setConfirmRevoke(true)} style={{ flex: 1, padding: 12, borderRadius: 10, border: `1px solid rgba(239,68,68,0.3)`, background: 'rgba(239,68,68,0.08)', color: '#ef4444', fontSize: 13, fontWeight: 600 }}>Revoke</button>
+            ) : (
+              <button onClick={revoke} disabled={busy} style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: '#ef4444', color: '#fff', fontSize: 13, fontWeight: 700 }}>Confirm revoke</button>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div style={{ ...card }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: t1, marginBottom: 8 }}>How to connect in claude.ai</div>
+        <ol style={{ fontSize: 12, color: t2, lineHeight: 1.6, paddingLeft: 18, margin: 0 }}>
+          <li>Open <b>claude.ai → Settings → Connectors → Add custom connector</b></li>
+          <li>Name: <code>Vitals</code></li>
+          <li>URL: <code style={{ background: '#f5f5f5', padding: '1px 5px', borderRadius: 4 }}>{mcpUrl}</code></li>
+          <li>Auth: Bearer token — paste the token above</li>
+          <li>Done. Start a chat and ask: <i>"What's my sat fat looking like this week?"</i></li>
+        </ol>
+      </div>
+    </div>
+  );
+}
+
 const r1 = n => Math.round(n * 10) / 10;
 
 function dateKey(d = new Date()) {
@@ -113,7 +204,7 @@ export default function Settings({ goTo, onRefresh }) {
       {saved && <div style={{ margin: '0 20px 12px', padding: '10px 16px', borderRadius: 12, background: 'rgba(229,57,53,0.08)', color: ac, fontSize: 14, fontWeight: 600 }}>{saved}</div>}
 
       <div style={{ display: 'flex', gap: 6, padding: '0 20px', marginBottom: 20, flexWrap: 'wrap' }}>
-        {[{ id: 'profile', l: 'Profile' }, { id: 'goals', l: 'Goals' }, { id: 'myfoods', l: 'My Foods' }, { id: 'supps', l: 'Supplements' }, { id: 'weight', l: 'Weight' }, { id: 'data', l: 'Data' }].map(t => (
+        {[{ id: 'profile', l: 'Profile' }, { id: 'goals', l: 'Goals' }, { id: 'myfoods', l: 'My Foods' }, { id: 'supps', l: 'Supplements' }, { id: 'weight', l: 'Weight' }, { id: 'claude', l: 'Claude' }, { id: 'data', l: 'Data' }].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={pill(tab === t.id)}>{t.l}</button>
         ))}
       </div>
@@ -291,6 +382,9 @@ export default function Settings({ goTo, onRefresh }) {
             {!weighIns.length && <div style={{ color: t3, fontSize: 14, padding: 20, textAlign: 'center' }}>No weigh-ins yet.</div>}
           </div>
         )}
+
+        {/* Claude — MCP/API token for chatting about your data */}
+        {tab === 'claude' && <ClaudeTokenSection ac={ac} t1={t1} t2={t2} t3={t3} brd={brd} card={{ background: '#fff', borderRadius: 14, padding: 18, border: `1px solid ${brd}` }} inp={inp} flash={flash} />}
 
         {/* Data */}
         {tab === 'data' && (

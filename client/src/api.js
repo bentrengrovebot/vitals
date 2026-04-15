@@ -27,6 +27,9 @@ export const api = {
   me: () => request('/auth/me'),
   forgotPassword: (email) => request('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) }),
   resetPassword: (token, newPassword) => request('/auth/reset-password', { method: 'POST', body: JSON.stringify({ token, newPassword }) }),
+  getMcpTokenStatus: () => request('/auth/mcp-token'),
+  generateMcpToken: () => request('/auth/mcp-token', { method: 'POST' }),
+  revokeMcpToken: () => request('/auth/mcp-token', { method: 'DELETE' }),
 
   // Profile & Goals
   getProfile: () => request('/profile'),

@@ -156,4 +156,44 @@ router.get('/me', authMiddleware, async (req, res) => {
   }
 });
 
+// MCP / API Bearer token — for Claude.ai custom connectors and other
+// programmatic clients hitting /mcp.
+//
+// Token format: vt_ + 40 random hex chars (~160 bits of entropy).
+// Stored as SHA-256 hash; raw token shown to user once on creation.
+const TOKEN_PREFIX = 'vt_';
+const hashToken = t => crypto.createHash('sha256').update(t).digest('hex');
+
+// GET /api/auth/mcp-token — has a token been set? Returns no secret.
+router.get('/mcp-token', authMiddleware, async (req, res) => {
+  try {
+    const u = await req.prisma.user.findUnique({ where: { id: req.userId }, select: { mcpTokenHash: true } });
+    res.json({ exists: !!u?.mcpTokenHash });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// POST /api/auth/mcp-token — generate (or rotate) the token. Returns
+// the raw token ONCE; subsequent reads only return existence.
+router.post('/mcp-token', authMiddleware, async (req, res) => {
+  try {
+    const raw = TOKEN_PREFIX + crypto.randomBytes(20).toString('hex');
+    await req.prisma.user.update({ where: { id: req.userId }, data: { mcpTokenHash: hashToken(raw) } });
+    res.json({ token: raw });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// DELETE /api/auth/mcp-token — revoke. /mcp will refuse all requests.
+router.delete('/mcp-token', authMiddleware, async (req, res) => {
+  try {
+    await req.prisma.user.update({ where: { id: req.userId }, data: { mcpTokenHash: null } });
+    res.json({ revoked: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 export default router;
