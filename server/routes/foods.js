@@ -550,79 +550,70 @@ function merge(...lists) {
 
 // ----- Route -------------------------------------------------------------
 
-// GET /api/foods/search?q=chicken breast
-//
-// Lookup order (fastest first):
-//   1. STAPLES       — ~45 hand-curated whole foods (in-memory, instant)
-//   2. NZFCD         — 1,278 Concise NZ Food Composition Tables entries
-//                      (in-memory, instant, NZ-accurate with micros)
+// Exported pipeline so other server modules (e.g. MCP tools) can search
+// without going through HTTP. Same lookup order the HTTP route uses:
+//   1. STAPLES       — ~96 hand-curated whole foods (in-memory)
+//   2. NZFCD         — 1,278 Concise NZ Food Composition entries (in-memory)
 //   3. memCache      — previous network results this process has seen
 //   4. Postgres cache — previous network results from any deploy
 //   5. Open Food Facts — ~3M branded products (network, ~400ms)
 //   6. Claude Haiku   — fallback for the long tail (network, ~2-3s)
-//
-// Staples + NZFCD are always computed fresh — they're code-owned data,
-// cheap to run, and shouldn't poison the network cache.
-router.get('/search', async (req, res) => {
-  try {
-    const { q } = req.query;
-    if (!q || q.length < 2) return res.json({ products: [] });
+export async function searchAll(q, prisma) {
+  if (!q || q.length < 2) return { products: [], source: 'empty' };
 
-    const key = normalize(q);
-    const staples = findStaples(q);
-    const nzfcd = searchNzfcd(q);
+  const key = normalize(q);
+  const staples = findStaples(q);
+  const nzfcd = searchNzfcd(q);
+  const queryWords = q.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+  const filterCached = arr => (arr || []).filter(p => isRelevant(p.name, queryWords));
 
-    // Re-apply relevance check to cached network results too — older
-    // cache entries pre-date the filter and can contain Korean noodles,
-    // French biscuits, etc. Defensive re-filtering on read is cheap and
-    // means bad data gets weeded out even without cache invalidation.
-    const queryWords = q.toLowerCase().split(/\s+/).filter(w => w.length > 2);
-    const filterCached = arr => (arr || []).filter(p => isRelevant(p.name, queryWords));
+  if (memCache.has(key)) {
+    return { products: merge(staples, nzfcd, filterCached(memCache.get(key))), cached: 'mem' };
+  }
 
-    // L1: in-memory (network results only)
-    if (memCache.has(key)) {
-      return res.json({ products: merge(staples, nzfcd, filterCached(memCache.get(key))), cached: 'mem' });
-    }
-
-    // L2: Postgres (network results only)
-    const cached = await req.prisma.foodSearchCache.findUnique({ where: { query: key } }).catch(() => null);
+  if (prisma) {
+    const cached = await prisma.foodSearchCache.findUnique({ where: { query: key } }).catch(() => null);
     if (cached) {
       memSet(key, cached.results);
-      return res.json({ products: merge(staples, nzfcd, filterCached(cached.results)), cached: 'db' });
+      return { products: merge(staples, nzfcd, filterCached(cached.results)), cached: 'db' };
     }
+  }
 
-    // If we already have 5+ in-memory hits, skip the network entirely.
-    const localHits = staples.length + nzfcd.length;
-    if (localHits >= 5) {
-      return res.json({ products: merge(staples, nzfcd), source: 'local' });
+  const localHits = staples.length + nzfcd.length;
+  if (localHits >= 5) {
+    return { products: merge(staples, nzfcd), source: 'local' };
+  }
+
+  let offResults = await searchOpenFoodFacts(q);
+  let source = 'openfoodfacts';
+
+  if (localHits === 0 && offResults.length === 0) {
+    try {
+      offResults = await searchClaude(q);
+      source = 'claude';
+    } catch (err) {
+      console.error('Claude fallback failed:', err);
+      offResults = [];
     }
+  }
 
-    // L3: Open Food Facts for the long-tail branded stuff NZFCD misses.
-    let offResults = await searchOpenFoodFacts(q);
-    let source = 'openfoodfacts';
+  if (offResults.length > 0 && prisma) {
+    memSet(key, offResults);
+    await prisma.foodSearchCache.upsert({
+      where: { query: key },
+      create: { query: key, source, results: offResults },
+      update: { source, results: offResults, updatedAt: new Date() },
+    }).catch(err => console.warn('Cache write failed:', err.message));
+  }
 
-    // Fallback to Claude only when nothing local OR OFF answered.
-    if (localHits === 0 && offResults.length === 0) {
-      try {
-        offResults = await searchClaude(q);
-        source = 'claude';
-      } catch (err) {
-        console.error('Claude fallback failed:', err);
-        offResults = [];
-      }
-    }
+  return { products: merge(staples, nzfcd, offResults), source };
+}
 
-    // Cache the network half (local sources are code-owned, don't re-cache).
-    if (offResults.length > 0) {
-      memSet(key, offResults);
-      await req.prisma.foodSearchCache.upsert({
-        where: { query: key },
-        create: { query: key, source, results: offResults },
-        update: { source, results: offResults, updatedAt: new Date() },
-      }).catch(err => console.warn('Cache write failed:', err.message));
-    }
-
-    res.json({ products: merge(staples, nzfcd, offResults), source });
+// GET /api/foods/search?q=chicken breast — thin HTTP wrapper around searchAll.
+router.get('/search', async (req, res) => {
+  try {
+    const out = await searchAll(req.query.q, req.prisma);
+    res.json(out);
   } catch (err) {
     console.error('Food search error:', err);
     res.status(500).json({ error: 'Search failed', products: [] });

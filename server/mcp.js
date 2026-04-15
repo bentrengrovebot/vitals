@@ -25,24 +25,69 @@ function createMcpServer(prisma, authedUserId = null) {
 
   // ====== NUTRITION ======
 
-  server.tool('get_diary', 'Get food diary entries for a date with calories and macros.', { date: z.string().optional().describe('YYYY-MM-DD. Defaults to today.') }, async ({ date }) => {
+  server.tool('get_diary', 'Get food diary entries for a date with calories, macros, micronutrients (fibre/sat fat/sugar/sodium/potassium), and meal time per entry.', { date: z.string().optional().describe('YYYY-MM-DD. Defaults to today.') }, async ({ date }) => {
     const userId = await getUserId();
     const d = date || dateKey();
     const entries = await prisma.diaryEntry.findMany({ where: { userId, date: new Date(d) }, orderBy: { slot: 'asc' } });
     const bySlot = {};
-    entries.forEach(e => { if (!bySlot[e.slot]) bySlot[e.slot] = []; bySlot[e.slot].push({ name: e.name, portion: e.portion, calories: e.calories, proteinG: e.proteinG, fatG: e.fatG, carbsG: e.carbsG }); });
-    const totals = entries.reduce((t, e) => ({ calories: t.calories + (e.calories || 0), proteinG: t.proteinG + (e.proteinG || 0), fatG: t.fatG + (e.fatG || 0), carbsG: t.carbsG + (e.carbsG || 0) }), { calories: 0, proteinG: 0, fatG: 0, carbsG: 0 });
+    entries.forEach(e => {
+      if (!bySlot[e.slot]) bySlot[e.slot] = [];
+      bySlot[e.slot].push({
+        id: e.id, name: e.name, portion: e.portion,
+        calories: e.calories, proteinG: e.proteinG, fatG: e.fatG, carbsG: e.carbsG,
+        fiberG: e.fiberG, satFatG: e.satFatG, sugarG: e.sugarG, sodiumMg: e.sodiumMg, potassiumMg: e.potassiumMg,
+        mealTime: e.mealTime,
+      });
+    });
+    const totals = entries.reduce((t, e) => ({
+      calories: t.calories + (e.calories || 0),
+      proteinG: t.proteinG + (e.proteinG || 0),
+      fatG: t.fatG + (e.fatG || 0),
+      carbsG: t.carbsG + (e.carbsG || 0),
+      fiberG: t.fiberG + (e.fiberG || 0),
+      satFatG: t.satFatG + (e.satFatG || 0),
+      sugarG: t.sugarG + (e.sugarG || 0),
+      sodiumMg: t.sodiumMg + (e.sodiumMg || 0),
+      potassiumMg: t.potassiumMg + (e.potassiumMg || 0),
+    }), { calories: 0, proteinG: 0, fatG: 0, carbsG: 0, fiberG: 0, satFatG: 0, sugarG: 0, sodiumMg: 0, potassiumMg: 0 });
     return { content: [{ type: 'text', text: JSON.stringify({ date: d, meals: bySlot, totals }, null, 2) }] };
   });
 
-  server.tool('log_food', 'Log a food item to the diary.', {
-    slot: z.enum(['Breakfast', 'Lunch', 'Dinner', 'Snacks']), name: z.string(), calories: z.number(),
-    proteinG: z.number().optional(), fatG: z.number().optional(), carbsG: z.number().optional(),
-    portion: z.string().optional(), date: z.string().optional(),
-  }, async ({ slot, name, calories, proteinG, fatG, carbsG, portion, date }) => {
+  server.tool('log_food', 'Log a food item to the diary. Accepts main macros (cal/P/F/C), extended nutrients (fibre/sat fat/sugar/sodium/potassium), and the actual eating time.', {
+    slot: z.enum(['Breakfast', 'Lunch', 'Dinner', 'Snacks']),
+    name: z.string(),
+    calories: z.number(),
+    proteinG: z.number().optional(),
+    fatG: z.number().optional(),
+    carbsG: z.number().optional(),
+    fiberG: z.number().optional(),
+    satFatG: z.number().optional(),
+    sugarG: z.number().optional(),
+    sodiumMg: z.number().optional(),
+    potassiumMg: z.number().optional(),
+    portion: z.string().optional(),
+    date: z.string().optional().describe('YYYY-MM-DD diary date. Defaults to today.'),
+    mealTime: z.string().optional().describe('ISO 8601 timestamp of when food was actually eaten. Defaults to now.'),
+  }, async ({ slot, name, calories, proteinG, fatG, carbsG, fiberG, satFatG, sugarG, sodiumMg, potassiumMg, portion, date, mealTime }) => {
     const userId = await getUserId();
-    await prisma.diaryEntry.create({ data: { userId, date: new Date(date || dateKey()), slot, name, portion, calories, proteinG: proteinG || 0, fatG: fatG || 0, carbsG: carbsG || 0 } });
-    return { content: [{ type: 'text', text: `Logged "${name}" to ${slot}: ${calories} cal, ${proteinG || 0}g P, ${fatG || 0}g F, ${carbsG || 0}g C` }] };
+    await prisma.diaryEntry.create({
+      data: {
+        userId,
+        date: new Date(date || dateKey()),
+        slot, name, portion,
+        calories,
+        proteinG: proteinG || 0,
+        fatG: fatG || 0,
+        carbsG: carbsG || 0,
+        fiberG: fiberG ?? null,
+        satFatG: satFatG ?? null,
+        sugarG: sugarG ?? null,
+        sodiumMg: sodiumMg ?? null,
+        potassiumMg: potassiumMg ?? null,
+        mealTime: mealTime ? new Date(mealTime) : new Date(),
+      },
+    });
+    return { content: [{ type: 'text', text: `Logged "${name}" to ${slot}: ${calories} cal, ${proteinG || 0}g P, ${fatG || 0}g F, ${carbsG || 0}g C${fiberG != null ? `, ${fiberG}g fibre` : ''}${satFatG != null ? `, ${satFatG}g sat fat` : ''}${sodiumMg != null ? `, ${sodiumMg}mg Na` : ''}` }] };
   });
 
   server.tool('get_goals', 'Get daily nutrition goals and profile.', {}, async () => {
@@ -66,8 +111,48 @@ function createMcpServer(prisma, authedUserId = null) {
     const userId = await getUserId();
     const entries = await prisma.diaryEntry.findMany({ where: { userId, date: new Date(fromDate), slot } });
     if (!entries.length) return { content: [{ type: 'text', text: `No entries for ${slot} on ${fromDate}` }] };
-    for (const e of entries) { await prisma.diaryEntry.create({ data: { userId, date: new Date(toDate), slot, name: e.name, portion: e.portion, calories: e.calories, proteinG: e.proteinG, fatG: e.fatG, carbsG: e.carbsG } }); }
+    for (const e of entries) { await prisma.diaryEntry.create({ data: { userId, date: new Date(toDate), slot, name: e.name, portion: e.portion, calories: e.calories, proteinG: e.proteinG, fatG: e.fatG, carbsG: e.carbsG, fiberG: e.fiberG, satFatG: e.satFatG, sugarG: e.sugarG, sodiumMg: e.sodiumMg, potassiumMg: e.potassiumMg } }); }
     return { content: [{ type: 'text', text: `Copied ${entries.length} items from ${slot} ${fromDate} to ${toDate}` }] };
+  });
+
+  server.tool('get_diary_range', 'Get diary entries across a date range with daily totals. Useful for "this week" or "last 30 days" analyses.', {
+    startDate: z.string().describe('YYYY-MM-DD inclusive'),
+    endDate: z.string().describe('YYYY-MM-DD inclusive'),
+  }, async ({ startDate, endDate }) => {
+    const userId = await getUserId();
+    const entries = await prisma.diaryEntry.findMany({
+      where: { userId, date: { gte: new Date(startDate), lte: new Date(endDate) } },
+      orderBy: [{ date: 'asc' }, { slot: 'asc' }],
+    });
+    const byDate = {};
+    for (const e of entries) {
+      const k = e.date.toISOString().slice(0, 10);
+      if (!byDate[k]) byDate[k] = { entries: [], totals: { calories: 0, proteinG: 0, fatG: 0, carbsG: 0, fiberG: 0, satFatG: 0, sugarG: 0, sodiumMg: 0, potassiumMg: 0 } };
+      byDate[k].entries.push({ id: e.id, slot: e.slot, name: e.name, portion: e.portion, calories: e.calories, proteinG: e.proteinG, fatG: e.fatG, carbsG: e.carbsG, fiberG: e.fiberG, satFatG: e.satFatG, sugarG: e.sugarG, sodiumMg: e.sodiumMg, potassiumMg: e.potassiumMg, mealTime: e.mealTime });
+      const t = byDate[k].totals;
+      t.calories += e.calories || 0; t.proteinG += e.proteinG || 0; t.fatG += e.fatG || 0; t.carbsG += e.carbsG || 0;
+      t.fiberG += e.fiberG || 0; t.satFatG += e.satFatG || 0; t.sugarG += e.sugarG || 0;
+      t.sodiumMg += e.sodiumMg || 0; t.potassiumMg += e.potassiumMg || 0;
+    }
+    return { content: [{ type: 'text', text: JSON.stringify({ startDate, endDate, days: byDate }, null, 2) }] };
+  });
+
+  server.tool('search_food', 'Search the food database. Hits the same pipeline the app uses: ~96 curated NZ staples first, then 1,278 NZ Food Composition Database entries, then Open Food Facts, then Claude fallback. Returns full nutrition (cal/P/F/C + fibre/sat fat/sugar/sodium/potassium per 100g/ml) and serving sizes ready to pass into log_food.', {
+    query: z.string().describe('Free text — e.g. "chicken breast", "kumara", "tasty cheese"'),
+  }, async ({ query }) => {
+    const { searchAll } = await import('./routes/foods.js');
+    const out = await searchAll(query, prisma);
+    return { content: [{ type: 'text', text: JSON.stringify({ source: out.source || out.cached, products: (out.products || []).slice(0, 10) }, null, 2) }] };
+  });
+
+  server.tool('get_water', 'Get water intake total + entries for a date.', {
+    date: z.string().optional(),
+  }, async ({ date }) => {
+    const userId = await getUserId();
+    const d = date || dateKey();
+    const logs = await prisma.waterLog.findMany({ where: { userId, date: new Date(d) }, orderBy: { timestamp: 'asc' } });
+    const totalMl = logs.reduce((s, l) => s + l.amountMl, 0);
+    return { content: [{ type: 'text', text: JSON.stringify({ date: d, totalMl, entries: logs.map(l => ({ id: l.id, amountMl: l.amountMl, timestamp: l.timestamp })) }, null, 2) }] };
   });
 
   // ====== TRAINING ======
@@ -190,7 +275,7 @@ function createMcpServer(prisma, authedUserId = null) {
     return { content: [{ type: 'text', text: `Updated supplement ${id}` }] };
   });
 
-  server.tool('toggle_supplement', 'Mark a supplement as taken/untaken today.', {
+  server.tool('toggle_supplement', 'Mark a supplement as taken/untaken today (defaults to "now"). Use log_supplement for richer fields.', {
     supplementId: z.string().describe('Supplement ID'),
   }, async ({ supplementId }) => {
     const userId = await getUserId();
@@ -201,6 +286,60 @@ function createMcpServer(prisma, authedUserId = null) {
     }
     await prisma.supplementLog.create({ data: { userId, supplementId, date: new Date(dateKey()), takenAt: new Date() } });
     return { content: [{ type: 'text', text: 'Marked as taken today.' }] };
+  });
+
+  server.tool('log_supplement', 'Log a supplement on a specific date with full timing context — when it was taken, optional end time for sipped/extended supps (e.g. Sodii drink over 2 hours), with-food flag, and notes.', {
+    supplementId: z.string(),
+    date: z.string().optional().describe('YYYY-MM-DD diary date. Defaults to today.'),
+    takenAt: z.string().optional().describe('ISO 8601 timestamp of when actually taken. Defaults to now.'),
+    endTime: z.string().optional().describe('ISO 8601 — for sipped supps. Omit for instant doses.'),
+    withFood: z.boolean().optional(),
+    notes: z.string().optional(),
+  }, async ({ supplementId, date, takenAt, endTime, withFood, notes }) => {
+    const userId = await getUserId();
+    const dateBucket = date ? new Date(date + 'T00:00:00') : (() => { const d = new Date(); d.setHours(0,0,0,0); return d; })();
+    const log = await prisma.supplementLog.create({
+      data: {
+        userId, supplementId, date: dateBucket,
+        takenAt: takenAt ? new Date(takenAt) : new Date(),
+        endTime: endTime ? new Date(endTime) : null,
+        withFood: !!withFood,
+        notes: notes || null,
+      },
+    });
+    return { content: [{ type: 'text', text: `Logged supplement ${supplementId} at ${log.takenAt.toISOString()}${endTime ? ` until ${log.endTime.toISOString()}` : ''}` }] };
+  });
+
+  server.tool('update_supplement_log', 'Edit an existing supplement log (timing, end time, notes, with-food).', {
+    id: z.string().describe('SupplementLog id'),
+    takenAt: z.string().optional(),
+    endTime: z.string().nullable().optional(),
+    withFood: z.boolean().optional(),
+    notes: z.string().nullable().optional(),
+  }, async ({ id, ...data }) => {
+    const patch = {};
+    if (data.takenAt !== undefined) patch.takenAt = data.takenAt ? new Date(data.takenAt) : null;
+    if (data.endTime !== undefined) patch.endTime = data.endTime ? new Date(data.endTime) : null;
+    if (data.withFood !== undefined) patch.withFood = !!data.withFood;
+    if (data.notes !== undefined) patch.notes = data.notes || null;
+    await prisma.supplementLog.update({ where: { id }, data: patch });
+    return { content: [{ type: 'text', text: `Updated supplement log ${id}` }] };
+  });
+
+  server.tool('get_supp_compliance', 'Compliance percentage and per-supp adherence over the last N days.', {
+    days: z.number().optional().describe('Window in days. Default 7.'),
+  }, async ({ days }) => {
+    const userId = await getUserId();
+    const n = days || 7;
+    const start = new Date(); start.setHours(0,0,0,0); start.setDate(start.getDate() - (n - 1));
+    const supps = await prisma.supplement.findMany({ where: { userId, isActive: true } });
+    const logs = await prisma.supplementLog.findMany({ where: { userId, date: { gte: start } } });
+    const counts = supps.map(s => {
+      const taken = logs.filter(l => l.supplementId === s.id).length;
+      return { id: s.id, name: s.name, dose: s.activeDose, takenDays: taken, windowDays: n, compliance: r1((taken / n) * 100) };
+    });
+    const overall = supps.length > 0 ? r1(counts.reduce((s, c) => s + c.compliance, 0) / counts.length) : 0;
+    return { content: [{ type: 'text', text: JSON.stringify({ windowDays: n, overallCompliancePct: overall, perSupp: counts }, null, 2) }] };
   });
 
   // ====== PROFILE & GOALS ======
@@ -216,13 +355,26 @@ function createMcpServer(prisma, authedUserId = null) {
     return { content: [{ type: 'text', text: `Profile updated: ${Object.keys(clean).join(', ')}` }] };
   });
 
-  server.tool('update_goals', 'Update daily nutrition goals.', {
-    calories: z.number().optional(), proteinG: z.number().optional(), fatG: z.number().optional(),
-    carbsG: z.number().optional(), waterMl: z.number().optional(),
+  server.tool('update_goals', 'Update daily nutrition goals (creates a new effective-from-now record). Includes the extended targets (fibre/sat fat/sugar/sodium/potassium).', {
+    calories: z.number().optional(),
+    proteinG: z.number().optional(),
+    fatG: z.number().optional(),
+    carbsG: z.number().optional(),
+    waterMl: z.number().optional(),
+    fiberG: z.number().optional(),
+    satFatG: z.number().optional(),
+    sugarG: z.number().optional(),
+    sodiumMg: z.number().optional(),
+    potassiumMg: z.number().optional(),
   }, async (data) => {
     const userId = await getUserId();
+    // Carry over current values for any field not being changed.
+    const current = await prisma.goals.findFirst({ where: { userId }, orderBy: { effectiveFrom: 'desc' } });
+    const base = current
+      ? { calories: current.calories, proteinG: current.proteinG, fatG: current.fatG, carbsG: current.carbsG, waterMl: current.waterMl, fiberG: current.fiberG, satFatG: current.satFatG, sugarG: current.sugarG, sodiumMg: current.sodiumMg, potassiumMg: current.potassiumMg }
+      : { calories: 2300, proteinG: 150, fatG: 80, carbsG: 250, waterMl: 2500, fiberG: 30, satFatG: 15, sugarG: 25, sodiumMg: 2300, potassiumMg: 3500 };
     const clean = Object.fromEntries(Object.entries(data).filter(([_, v]) => v !== undefined));
-    await prisma.goals.create({ data: { userId, ...{ calories: 2300, proteinG: 150, fatG: 80, carbsG: 250, waterMl: 2500, effectiveFrom: new Date() }, ...clean } });
+    await prisma.goals.create({ data: { userId, ...base, ...clean, effectiveFrom: new Date() } });
     return { content: [{ type: 'text', text: `Goals updated: ${Object.entries(clean).map(([k, v]) => `${k}=${v}`).join(', ')}` }] };
   });
 
