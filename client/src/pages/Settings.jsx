@@ -42,7 +42,7 @@ export default function Settings({ goTo, onRefresh }) {
       name: p.name || '', dob: p.dob ? p.dob.split('T')[0] : '', sex: p.sex || 'Male',
       heightCm: p.heightCm || '', weightKg: p.weightKg || '', weightGoalKg: p.weightGoalKg || '',
     });
-    if (g) setGoals({ calories: g.calories, proteinG: g.proteinG, fatG: g.fatG, carbsG: g.carbsG, waterMl: g.waterMl || 2500 });
+    if (g) setGoals({ calories: g.calories, proteinG: g.proteinG, fatG: g.fatG, carbsG: g.carbsG, waterMl: g.waterMl || 2500, sodiumMg: g.sodiumMg ?? 2300, potassiumMg: g.potassiumMg ?? 3500 });
     setSupplements(s);
     setWeighIns(w);
   }
@@ -142,7 +142,14 @@ export default function Settings({ goTo, onRefresh }) {
         {/* Goals */}
         {tab === 'goals' && (
           <div>
-            {[{ k: 'calories', l: 'Daily Calories', p: '2300' }, { k: 'proteinG', l: 'Protein (g)', p: '150' }, { k: 'fatG', l: 'Fat (g)', p: '80' }, { k: 'carbsG', l: 'Carbs (g)', p: '250' }].map(f => (
+            {[
+              { k: 'calories',    l: 'Daily Calories',     p: '2300' },
+              { k: 'proteinG',    l: 'Protein (g)',        p: '150'  },
+              { k: 'fatG',        l: 'Fat (g)',            p: '80'   },
+              { k: 'carbsG',      l: 'Carbs (g)',          p: '250'  },
+              { k: 'sodiumMg',    l: 'Sodium (mg)',        p: '2300' },
+              { k: 'potassiumMg', l: 'Potassium (mg)',     p: '3500' },
+            ].map(f => (
               <div key={f.k} style={{ marginBottom: 14 }}>
                 <label style={{ fontSize: 11, fontWeight: 700, color: t2, textTransform: 'uppercase', letterSpacing: 1 }}>{f.l}</label>
                 <input type="number" value={goals[f.k] || ''} onChange={e => setGoals(g => ({ ...g, [f.k]: parseFloat(e.target.value) || 0 }))} placeholder={f.p} style={{ ...inp, marginTop: 4 }} />

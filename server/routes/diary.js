@@ -42,7 +42,7 @@ router.get('/range/query', async (req, res) => {
 // POST /api/diary
 router.post('/', async (req, res) => {
   try {
-    const { date, slot, name, portion, calories, proteinG, fatG, carbsG, fiberG, satFatG, sugarG, sodiumMg, recipeId, mealTime } = req.body;
+    const { date, slot, name, portion, calories, proteinG, fatG, carbsG, fiberG, satFatG, sugarG, sodiumMg, potassiumMg, recipeId, mealTime } = req.body;
     const entry = await req.prisma.diaryEntry.create({
       data: {
         userId: req.userId,
@@ -62,6 +62,7 @@ router.post('/', async (req, res) => {
         satFatG: satFatG ?? null,
         sugarG: sugarG ?? null,
         sodiumMg: sodiumMg ?? null,
+        potassiumMg: potassiumMg ?? null,
         recipeId,
       },
     });

@@ -68,18 +68,19 @@ function main() {
   };
 
   const COL = {
-    id:       idx('FoodID'),
-    name:     idx('Short Food Name'),
-    measure:  idx('Measure'),
-    energy:   idx('Energy'),           // kJ
-    energyN:  idx('Energy (NIP)'),     // kJ (package panel)
-    protein:  idx('Protein'),
-    fat:      idx('Fat'),
-    carbs:    idx('Carbohydrate, available'),
-    fiber:    idx('Dietary fibre'),
-    sugar:    idx('Sugars'),
-    satFat:   idx('SFA'),
-    sodium:   idx('Sodium Na'),
+    id:        idx('FoodID'),
+    name:      idx('Short Food Name'),
+    measure:   idx('Measure'),
+    energy:    idx('Energy'),           // kJ
+    energyN:   idx('Energy (NIP)'),     // kJ (package panel)
+    protein:   idx('Protein'),
+    fat:       idx('Fat'),
+    carbs:     idx('Carbohydrate, available'),
+    fiber:     idx('Dietary fibre'),
+    sugar:     idx('Sugars'),
+    satFat:    idx('SFA'),
+    sodium:    idx('Sodium Na'),
+    potassium: idx('Potassium K'),
   };
 
   const foods = [];
@@ -117,6 +118,7 @@ function main() {
           sugar:    num(row[COL.sugar]),
           satFat:   num(row[COL.satFat]),
           sodium:   num(row[COL.sodium]),
+          potassium: num(row[COL.potassium]),
         },
         servings: [{ label: '100g', grams: 100 }],
       };

@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
         where: { userId: req.userId },
         orderBy: { effectiveFrom: 'desc' },
       });
-      return res.json(goals || { calories: 2300, proteinG: 150, fatG: 80, carbsG: 250, waterMl: 2500, fiberG: 30, satFatG: 15, sugarG: 25, sodiumMg: 2300 });
+      return res.json(goals || { calories: 2300, proteinG: 150, fatG: 80, carbsG: 250, waterMl: 2500, fiberG: 30, satFatG: 15, sugarG: 25, sodiumMg: 2300, potassiumMg: 3500 });
     }
 
     const profile = await req.prisma.profile.findUnique({ where: { userId: req.userId } });
@@ -27,7 +27,7 @@ router.get('/', async (req, res) => {
 router.put('/', async (req, res) => {
   try {
     if (req.baseUrl === '/api/goals') {
-      const { calories, proteinG, fatG, carbsG, waterMl, fiberG, satFatG, sugarG, sodiumMg } = req.body;
+      const { calories, proteinG, fatG, carbsG, waterMl, fiberG, satFatG, sugarG, sodiumMg, potassiumMg } = req.body;
       const goals = await req.prisma.goals.create({
         data: {
           userId: req.userId,
@@ -37,6 +37,7 @@ router.put('/', async (req, res) => {
           satFatG: satFatG ?? 15,
           sugarG: sugarG ?? 25,
           sodiumMg: sodiumMg ?? 2300,
+          potassiumMg: potassiumMg ?? 3500,
         },
       });
       return res.json(goals);

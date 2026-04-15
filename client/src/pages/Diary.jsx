@@ -110,12 +110,13 @@ export default function Diary({ openPicker, goTo }) {
   }
 
   // Totals
-  const tot = { cal: 0, protein: 0, fat: 0, carbs: 0, fiber: 0, satFat: 0, sugar: 0, sodium: 0 };
+  const tot = { cal: 0, protein: 0, fat: 0, carbs: 0, fiber: 0, satFat: 0, sugar: 0, sodium: 0, potassium: 0 };
   SLOTS.forEach(sl => (diary[sl] || []).forEach(i => {
     tot.cal += i.calories || 0; tot.protein += i.proteinG || 0;
     tot.fat += i.fatG || 0; tot.carbs += i.carbsG || 0;
     tot.fiber += i.fiberG || 0; tot.satFat += i.satFatG || 0;
     tot.sugar += i.sugarG || 0; tot.sodium += i.sodiumMg || 0;
+    tot.potassium += i.potassiumMg || 0;
   }));
   Object.keys(tot).forEach(k => tot[k] = r1(tot[k]));
 
@@ -404,6 +405,10 @@ export default function Diary({ openPicker, goTo }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
           <span style={{ fontSize: 14, fontWeight: 700, color: tot.sodium > (goals.sodiumMg || 2300) ? '#ef4444' : '#06b6d4' }}>{tot.sodium}</span>
           <span style={{ fontSize: 12, color: t3 }}>/{goals.sodiumMg || 2300}Na</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: tot.potassium < (goals.potassiumMg || 3500) * 0.7 ? '#f59e0b' : '#a855f7' }}>{tot.potassium}</span>
+          <span style={{ fontSize: 12, color: t3 }}>/{goals.potassiumMg || 3500}K</span>
         </div>
       </div>
 

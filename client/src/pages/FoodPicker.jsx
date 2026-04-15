@@ -107,6 +107,7 @@ export default function FoodPicker({ slot, date, onBack }) {
         satFatG: item.satFat ?? item.satFatG ?? null,
         sugarG: item.sugar ?? item.sugarG ?? null,
         sodiumMg: item.sodium ?? item.sodiumMg ?? null,
+        potassiumMg: item.potassium ?? item.potassiumMg ?? null,
         mealTime: buildMealTimeISO(date, eatTime),
       });
       onBack();
@@ -151,6 +152,7 @@ export default function FoodPicker({ slot, date, onBack }) {
       satFat: scale(p.satFat),
       sugar: scale(p.sugar),
       sodium: scale(p.sodium),
+      potassium: scale(p.potassium),
     });
   }
 
@@ -185,12 +187,13 @@ export default function FoodPicker({ slot, date, onBack }) {
             <div style={{ fontSize: 11, color: t2, marginBottom: 4 }}>
               Per 100{selectedFood.servingUnit || 'g'}: {selectedFood.per100g.calories} cal · {selectedFood.per100g.protein}g P · {selectedFood.per100g.fat}g F · {selectedFood.per100g.carbs}g C
             </div>
-            {(selectedFood.per100g.fiber != null || selectedFood.per100g.satFat != null || selectedFood.per100g.sugar != null || selectedFood.per100g.sodium != null) && (
+            {(selectedFood.per100g.fiber != null || selectedFood.per100g.satFat != null || selectedFood.per100g.sugar != null || selectedFood.per100g.sodium != null || selectedFood.per100g.potassium != null) && (
               <div style={{ fontSize: 10, color: t3, marginBottom: 12 }}>
                 {selectedFood.per100g.fiber != null && <>Fibre {selectedFood.per100g.fiber}g · </>}
                 {selectedFood.per100g.satFat != null && <>Sat fat {selectedFood.per100g.satFat}g · </>}
                 {selectedFood.per100g.sugar != null && <>Sugar {selectedFood.per100g.sugar}g · </>}
                 {selectedFood.per100g.sodium != null && <>Sodium {selectedFood.per100g.sodium}mg</>}
+                {selectedFood.per100g.potassium != null && <> · Potassium {selectedFood.per100g.potassium}mg</>}
               </div>
             )}
             <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
@@ -216,7 +219,7 @@ export default function FoodPicker({ slot, date, onBack }) {
               const mult = g / 100;
               const p = selectedFood.per100g;
               const scale = v => v == null ? null : r1(v * mult);
-              const hasExtras = p.fiber != null || p.satFat != null || p.sugar != null || p.sodium != null;
+              const hasExtras = p.fiber != null || p.satFat != null || p.sugar != null || p.sodium != null || p.potassium != null;
               return (
                 <div style={{ background: '#f0f0f2', borderRadius: 10, padding: '10px 14px', marginBottom: 12 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-around' }}>
@@ -231,6 +234,7 @@ export default function FoodPicker({ slot, date, onBack }) {
                       <div style={{ textAlign: 'center' }}><div style={{ fontSize: 13, fontWeight: 600, color: '#1a1a1a' }}>{scale(p.satFat) ?? '–'}</div><div style={{ fontSize: 9, color: t2, textTransform: 'uppercase', letterSpacing: 0.5 }}>sat fat</div></div>
                       <div style={{ textAlign: 'center' }}><div style={{ fontSize: 13, fontWeight: 600, color: '#1a1a1a' }}>{scale(p.sugar) ?? '–'}</div><div style={{ fontSize: 9, color: t2, textTransform: 'uppercase', letterSpacing: 0.5 }}>sugar</div></div>
                       <div style={{ textAlign: 'center' }}><div style={{ fontSize: 13, fontWeight: 600, color: '#1a1a1a' }}>{scale(p.sodium) ?? '–'}</div><div style={{ fontSize: 9, color: t2, textTransform: 'uppercase', letterSpacing: 0.5 }}>sodium</div></div>
+                      <div style={{ textAlign: 'center' }}><div style={{ fontSize: 13, fontWeight: 600, color: '#1a1a1a' }}>{scale(p.potassium) ?? '–'}</div><div style={{ fontSize: 9, color: t2, textTransform: 'uppercase', letterSpacing: 0.5 }}>potassium</div></div>
                     </div>
                   )}
                 </div>

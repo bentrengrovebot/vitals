@@ -63,12 +63,12 @@ function mapNzfcd(f) {
       protein: f.per100g.protein,
       fat: f.per100g.fat,
       carbs: f.per100g.carbs,
-      // Extra nutrients — sat fat / fiber / sugar / sodium. Consumed by
-      // Diary's second macro row and DiaryEntry storage.
+      // Extras consumed by Diary macro bar + DiaryEntry storage.
       fiber: f.per100g.fiber,
       sugar: f.per100g.sugar,
       satFat: f.per100g.satFat,
       sodium: f.per100g.sodium,
+      potassium: f.per100g.potassium,
     },
     defaultServing: 100,
     servingUnit: beverage ? 'ml' : 'g',
@@ -363,10 +363,61 @@ const STAPLE_MICROS = {
   'Mozzarella':                           { fiber: 0,   sugar: 1.1, satFat: 10,   sodium: 627 },
 };
 
+// Potassium per 100g (USDA cross-ref). Kept as a parallel table so the
+// main STAPLE_MICROS block stays readable rather than ballooning by 25%.
+const STAPLE_POTASSIUM = {
+  'Chicken breast, raw': 256, 'Chicken breast, cooked': 256,
+  'Chicken thigh, skinless, raw': 230, 'Chicken thigh, skinless, cooked': 240,
+  'Chicken thigh, skin-on, raw': 240, 'Chicken thigh, skin-on, cooked': 254,
+  'Chicken drumstick, cooked': 240, 'Chicken wing, cooked': 222,
+  'Chicken mince, raw': 220, 'Chicken mince, cooked': 290,
+  'Chicken, whole roast (meat only)': 256, 'Chicken tenderloin, raw': 411,
+  'Beef mince, lean, raw': 318, 'Beef mince, lean, cooked': 270,
+  'Beef sirloin steak, cooked': 359, 'Beef ribeye, cooked': 270,
+  'Beef eye fillet, cooked': 380, 'Beef rump, cooked': 360,
+  'Salmon fillet, raw': 363, 'Salmon fillet, cooked': 384,
+  'Tuna in springwater': 207, 'Tuna steak, fresh, cooked': 444,
+  'Hoki fillet, cooked': 415, 'Tarakihi fillet, cooked': 320,
+  'Blue cod, cooked': 384, 'Snapper, cooked': 444, 'Prawns, cooked': 113,
+  'Pork mince, lean, raw': 350, 'Pork mince, lean, cooked': 380,
+  'Pork loin chop, lean, cooked': 363, 'Pork belly, cooked': 250,
+  'Pork scotch fillet, cooked': 332, 'Pork fillet (tenderloin), cooked': 425,
+  'Bacon, middle rasher, cooked': 565, 'Bacon, shortcut, cooked': 565,
+  'Ham, lean, sliced': 287,
+  'Lamb mince, raw': 270, 'Lamb mince, cooked': 290,
+  'Lamb loin chop, cooked': 332, 'Lamb rack, cooked': 325,
+  'Lamb leg, lean, cooked': 320, 'Lamb shoulder, cooked': 270,
+  'Lamb backstrap, cooked': 365,
+  'Egg, whole': 138, 'Egg white': 163,
+  'Cottage cheese, low fat': 86, 'Greek yoghurt, plain, low-fat': 141,
+  'Greek yoghurt, plain, full-fat': 130, 'Skyr / high-protein yoghurt': 130,
+  'Whey protein isolate': 160,
+  'White rice, cooked': 35, 'Brown rice, cooked': 79,
+  'Potato, boiled': 379, 'Potato, baked': 535, 'Kumara (sweet potato)': 337,
+  'Rolled oats, dry': 362, 'White bread': 100, 'Wholemeal bread': 230,
+  'Pasta, cooked': 44,
+  'Broccoli, raw': 316, 'Carrot, raw': 320, 'Spinach, raw': 558,
+  'Tomato, raw': 237, 'Capsicum (bell pepper)': 175, 'Cucumber': 147,
+  'Mushrooms, raw': 318,
+  'Banana': 358, 'Apple': 107, 'Blueberries': 77, 'Strawberries': 153,
+  'Avocado': 485,
+  'Almonds': 733, 'Peanut butter, natural': 649, 'Olive oil': 1, 'Butter': 24,
+  'Cashews, roasted, salted': 565, 'Cashews, roasted, unsalted': 565,
+  'Macadamias, raw': 368, 'Walnuts, raw': 441, 'Brazil nuts, raw': 659,
+  'Pumpkin seeds (pepitas), raw': 809, 'Sunflower seeds, raw': 645,
+  'Chia seeds, dry': 407, 'Flaxseed (linseed), ground': 813,
+  'Whole milk (blue top)': 132, 'Trim milk (green top)': 156,
+  'Black coffee': 49, 'Flat white (trim milk)': 145, 'Tea, black (no milk)': 18,
+  'Tasty cheddar': 98, 'Edam cheese': 188, 'Feta cheese': 62,
+  'Haloumi cheese': 79, 'Parmesan cheese': 92, 'Cream cheese': 138,
+  'Mozzarella': 84,
+};
+
 function augmentStaple(s) {
   const m = STAPLE_MICROS[s.name];
-  if (!m) return s;
-  return { ...s, per100g: { ...s.per100g, ...m } };
+  const k = STAPLE_POTASSIUM[s.name];
+  if (!m && k == null) return s;
+  return { ...s, per100g: { ...s.per100g, ...(m || {}), ...(k != null ? { potassium: k } : {}) } };
 }
 
 function findStaples(q) {
@@ -412,9 +463,11 @@ function mapOffProduct(p) {
   }
   servings.push({ label: `100${unit}`, grams: 100 });
 
-  // OFF stores sodium in grams; convert to mg to match NZFCD.
+  // OFF stores sodium + potassium in grams; convert to mg to match NZFCD.
   const sodiumG = n['sodium_100g'];
   const sodiumMg = typeof sodiumG === 'number' ? sodiumG * 1000 : null;
+  const potassiumG = n['potassium_100g'];
+  const potassiumMg = typeof potassiumG === 'number' ? potassiumG * 1000 : null;
 
   return {
     name,
@@ -428,6 +481,7 @@ function mapOffProduct(p) {
       sugar:  typeof n['sugars_100g'] === 'number' ? r1(n['sugars_100g']) : null,
       satFat: typeof n['saturated-fat_100g'] === 'number' ? r1(n['saturated-fat_100g']) : null,
       sodium: sodiumMg != null ? r1(sodiumMg) : null,
+      potassium: potassiumMg != null ? r1(potassiumMg) : null,
     },
     defaultServing,
     servingUnit: unit,
