@@ -367,57 +367,44 @@ export default function Diary({ openPicker, goTo }) {
         </div>
       </div>
 
-      {/* Week Calendar (RP Diet style) */}
+      {/* Week Calendar (RP Diet style) — calorie totals coloured against goal:
+          green = under or at target (in deficit), red = over target. */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: 4, padding: '14px 16px 6px' }}>
-        {getWeekDays().map(d => (
-          <button key={d.dk} onClick={() => setCurDate(d.dk)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, width: 46, padding: '4px 0', background: 'none', border: 'none' }}>
-            <div style={{ fontSize: 10, fontWeight: 600, color: d.isToday ? ac : t3, textTransform: 'uppercase' }}>{d.letter}</div>
-            <div style={{ width: 36, height: 36, borderRadius: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, background: d.isSelected ? t1 : 'transparent', color: d.isSelected ? '#fff' : d.isToday ? ac : t2 }}>{d.num}</div>
-            <div style={{ fontSize: 9, fontWeight: 600, color: d.cal != null ? t2 : t3 }}>{d.cal != null ? d.cal : '—'}</div>
-          </button>
-        ))}
+        {getWeekDays().map(d => {
+          const calColor = d.cal == null ? t3 : (d.cal > goals.calories ? '#ef4444' : '#22c55e');
+          return (
+            <button key={d.dk} onClick={() => setCurDate(d.dk)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, width: 46, padding: '4px 0', background: 'none', border: 'none' }}>
+              <div style={{ fontSize: 10, fontWeight: 600, color: d.isToday ? ac : t3, textTransform: 'uppercase' }}>{d.letter}</div>
+              <div style={{ width: 36, height: 36, borderRadius: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, background: d.isSelected ? t1 : 'transparent', color: d.isSelected ? '#fff' : d.isToday ? ac : t2 }}>{d.num}</div>
+              <div style={{ fontSize: 9, fontWeight: 700, color: calColor }}>{d.cal != null ? d.cal : '—'}</div>
+            </button>
+          );
+        })}
       </div>
 
-      {/* Macro Summary Bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 20px 4px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+      {/* Macro Summary Bar — scrollable so sodium fits on small screens */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '6px 20px 10px', overflowX: 'auto', whiteSpace: 'nowrap', scrollbarWidth: 'none' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
           <div style={{ width: 7, height: 7, borderRadius: 4, background: CAL }} />
           <span style={{ fontSize: 14, fontWeight: 700, color: CAL }}>{tot.cal}</span>
           <span style={{ fontSize: 12, color: t3 }}>/{goals.calories}</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
           <span style={{ fontSize: 14, fontWeight: 700, color: PRO }}>{tot.protein}</span>
           <span style={{ fontSize: 12, color: t3 }}>/{goals.proteinG}P</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
           <span style={{ fontSize: 14, fontWeight: 700, color: FAT }}>{tot.fat}</span>
           <span style={{ fontSize: 12, color: t3 }}>/{goals.fatG}F</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
           <span style={{ fontSize: 14, fontWeight: 700, color: CARB }}>{tot.carbs}</span>
           <span style={{ fontSize: 12, color: t3 }}>/{goals.carbsG}C</span>
         </div>
-      </div>
-
-      {/* Extended nutrients — fiber, sat fat, sugar, sodium. Colour satFat
-          red when over goal (apoB/CV flag); fiber green when on target. */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 20px 10px', fontSize: 11, color: t2 }}>
-        <span>
-          <span style={{ fontWeight: 700, color: tot.fiber >= (goals.fiberG || 30) ? '#22c55e' : t1 }}>Fib {tot.fiber}</span>
-          <span style={{ color: t3 }}>/{goals.fiberG || 30}g</span>
-        </span>
-        <span>
-          <span style={{ fontWeight: 700, color: tot.satFat > (goals.satFatG || 15) ? '#ef4444' : t1 }}>SFa {tot.satFat}</span>
-          <span style={{ color: t3 }}>/{goals.satFatG || 15}g</span>
-        </span>
-        <span>
-          <span style={{ fontWeight: 700, color: tot.sugar > (goals.sugarG || 25) ? '#ef4444' : t1 }}>Sug {tot.sugar}</span>
-          <span style={{ color: t3 }}>/{goals.sugarG || 25}g</span>
-        </span>
-        <span>
-          <span style={{ fontWeight: 700, color: tot.sodium > (goals.sodiumMg || 2300) ? '#ef4444' : t1 }}>Na {tot.sodium}</span>
-          <span style={{ color: t3 }}>/{goals.sodiumMg || 2300}mg</span>
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: tot.sodium > (goals.sodiumMg || 2300) ? '#ef4444' : '#06b6d4' }}>{tot.sodium}</span>
+          <span style={{ fontSize: 12, color: t3 }}>/{goals.sodiumMg || 2300}Na</span>
+        </div>
       </div>
 
       {/* Meal Cards */}
