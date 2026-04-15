@@ -592,8 +592,12 @@ export default function Diary({ openPicker, goTo }) {
       )}
 
       {/* Supplements — visible on any date so retroactive logs and
-          historical compliance are both editable. */}
-      {supplements.length > 0 && (
+          historical compliance are both editable. Only counts active
+          supps so soft-deleted ones don't keep the panel up. */}
+      {(() => {
+        const activeSupps = supplements.filter(s => s.isActive);
+        if (activeSupps.length === 0) return null;
+        return (
         <div style={{ padding: '8px 16px 0' }}>
           <div style={{ ...card, padding: '14px 16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
@@ -601,9 +605,9 @@ export default function Diary({ openPicker, goTo }) {
                 <span style={{ fontSize: 14 }}>💊</span>
                 <span style={{ fontSize: 14, fontWeight: 700, color: t1 }}>Supplements</span>
               </div>
-              <span style={{ fontSize: 12, fontWeight: 600, color: suppLogs.length === supplements.length ? gn : t3 }}>{suppLogs.length}/{supplements.length}</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: suppLogs.length === activeSupps.length ? gn : t3 }}>{suppLogs.length}/{activeSupps.length}</span>
             </div>
-            {supplements.map(sup => {
+            {activeSupps.map(sup => {
               const taken = suppLogs.find(l => l.supplementId === sup.id);
               const fmt = iso => new Date(iso).toLocaleTimeString('en-NZ', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase().replace(' ', '');
               const timing = taken ? (taken.endTime ? `${fmt(taken.takenAt)} – ${fmt(taken.endTime)}` : fmt(taken.takenAt)) : null;
@@ -628,7 +632,8 @@ export default function Diary({ openPicker, goTo }) {
             })}
           </div>
         </div>
-      )}
+        );
+      })()}
 
     </div>
   );
