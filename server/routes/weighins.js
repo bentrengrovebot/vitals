@@ -23,7 +23,10 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { weightKg, date } = req.body;
-    const d = date ? new Date(date) : new Date();
+    // Use the client-supplied local date to avoid NZ→UTC day-shift.
+    // Append T12:00:00 so Postgres @db.Date truncation never flips
+    // to the previous day regardless of timezone.
+    const d = date ? new Date(date + 'T12:00:00') : new Date();
 
     // Calculate 7-day moving average
     const recent = await req.prisma.weighIn.findMany({

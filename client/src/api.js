@@ -53,7 +53,13 @@ export const api = {
 
   // Weigh-ins
   getWeighIns: (limit = 14) => request(`/weighins?limit=${limit}`),
-  logWeighIn: (weightKg) => request('/weighins', { method: 'POST', body: JSON.stringify({ weightKg }) }),
+  logWeighIn: (weightKg) => {
+    // Send the USER's local date so the server doesn't store yesterday
+    // when NZ morning maps to previous-day UTC.
+    const d = new Date();
+    const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    return request('/weighins', { method: 'POST', body: JSON.stringify({ weightKg, date }) });
+  },
   deleteWeighIn: (id) => request(`/weighins/${id}`, { method: 'DELETE' }),
 
   // Symptoms

@@ -33,6 +33,7 @@ export default function Diary({ openPicker, goTo }) {
   const [supplements, setSupplements] = useState([]);
   const [suppLogs, setSuppLogs] = useState([]);
   const [symptoms, setSymptoms] = useState([]);
+  const [daySessions, setDaySessions] = useState([]);
   const [weekData, setWeekData] = useState(null);
   const [yesterdayDiary, setYesterdayDiary] = useState({ Breakfast: [], Lunch: [], Dinner: [], Snacks: [] });
   const [mp, setMp] = useState(0);
@@ -68,16 +69,18 @@ export default function Diary({ openPicker, goTo }) {
     setSymptoms(symp);
     setYesterdayDiary(yd);
 
-    if (isToday) {
-      const [w, s, sl] = await Promise.all([
-        api.getWater(curDate),
-        api.getSupplements(),
-        api.getSupplementLogs(curDate),
-      ]);
-      setWaterLogs(w);
-      setSupplements(s.filter(x => x.isActive));
-      setSuppLogs(sl);
-    }
+    // Load water, supps, supp logs, and training for the viewed date
+    // (not gated to today — so historical days are visible + editable).
+    const [w, s, sl, ts] = await Promise.all([
+      api.getWater(curDate),
+      api.getSupplements(),
+      api.getSupplementLogs(curDate),
+      api.getTrainingSessions(curDate).catch(() => []),
+    ]);
+    setWaterLogs(w);
+    setSupplements(s.filter(x => x.isActive));
+    setSuppLogs(sl);
+    setDaySessions(Array.isArray(ts) ? ts : []);
 
     // Load week data
     loadWeekData(g || goals);
@@ -570,6 +573,53 @@ export default function Diary({ openPicker, goTo }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <div style={{ width: 8, height: 8, borderRadius: 4, background: PRO }} />
             <span style={{ fontSize: 13, fontWeight: 700, color: t1 }}>{remaining.protein}g P left</span>
+          </div>
+        </div>
+      )}
+
+      {/* Water tracker */}
+      <div style={{ padding: '8px 16px 0' }}>
+        <div style={{ ...card, padding: '14px 16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 14 }}>💧</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: t1 }}>Water</span>
+            </div>
+            <span style={{ fontSize: 13, fontWeight: 700, color: totalWater >= goals.waterMl ? gn : t2 }}>{totalWater}ml <span style={{ fontWeight: 500, color: t3 }}>/ {goals.waterMl}ml</span></span>
+          </div>
+          {/* Progress bar */}
+          <div style={{ height: 6, borderRadius: 3, background: brd, marginBottom: 10 }}>
+            <div style={{ height: 6, borderRadius: 3, background: totalWater >= goals.waterMl ? gn : CAL, width: `${waterPct}%`, transition: 'width 0.3s' }} />
+          </div>
+          {/* Quick-add buttons */}
+          <div style={{ display: 'flex', gap: 6 }}>
+            {[250, 500, 750, 1000].map(ml => (
+              <button key={ml} onClick={() => addWater(ml)} style={{ flex: 1, padding: '8px 0', borderRadius: 10, border: `1px solid ${brd}`, background: '#f5f5f5', color: t1, fontSize: 12, fontWeight: 600 }}>+{ml >= 1000 ? '1L' : ml + 'ml'}</button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Training — lightweight indicator of today's workout */}
+      {daySessions.length > 0 && (
+        <div style={{ padding: '8px 16px 0' }}>
+          <div style={{ ...card, padding: '14px 16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <span style={{ fontSize: 14 }}>🏋️</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: t1 }}>Training</span>
+            </div>
+            {daySessions.map(s => {
+              const sets = (s.sets || []).filter(x => x.reps).length;
+              return (
+                <div key={s.id} style={{ padding: '6px 0', borderTop: `1px solid ${brd}` }}>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: t1 }}>{s.name}</div>
+                  <div style={{ fontSize: 11, color: t3 }}>
+                    {s.durationMins ? `${s.durationMins} min` : 'In progress'}
+                    {sets > 0 && ` · ${sets} sets`}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
