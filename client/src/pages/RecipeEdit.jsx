@@ -13,7 +13,7 @@ export default function RecipeEdit({ recipe, onBack }) {
     })),
   });
   const [addIng, setAddIng] = useState(false);
-  const [ingF, setIngF] = useState({ name: '', grams: '', cal: '', protein: '', fat: '', carbs: '' });
+  const [ingF, setIngF] = useState({ name: '', qty: '', unit: 'g', cal: '', protein: '', fat: '', carbs: '' });
   const [est, setEst] = useState(false);
   const [del, setDel] = useState(false);
   // Bulk import: paste recipe text or upload a photo, AI parses into ingredients.
@@ -73,17 +73,18 @@ export default function RecipeEdit({ recipe, onBack }) {
   };
 
   const estimateNutrition = async () => {
-    if (!ingF.name || !ingF.grams) return;
+    if (!ingF.name || !ingF.qty) return;
     setEst(true);
     try {
-      // Pass the raw amount string — api.estimate routes to the
-      // natural-language path when it's non-numeric ("½ cup").
-      const data = await api.estimate(ingF.name, ingF.grams);
+      // Build a natural-language amount from qty + unit.
+      // If unit is "g", pass numeric grams; else e.g. "0.5 cup".
+      const amount = ingF.unit === 'g' ? ingF.qty : `${ingF.qty} ${ingF.unit}`;
+      const data = await api.estimate(ingF.name, amount);
       setIngF(f => ({
         ...f,
-        // If the AI resolved a free-form amount to grams, swap the
-        // input to the numeric value so the ingredient saves correctly.
-        grams: data.grams != null ? String(data.grams) : f.grams,
+        // Swap qty + unit to the resolved grams so ingredient saves correctly.
+        qty: data.grams != null ? String(data.grams) : f.qty,
+        unit: data.grams != null ? 'g' : f.unit,
         cal: String(data.cal || 0),
         protein: String(data.protein || 0),
         fat: String(data.fat || 0),
@@ -94,16 +95,16 @@ export default function RecipeEdit({ recipe, onBack }) {
   };
 
   const addIngredient = () => {
-    if (!ingF.name || !ingF.grams) return;
+    if (!ingF.name || !ingF.qty) return;
     setRec(r => ({
       ...r,
       ingredients: [...r.ingredients, {
-        name: ingF.name, grams: parseFloat(ingF.grams) || 0,
+        name: ingF.name, grams: parseFloat(ingF.qty) || 0,
         calories: parseFloat(ingF.cal) || 0, proteinG: parseFloat(ingF.protein) || 0,
         fatG: parseFloat(ingF.fat) || 0, carbsG: parseFloat(ingF.carbs) || 0,
       }],
     }));
-    setIngF({ name: '', grams: '', cal: '', protein: '', fat: '', carbs: '' });
+    setIngF({ name: '', qty: '', unit: 'g', cal: '', protein: '', fat: '', carbs: '' });
     setAddIng(false);
   };
 
@@ -209,9 +210,19 @@ Cottage cheese pancakes (serves 2)
             <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12, color: t1 }}>Add Ingredient</div>
             <input value={ingF.name} onChange={e => setIngF(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Anchor Cottage Cheese" style={{ ...inp, marginBottom: 8 }} />
             <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-              <input type="text" inputMode="decimal" value={ingF.grams} onChange={e => setIngF(f => ({ ...f, grams: e.target.value }))} placeholder="½ cup, 150g, 2 tbsp…" style={{ ...inp, flex: 1 }} />
-              <button onClick={estimateNutrition} disabled={!ingF.name || !ingF.grams || est}
-                style={{ padding: '12px 16px', borderRadius: 12, border: `1px solid rgba(224,165,38,0.3)`, background: 'rgba(224,165,38,0.1)', color: ingF.name && ingF.grams ? or : t3, fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>
+              <input type="number" inputMode="decimal" step="any" value={ingF.qty} onChange={e => setIngF(f => ({ ...f, qty: e.target.value }))} placeholder="Qty" style={{ ...inp, flex: 1 }} />
+              <select value={ingF.unit} onChange={e => setIngF(f => ({ ...f, unit: e.target.value }))} style={{ ...inp, flex: 0.8, padding: '14px 8px', fontSize: 14, appearance: 'auto' }}>
+                <option value="g">g</option>
+                <option value="ml">ml</option>
+                <option value="cup">cup</option>
+                <option value="tbsp">tbsp</option>
+                <option value="tsp">tsp</option>
+                <option value="whole">whole</option>
+                <option value="slice">slice</option>
+                <option value="piece">piece</option>
+              </select>
+              <button onClick={estimateNutrition} disabled={!ingF.name || !ingF.qty || est}
+                style={{ padding: '12px 16px', borderRadius: 12, border: `1px solid rgba(224,165,38,0.3)`, background: 'rgba(224,165,38,0.1)', color: ingF.name && ingF.qty ? or : t3, fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' }}>
                 {est ? '...' : '✨ AI'}
               </button>
             </div>
