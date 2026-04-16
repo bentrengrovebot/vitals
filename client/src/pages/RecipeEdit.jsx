@@ -146,8 +146,8 @@ export default function RecipeEdit({ recipe, onBack }) {
           <div style={{ fontSize: 11, color: t2, marginBottom: 10 }}>Paste ingredients from a website, copy from another app, or snap a photo of a cookbook page. AI parses and fills in everything.</div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={() => setImportOpen(true)} style={{ flex: 1, padding: 12, borderRadius: 10, border: `1px solid rgba(224,165,38,0.3)`, background: '#fff', color: or, fontSize: 13, fontWeight: 700 }}>📋 Paste</button>
-            <button onClick={() => fileInputRef.current?.click()} disabled={importBusy} style={{ flex: 1, padding: 12, borderRadius: 10, border: `1px solid rgba(224,165,38,0.3)`, background: '#fff', color: importBusy ? t3 : or, fontSize: 13, fontWeight: 700 }}>{importBusy ? 'Reading…' : '📷 Photo'}</button>
-            <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={onPhotoPicked} style={{ display: 'none' }} />
+            <button onClick={() => fileInputRef.current?.click()} disabled={importBusy} style={{ flex: 1, padding: 12, borderRadius: 10, border: `1px solid rgba(224,165,38,0.3)`, background: '#fff', color: importBusy ? t3 : or, fontSize: 13, fontWeight: 700 }}>{importBusy ? 'Reading…' : '📷 Photo / Image'}</button>
+            <input ref={fileInputRef} type="file" accept="image/*" onChange={onPhotoPicked} style={{ display: 'none' }} />
           </div>
           {importErr && <div style={{ fontSize: 11, color: rd, marginTop: 8 }}>{importErr}</div>}
         </div>
