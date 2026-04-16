@@ -513,18 +513,26 @@ function createMcpServer(prisma, authedUserId = null) {
  * the user opts into auth via Settings.
  */
 async function authBearerOrFallback(req, prisma) {
-  const auth = req.headers.authorization || '';
-  const match = auth.match(/^Bearer\s+(.+)$/i);
-  if (match) {
-    const hash = crypto.createHash('sha256').update(match[1].trim()).digest('hex');
-    const user = await prisma.user.findFirst({ where: { mcpTokenHash: hash } });
-    if (user) return user;
+  try {
+    const auth = req.headers.authorization || '';
+    const match = auth.match(/^Bearer\s+(.+)$/i);
+    if (match) {
+      const hash = crypto.createHash('sha256').update(match[1].trim()).digest('hex');
+      const user = await prisma.user.findFirst({ where: { mcpTokenHash: hash } });
+      if (user) return user;
+    }
+    // No bearer or invalid: only require token if any user has set one.
+    const anyTokenSet = await prisma.user.findFirst({ where: { mcpTokenHash: { not: null } }, select: { id: true } });
+    if (anyTokenSet) return null;
+    // Fallback: first user, legacy behaviour for personal-app deploys
+    return prisma.user.findFirst();
+  } catch (err) {
+    // Schema migration mid-deploy, Prisma client out of sync, etc.
+    // Be permissive — fall back to first user so the connector still
+    // works rather than 5xx-ing claude.ai out.
+    console.warn('MCP auth check failed, falling back to first user:', err.message);
+    try { return await prisma.user.findFirst(); } catch { return null; }
   }
-  // No bearer or invalid: only allow if NO user has set a token yet.
-  const anyTokenSet = await prisma.user.findFirst({ where: { mcpTokenHash: { not: null } }, select: { id: true } });
-  if (anyTokenSet) return null;
-  // Fallback: first user, legacy behaviour
-  return prisma.user.findFirst();
 }
 
 export function setupMCP(app, prisma) {
