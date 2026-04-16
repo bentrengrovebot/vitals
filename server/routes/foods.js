@@ -620,24 +620,93 @@ router.get('/search', async (req, res) => {
   }
 });
 
-// POST /api/foods/ai-search — Estimate nutrition for specific food + grams
+// POST /api/foods/ai-search — Estimate nutrition for a food.
+// Accepts either { name, grams } (numeric grams) OR { name, amount }
+// where amount is a free-form string like "½ cup", "2 tbsp", "1 slice".
+// Claude interprets the amount into grams and returns macros +
+// the resolved gram weight so recipes can store a numeric value.
 router.post('/ai-search', async (req, res) => {
   try {
-    const { name, grams } = req.body;
+    const { name, grams, amount } = req.body;
     const client = getClient();
+
+    // Natural-language amount path: ask Claude to interpret units.
+    if (amount && (!grams || isNaN(parseFloat(grams)))) {
+      const response = await client.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 220,
+        system: `Nutrition database. Convert a free-form amount to grams and estimate nutrition for the given food. NZ metric (1 cup = 250 mL). Common densities: cottage cheese ~226g/cup, yoghurt ~245g/cup, oats ~85g/cup dry, rice cooked ~195g/cup, milk ~245g/cup, peanut butter ~16g/tbsp, olive oil ~14g/tbsp, flour ~125g/cup. Respond ONLY with JSON: {"grams":number,"cal":number,"protein":number,"fat":number,"carbs":number}. Round to 1 decimal place.`,
+        messages: [{ role: 'user', content: `"${name}", ${amount}` }],
+      });
+      const text = (response.content[0]?.text || '').replace(/```json|```/g, '').trim();
+      return res.json(JSON.parse(text));
+    }
+
+    // Numeric grams path (original behaviour).
     const response = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 200,
       system: 'Nutrition database. Given food+grams, respond ONLY JSON: {"cal":number,"protein":number,"fat":number,"carbs":number}. Use NZ food data where applicable. Round to 1 decimal place.',
       messages: [{ role: 'user', content: `"${name}", ${grams}g` }],
     });
-
     const text = (response.content[0]?.text || '').replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(text);
-    res.json(parsed);
+    res.json(JSON.parse(text));
   } catch (err) {
     console.error('AI food search error:', err);
     res.status(500).json({ error: 'Estimation failed' });
+  }
+});
+
+// POST /api/foods/parse-recipe — takes raw text OR an image (base64)
+// and returns a structured recipe: name, default servings, and
+// ingredients with grams + macros already resolved. Saves the user
+// 15 minutes of manual entry per recipe.
+router.post('/parse-recipe', async (req, res) => {
+  try {
+    const { text, imageBase64, imageMediaType } = req.body;
+    if (!text && !imageBase64) return res.status(400).json({ error: 'Provide text or imageBase64' });
+
+    const client = getClient();
+    const systemPrompt = `You extract recipes into structured JSON. Return ONLY JSON (no markdown, no prose), with this shape:
+{
+  "name": "Recipe name if stated, else empty string",
+  "servings": number or null,
+  "ingredients": [
+    { "name": "ingredient name (clean, no brand unless essential)",
+      "amount": "original amount string, e.g. '½ cup', '200g', '2 large'",
+      "grams": number (estimated from amount using NZ metrics: 1 cup = 250 mL, standard densities like cottage cheese 226g/cup, oats 85g/cup dry, milk 245g/cup, oil 14g/tbsp),
+      "calories": number (for the stated amount, not per 100g),
+      "protein": number,
+      "fat": number,
+      "carbs": number
+    }
+  ]
+}
+Round to 1 decimal place. Skip garnishes, pinches of salt/pepper, and water. Combine duplicate ingredients. If servings isn't stated, make a sensible guess or use null.`;
+
+    const userContent = imageBase64
+      ? [
+          { type: 'image', source: { type: 'base64', media_type: imageMediaType || 'image/jpeg', data: imageBase64 } },
+          { type: 'text', text: 'Parse this recipe image into the JSON structure specified.' },
+        ]
+      : [{ type: 'text', text: `Parse this recipe into the JSON structure specified:\n\n${text}` }];
+
+    // Sonnet for vision (better OCR); Haiku for text-only (cheaper + faster).
+    const model = imageBase64 ? 'claude-sonnet-4-5' : 'claude-haiku-4-5-20251001';
+
+    const response = await client.messages.create({
+      model,
+      max_tokens: 2000,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userContent }],
+    });
+
+    const rawText = (response.content[0]?.text || '').replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(rawText);
+    res.json(parsed);
+  } catch (err) {
+    console.error('Recipe parse error:', err);
+    res.status(500).json({ error: 'Parse failed', detail: err.message });
   }
 });
 

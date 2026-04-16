@@ -133,6 +133,15 @@ export const api = {
 
   searchFoods: (q) => request(`/foods/search?q=${encodeURIComponent(q)}`),
   aiSearchFood: (name, grams) => request('/foods/ai-search', { method: 'POST', body: JSON.stringify({ name, grams }) }),
+  // Free-form amount estimation. Accepts any unit: "½ cup", "2 tbsp",
+  // "150g", "1 slice". Returns { grams, cal, protein, fat, carbs }.
+  estimate: (name, amount) => {
+    const body = typeof amount === 'number' || /^\s*-?\d+(\.\d+)?\s*$/.test(String(amount))
+      ? { name, grams: parseFloat(amount) }
+      : { name, amount: String(amount) };
+    return request('/foods/ai-search', { method: 'POST', body: JSON.stringify(body) });
+  },
+  parseRecipe: (payload) => request('/foods/parse-recipe', { method: 'POST', body: JSON.stringify(payload) }),
 
   // Whoop
   getWhoopStatus: () => request('/whoop/status'),
